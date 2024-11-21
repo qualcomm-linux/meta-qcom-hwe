@@ -1,0 +1,174 @@
+From 3b1ada9c6f060d7680b5eebc87e2dd39d74d8402 Mon Sep 17 00:00:00 2001
+From: Ekansh Gupta <quic_ekangupt@quicinc.com>
+Date: Thu, 21 Nov 2024 14:17:12 +0530
+Subject: [PATCH 1/2] FROMLIST: misc: fastrpc: Add support for multiple PD from one
+ process
+
+Memory intensive applications(which requires more tha 4GB) that wants
+to offload tasks to DSP might have to split the tasks to multiple
+user PD to make the resources available.
+
+For every call to DSP, fastrpc driver passes the process tgid which
+works as an identifier for the DSP to enqueue the tasks to specific PD.
+With current design, if any process opens device node more than once
+and makes PD init request, same tgid will be passed to DSP which will
+be considered a bad request and this will result in failure as the same
+identifier cannot be used for multiple DSP PD.
+
+Assign and pass a client ID to DSP which would be assigned during device
+open and will be dependent on the index of session allocated for the PD.
+This will allow the same process to open the device more than once and
+spawn multiple dynamic PD for ease of processing.
+
+Signed-off-by: Ekansh Gupta <quic_ekangupt@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241121084713.2599904-2-quic_ekangupt@quicinc.com/]
+---
+ drivers/misc/fastrpc.c | 30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/misc/fastrpc.c b/drivers/misc/fastrpc.c
+index 8c57c12349aa..e0929623d6a7 100644
+--- a/drivers/misc/fastrpc.c
++++ b/drivers/misc/fastrpc.c
+@@ -39,6 +39,7 @@
+ #define FASTRPC_INIT_HANDLE	1
+ #define FASTRPC_DSP_UTILITIES_HANDLE	2
+ #define FASTRPC_CTXID_MASK (0xFF0)
++#define FASTRPC_CLIENTID_MASK GENMASK(4, 4)
+ #define INIT_FILELEN_MAX (2 * 1024 * 1024)
+ #define INIT_FILE_NAMELEN_MAX (128)
+ #define FASTRPC_DEVICE_NAME	"fastrpc"
+@@ -299,7 +300,7 @@ struct fastrpc_user {
+ 	struct fastrpc_session_ctx *sctx;
+ 	struct fastrpc_buf *init_mem;
+ 
+-	int tgid;
++	int client_id;
+ 	int pd;
+ 	bool is_secure_dev;
+ 	/* Lock for lists */
+@@ -614,7 +615,7 @@ static struct fastrpc_invoke_ctx *fastrpc_context_alloc(
+ 	ctx->sc = sc;
+ 	ctx->retval = -1;
+ 	ctx->pid = current->pid;
+-	ctx->tgid = user->tgid;
++	ctx->tgid = user->client_id;
+ 	ctx->cctx = cctx;
+ 	init_completion(&ctx->work);
+ 	INIT_WORK(&ctx->put_work, fastrpc_context_put_wq);
+@@ -1112,7 +1113,7 @@ static int fastrpc_invoke_send(struct fastrpc_session_ctx *sctx,
+ 	int ret;
+ 
+ 	cctx = fl->cctx;
+-	msg->pid = fl->tgid;
++	msg->pid = fl->client_id;
+ 	msg->tid = current->pid;
+ 
+ 	if (kernel)
+@@ -1295,7 +1296,7 @@ static int fastrpc_init_create_static_process(struct fastrpc_user *fl,
+ 		}
+ 	}
+ 
+-	inbuf.pgid = fl->tgid;
++	inbuf.pgid = fl->client_id;
+ 	inbuf.namelen = init.namelen;
+ 	inbuf.pageslen = 0;
+ 	fl->pd = USER_PD;
+@@ -1397,7 +1398,7 @@ static int fastrpc_init_create_process(struct fastrpc_user *fl,
+ 		goto err;
+ 	}
+ 
+-	inbuf.pgid = fl->tgid;
++	inbuf.pgid = fl->client_id;
+ 	inbuf.namelen = strlen(current->comm) + 1;
+ 	inbuf.filelen = init.filelen;
+ 	inbuf.pageslen = 1;
+@@ -1471,8 +1472,9 @@ static int fastrpc_init_create_process(struct fastrpc_user *fl,
+ }
+ 
+ static struct fastrpc_session_ctx *fastrpc_session_alloc(
+-					struct fastrpc_channel_ctx *cctx)
++					struct fastrpc_user *fl)
+ {
++	struct fastrpc_channel_ctx *cctx = fl->cctx;
+ 	struct fastrpc_session_ctx *session = NULL;
+ 	unsigned long flags;
+ 	int i;
+@@ -1482,6 +1484,7 @@ static struct fastrpc_session_ctx *fastrpc_session_alloc(
+ 		if (!cctx->session[i].used && cctx->session[i].valid) {
+ 			cctx->session[i].used = true;
+ 			session = &cctx->session[i];
++			fl->client_id = FASTRPC_CLIENTID_MASK | i;
+ 			break;
+ 		}
+ 	}
+@@ -1506,7 +1509,7 @@ static int fastrpc_release_current_dsp_process(struct fastrpc_user *fl)
+ 	int tgid = 0;
+ 	u32 sc;
+ 
+-	tgid = fl->tgid;
++	tgid = fl->client_id;
+ 	args[0].ptr = (u64)(uintptr_t) &tgid;
+ 	args[0].length = sizeof(tgid);
+ 	args[0].fd = -1;
+@@ -1581,11 +1584,10 @@ static int fastrpc_device_open(struct inode *inode, struct file *filp)
+ 	INIT_LIST_HEAD(&fl->maps);
+ 	INIT_LIST_HEAD(&fl->mmaps);
+ 	INIT_LIST_HEAD(&fl->user);
+-	fl->tgid = current->tgid;
+ 	fl->cctx = cctx;
+ 	fl->is_secure_dev = fdevice->secure;
+ 
+-	fl->sctx = fastrpc_session_alloc(cctx);
++	fl->sctx = fastrpc_session_alloc(fl);
+ 	if (!fl->sctx) {
+ 		dev_err(&cctx->rpdev->dev, "No session available\n");
+ 		mutex_destroy(&fl->mutex);
+@@ -1649,7 +1651,7 @@ static int fastrpc_dmabuf_alloc(struct fastrpc_user *fl, char __user *argp)
+ static int fastrpc_init_attach(struct fastrpc_user *fl, int pd)
+ {
+ 	struct fastrpc_invoke_args args[1];
+-	int tgid = fl->tgid;
++	int tgid = fl->client_id;
+ 	u32 sc;
+ 
+ 	args[0].ptr = (u64)(uintptr_t) &tgid;
+@@ -1805,7 +1807,7 @@ static int fastrpc_req_munmap_impl(struct fastrpc_user *fl, struct fastrpc_buf *
+ 	int err;
+ 	u32 sc;
+ 
+-	req_msg.pgid = fl->tgid;
++	req_msg.pgid = fl->client_id;
+ 	req_msg.size = buf->size;
+ 	req_msg.vaddr = buf->raddr;
+ 
+@@ -1891,7 +1893,7 @@ static int fastrpc_req_mmap(struct fastrpc_user *fl, char __user *argp)
+ 		return err;
+ 	}
+ 
+-	req_msg.pgid = fl->tgid;
++	req_msg.pgid = fl->client_id;
+ 	req_msg.flags = req.flags;
+ 	req_msg.vaddr = req.vaddrin;
+ 	req_msg.num = sizeof(pages);
+@@ -1980,7 +1982,7 @@ static int fastrpc_req_mem_unmap_impl(struct fastrpc_user *fl, struct fastrpc_me
+ 		return -EINVAL;
+ 	}
+ 
+-	req_msg.pgid = fl->tgid;
++	req_msg.pgid = fl->client_id;
+ 	req_msg.len = map->len;
+ 	req_msg.vaddrin = map->raddr;
+ 	req_msg.fd = map->fd;
+@@ -2033,7 +2035,7 @@ static int fastrpc_req_mem_map(struct fastrpc_user *fl, char __user *argp)
+ 		return err;
+ 	}
+ 
+-	req_msg.pgid = fl->tgid;
++	req_msg.pgid = fl->client_id;
+ 	req_msg.fd = req.fd;
+ 	req_msg.offset = req.offset;
+ 	req_msg.vaddrin = req.vaddrin;
+-- 
+2.34.1
+

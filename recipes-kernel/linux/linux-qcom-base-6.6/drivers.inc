@@ -173,4 +173,6 @@ SRC_URI:append = " \
     file://qcs615/0010-FROMLIST-clk-qcom-videocc-qcs615-Add-QCS615-video-cl.patch \
     file://common/0004-FROMLIST-firmware-psci-Read-and-use-vendor-reset-typ.patch \
     file://qcs6490/0007-UPSTREAM-remoteproc-qcom_q6v5_pas-Add-SC7280-ADSP-CD.patch \
+    file://qcs9100/0001-FROMLIST-misc-fastrpc-Add-support-for-multiple-PD-from-one-pr.patch \
+    file://qcs9100/0002-FROMLIST-misc-fastrpc-Rename-tgid-and-pid-to-client_id.patch \
     "
