@@ -55,3 +55,4 @@ qcom_allow_ops_qtee_supplicant_persist(qcom_sfs_config_initrc_t)
 qcom_allow_ops_qtee_supplicant_data(qcom_sfs_config_initrc_t)
 
 init_use_script_ptys(qcom_sfs_config_initrc_t)
+allow qcom_sfs_config_initrc_t tmpfs_t:dir { search };
