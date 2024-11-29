@@ -46,8 +46,8 @@ SRC_URI:append:qcom = " file://apps/ \
             file://files/ \
 "
 
-RDEPENDS:${PN} += " \
-                   selinux-autorelabel \
+RDEPENDS:${PN} += "\
+    ${@bb.utils.contains('DISTRO_FEATURES', 'sota', 'selinux-autorelabel', '', d)} \
 "
 
 #enable test sepolicy
