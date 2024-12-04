@@ -1,12 +1,12 @@
 #!/bin/sh
 /usr/sbin/selinuxenabled 2>/dev/null || exit 0
 RESTORCON=/usr/sbin/restorecon
+OSTREE=/usr/bin/ostree
 
-sleep 5
 mkdir -p /var/rootdirs/home/root
 ${RESTORCON} -R  /var/rootdirs
 
-current_deployment=$(ostree admin status | awk '/^\*/ {print $3}')
+current_deployment=$(${OSTREE} admin status | awk '/^\*/ {print $3}')
 if [ -n "$current_deployment" ]; then
        restore_cookie="/etc/restore-$current_deployment"
 fi
