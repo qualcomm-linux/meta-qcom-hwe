@@ -64,6 +64,7 @@
 
 #gunyah dev node
 /dev/gunyah   -c gen_context(system_u:object_r:qcom_gunyah_device_t,s0)
+/dev/hvc0 -c gen_context(system_u:object_r:qcom_console_dev_t,s0)
 
 #coresight specific contexts specific to qcm6490
 /sys/devices/platform/soc@0/6b05000.etf/tmc_etf0/enable_sink      --      gen_context(system_u:object_r:qcom_coresight_t,s0)

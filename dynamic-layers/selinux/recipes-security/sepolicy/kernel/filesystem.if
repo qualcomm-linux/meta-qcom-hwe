@@ -92,3 +92,20 @@ interface(`fs_map_tmpfs_file',`
         allow $1 tmpfs_t:file map;
 ')
 
+########################################
+## <summary>
+##	Allow permissions for function_fs unmounting
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed to unmount f_fs.
+##	</summary>
+## </param>
+#
+interface(`fs_unmount_functionfs',`
+	gen_require(`
+		type functionfs_t;
+	')
+
+	allow $1 functionfs_t:filesystem { unmount };
+')

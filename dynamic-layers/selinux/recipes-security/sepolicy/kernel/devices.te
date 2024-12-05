@@ -65,6 +65,9 @@ dev_node(qcom_weston_socket_dev_t)
 type qcom_gunyah_device_t;
 dev_node(qcom_gunyah_device_t)
 
+type qcom_console_dev_t;
+dev_node(qcom_console_dev_t)
+
 # Specific to qcm6490
 genfscon sysfs /devices/platform/soc@0/6b05000.etf/tmc_etf0/enable_sink    gen_context(system_u:object_r:qcom_coresight_t,s0)
 genfscon sysfs /devices/platform/soc@0/6048000.etr/tmc_etr0/enable_sink    gen_context(system_u:object_r:qcom_coresight_t,s0)

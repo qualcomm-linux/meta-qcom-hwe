@@ -1,0 +1,15 @@
+# Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+permissive virtd_t;
+permissive virsh_t;
+
+allow virtd_t svirt_image_t:sock_file relabelto;
+allow virtd_t virt_etc_rw_t:file { execute execute_no_trans };
+allow virtlogd_t self:unix_dgram_socket create;
+allow virtd_t virt_var_lib_t:dir relabelfrom;
+allow virtlogd_t self:unix_dgram_socket write;
+
+fs_unmount_functionfs(virtd_t)
+fs_list_functionfs_dirs(virtd_t)
+fs_unmount_tmpfs(virtd_t)
