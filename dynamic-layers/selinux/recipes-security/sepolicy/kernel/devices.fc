@@ -53,7 +53,7 @@
 /dev/mem_buf_vm(/.*)?    -c gen_context(system_u:object_r:qcom_mem_buf_vm_dev_t,s0)
 
 #camera service nodes
-/dev/media[0-1]               -c gen_context(system_u:object_r:qcom_cam_server_dev_t,s0)
+/dev/media[0-2]               -c gen_context(system_u:object_r:qcom_cam_server_dev_t,s0)
 /dev/v4l-subdev[0-9]|1[0-8]   -c gen_context(system_u:object_r:qcom_cam_server_dev_t,s0)
 
 #gpu dev node
