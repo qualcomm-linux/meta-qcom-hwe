@@ -2,7 +2,7 @@
 KAS configuration for Qualcomm based platforms.
 
 ## Compatible Yocto project BSP version
-qcom-6.6.38-QLI.1.2-Ver.1.0
+qcom-6.6.52-QLI.1.3-Ver.1.0
 
 ## KAS build instructions
 
@@ -20,6 +20,10 @@ To build with KAS, follow these steps:
 	qcs6490-rb3gen2-core-kit.yml
 	qcs6490-rb3gen2-vision-kit.yml
 	qcs6490-rb3gen2-industrial-kit.yml
+	qcs615-adp-air.yml
+	qcs9075-rb8-core-kit-interface-plus-mezz.yml
+	qcs9075-rb8-core-kit.yml
+	qcs9075-ride-sx.yml
 
 4. To modify the default settings, use the environment variables provided below.
 
