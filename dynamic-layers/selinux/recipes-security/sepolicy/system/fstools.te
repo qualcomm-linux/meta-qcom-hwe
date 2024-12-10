@@ -2,3 +2,5 @@
 #SPDX-License-Identifier: BSD-3-Clause-Clear
 
 busybox_nosuid_execute(fsadm_t)
+files_read_boot_files(fsadm_t)
+files_rw_boot_symlinks(fsadm_t)
