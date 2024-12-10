@@ -1,0 +1,240 @@
+#This patch file is from Qualcomm Innovation Center, Inc. and is provided under the following license:
+#
+#Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+#SPDX-License-Identifier: BSD-3-Clause-Clear
+
+From f19f318872675e6e4e3deecc078ff8b18600f233 Mon Sep 17 00:00:00 2001
+From: Devanshi Bansal <quic_devanshi@quicinc.com>
+Date: Tue, 10 Dec 2024 09:24:27 +0530
+Subject: [PATCH] fix plane offset calculation for ubwc formats
+
+Change-Id: I0f071690dd2f130e6b710b05fe792a83528573d0
+
+Signed-off-by: Devanshi Bansal <quic_devanshi@quicinc.com>
+---
+ inc/gbm_priv.h |  2 +-
+ src/gbm.c      | 12 +++----
+ src/msmgbm.c   | 86 ++++++++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 84 insertions(+), 16 deletions(-)
+
+diff --git a/inc/gbm_priv.h b/inc/gbm_priv.h
+index 63b793e..ce12dfe 100644
+--- a/inc/gbm_priv.h
++++ b/inc/gbm_priv.h
+@@ -972,7 +972,7 @@ struct gbm_bo {
+ 
+    void (*bo_unmap)(void *map_data);
+    uint32_t (*stride_for_plane)(int plane, struct gbm_bo *);
+-
++   uint32_t (*bo_get_offset)(struct gbm_bo *bo, int plane);
+ };
+ 
+ 
+diff --git a/src/gbm.c b/src/gbm.c
+index 4d6284a..34bc849 100644
+--- a/src/gbm.c
++++ b/src/gbm.c
+@@ -348,14 +348,10 @@ uint32_t
+ gbm_bo_get_offset(struct gbm_bo *bo, int plane)
+ {
+   if(bo!=NULL){
+-         if (plane <= MAX_NUM_OF_PLANES-1) {
+-            return bo->buf_lyt.planes[plane].offset;
+-         } else {
+-            fprintf(stderr,"%s(%d): invalid plane \n",__func__,__LINE__);
+-            return 0;
+-         }
+-    }
+-    else {
++         if (plane <= MAX_NUM_OF_PLANES-1)
++              return bo->bo_get_offset(bo, plane);
++  }
++  else {
+         fprintf(stderr,"%s(%d): NULL or Invalid bo pointer\n",__func__,__LINE__);
+         return 0;
+     }
+diff --git a/src/msmgbm.c b/src/msmgbm.c
+index 5bfbd4f..593ca42 100644
+--- a/src/msmgbm.c
++++ b/src/msmgbm.c
+@@ -625,6 +625,73 @@ is_format_rgb(uint32_t format)
+     return result;
+ }
+ 
++static uint32_t
++get_yuv_ubwc_plane_offset(int width, int height, int color_format, int plane)
++{
++    unsigned int y_meta_stride = 0, y_meta_height = 0, y_meta_size = 0;
++    unsigned int y_stride = 0, y_height = 0, y_size = 0;
++    unsigned int c_meta_stride = 0, c_meta_height = 0, c_meta_size = 0;
++    unsigned int c_stride = 0;
++    unsigned int alignment = 4096;
++
++    y_meta_stride = CalculateYMetaStride(color_format, width);
++    y_meta_height = CalculateYMetaScanlines(color_format, height);
++    y_meta_size = ALIGN((y_meta_stride * y_meta_height), alignment);
++
++    y_stride = CalculateYStride(color_format, width);
++    y_height = CalculateYScanlines(color_format, height);
++    y_size = ALIGN((y_stride * y_height), alignment);
++
++    uint32_t offset = 0;
++    offset = (plane == 0) ? 0 : (y_meta_size + y_size);
++
++    return offset;
++}
++
++static uint32_t
++msmgbm_bo_get_offset(struct gbm_bo *bo, int plane)
++{
++  uint32_t offset = 0;
++  if(is_format_rgb(bo->format) || (bo->format == GBM_FORMAT_C8_LINEAR)) {
++     return offset;
++  }
++
++  if (!is_ubwc_enabled(bo->format, bo->usage_flags, bo->usage_flags)) {
++     offset = (!plane) ? 0 : bo->aligned_width * bo->aligned_height *
++                             GetFormatBpp(bo->format, bo->usage_flags);
++     return offset;
++  } else {
++    switch(bo->format) {
++        //Semiplanar
++        case GBM_FORMAT_YCbCr_420_SP:
++        case GBM_FORMAT_YCrCb_420_SP:
++        case GBM_FORMAT_YCbCr_420_SP_VENUS:
++        case GBM_FORMAT_NV12_ENCODEABLE: //Same as YCbCr_420_SP_VENUS
++#ifdef COLOR_FMT_NV12_512
++        case GBM_FORMAT_NV12_HEIF:
++#endif
++        case GBM_FORMAT_NV12:
++        case GBM_FORMAT_NV21_ZSL:
++        case GBM_FORMAT_YCbCr_420_SP_VENUS_UBWC:
++           offset = get_yuv_ubwc_plane_offset(bo->aligned_width, bo->aligned_height,
++                                  FMT_NV12_UBWC, plane);
++            break;
++        case GBM_FORMAT_YCbCr_420_TP10_UBWC:
++           offset = get_yuv_ubwc_plane_offset(bo->aligned_width, bo->aligned_height,
++                                  FMT_NV12_BPP10_UBWC, plane);
++            break;
++        case GBM_FORMAT_YCbCr_420_P010_UBWC:
++            offset = get_yuv_ubwc_plane_offset(bo->aligned_width, bo->aligned_height,
++                                   FMT_P010_UBWC, plane);
++            break;
++        default:
++            break;
++    }
++    return offset;
++  }
++}
++
++
+ static int init_metadata(uint32_t mt_size, int meta_fd)
+ {
+     struct meta_data_t *data = NULL;
+@@ -787,13 +854,6 @@ msmgbm_bo_create(struct gbm_device *gbm,
+     int data_fd = 0;
+     int mt_data_fd = 0;
+     struct drm_prime_handle drm_args;
+-    /* Callers of this may specify a modifier, or a dri usage, but not both. The
+-     * newer modifier interface deprecates the older usage flags.
+-     */
+-   if(usage && count) {
+-     LOG(LOG_ERR," Usage and modifier both cannot be supplied \n");
+-     return NULL;
+-   }
+ 
+    /* Currently these two flags are equivalent */
+     if (usage & GBM_BO_USE_PROTECTED)
+@@ -1015,6 +1075,7 @@ msmgbm_bo_create(struct gbm_device *gbm,
+     gbmbo->stride_for_plane = msmgbm_stride_for_plane;
+     gbmbo->bo_get_device = msmgbm_bo_get_device;
+     gbmbo->bo_write = msmgbm_bo_write;
++    gbmbo->bo_get_offset = msmgbm_bo_get_offset;
+     gbmbo->bpp = Bpp;
+     msm_gbmbo->device = msm_dev;
+     msm_gbmbo->cpuaddr = base;
+@@ -1047,6 +1108,7 @@ msmgbm_bo_import_fd(struct msmgbm_device *msm_dev,
+     unsigned int aligned_width;
+     unsigned int aligned_height;
+     bool register_map = 0;
++    uint64_t modifier = 0;
+ 
+     if (buffer_info == NULL){
+         LOG(LOG_ERR,"INVALID buffer_info\n");
+@@ -1168,6 +1230,7 @@ msmgbm_bo_import_fd(struct msmgbm_device *msm_dev,
+         meta_data = (struct meta_data_t *)gbo_private_info.mt_cpuaddr;
+         if (meta_data->is_buffer_ubwc) {
+             bufdesc.Usage |= GBM_BO_USAGE_UBWC_ALIGNED_QTI | GBM_BO_USAGE_HW_RENDERING_QTI;
++            modifier = DRM_FORMAT_MOD_QCOM_COMPRESSED;
+         }
+     }
+ 
+@@ -1200,11 +1263,13 @@ msmgbm_bo_import_fd(struct msmgbm_device *msm_dev,
+     gbmbo->size          = size;
+     gbmbo->aligned_width  = aligned_width;
+     gbmbo->aligned_height = aligned_height;
++    gbmbo->modifier      = modifier;
+     gbmbo->bo_destroy    = msmgbm_bo_destroy;
+     gbmbo->bo_get_fd     = msmgbm_bo_get_fd;
+     gbmbo->stride_for_plane = msmgbm_stride_for_plane;
+     gbmbo->bo_get_device = msmgbm_bo_get_device;
+     gbmbo->bo_write      = msmgbm_bo_write;
++    gbmbo->bo_get_offset = msmgbm_bo_get_offset;
+     msm_gbmbo->device    = msm_dev;
+     msm_gbmbo->cpuaddr   = gbo_private_info.cpuaddr;
+     msm_gbmbo->mt_cpuaddr   = gbo_private_info.mt_cpuaddr;
+@@ -1420,11 +1485,13 @@ msmgbm_bo_import_fd_modifier(struct msmgbm_device *msm_dev,
+     gbmbo->aligned_width   = aligned_width;
+     gbmbo->aligned_height  = aligned_height;
+     gbmbo->size            = size;
++    gbmbo->modifier        = fd_data->modifier;
+     gbmbo->bo_destroy      = msmgbm_bo_destroy;
+     gbmbo->bo_get_fd       = msmgbm_bo_get_fd;
+     gbmbo->stride_for_plane = msmgbm_stride_for_plane;
+     gbmbo->bo_get_device   = msmgbm_bo_get_device;
+     gbmbo->bo_write        = msmgbm_bo_write;
++    gbmbo->bo_get_offset   = msmgbm_bo_get_offset;
+     msm_gbmbo->device      = msm_dev;
+     msm_gbmbo->cpuaddr   = gbo_private_info.cpuaddr;
+     msm_gbmbo->mt_cpuaddr = gbo_private_info.mt_cpuaddr;
+@@ -1463,6 +1530,7 @@ msmgbm_bo_import_gbm_buf(struct msmgbm_device *msm_dev,
+     unsigned int size = 0, mt_size;
+     unsigned int aligned_width;
+     unsigned int aligned_height;
++    uint64_t modifier = 0;
+ 
+     struct meta_data_t *meta_data = NULL;
+     struct gbm_buf_info temp_buf_info;
+@@ -1568,6 +1636,7 @@ msmgbm_bo_import_gbm_buf(struct msmgbm_device *msm_dev,
+     if(meta_data != NULL) {
+         if (meta_data->is_buffer_ubwc) {
+             bufdesc.Usage |= GBM_BO_USAGE_UBWC_ALIGNED_QTI | GBM_BO_USAGE_HW_RENDERING_QTI;
++            modifier = DRM_FORMAT_MOD_QCOM_COMPRESSED;
+         }
+     }
+ 
+@@ -1675,11 +1744,13 @@ msmgbm_bo_import_gbm_buf(struct msmgbm_device *msm_dev,
+     gbmbo->aligned_width   = aligned_width;
+     gbmbo->aligned_height  = aligned_height;
+     gbmbo->size            = size;
++    gbmbo->modifier        = modifier;
+     gbmbo->bo_destroy      = msmgbm_bo_destroy;
+     gbmbo->bo_get_fd       = msmgbm_bo_get_fd;
+     gbmbo->stride_for_plane = msmgbm_stride_for_plane;
+     gbmbo->bo_get_device   = msmgbm_bo_get_device;
+     gbmbo->bo_write        = msmgbm_bo_write;
++    gbmbo->bo_get_offset   = msmgbm_bo_get_offset;
+     msm_gbmbo->device      = msm_dev;
+     msm_gbmbo->cpuaddr   = gbo_private_info.cpuaddr;
+     msm_gbmbo->mt_cpuaddr = gbo_private_info.mt_cpuaddr;
+@@ -2401,6 +2472,7 @@ struct gbm_bo*  msmgbm_bo_import_from_name(struct gbm_device *dev, unsigned int
+     gbmbo->stride_for_plane = msmgbm_stride_for_plane;
+     gbmbo->bo_get_device = msmgbm_bo_get_device;
+     gbmbo->bo_write = msmgbm_bo_write;
++    gbmbo->bo_get_offset = msmgbm_bo_get_offset;
+     msm_gbmbo->device = msm_dev;
+     msm_gbmbo->current_state =  GBM_BO_STATE_FREE;
+     msm_gbmbo->magic = QCMAGIC;
+-- 
+2.34.1
+

@@ -23,7 +23,8 @@ SRC_URI =  "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=display/vendor/qcom/ope
 S = "${WORKDIR}/display/vendor/qcom/opensource/display/libgbm"
 
 SRC_URI:append = " file://pkgconfig/gbm.pc "
-SRC_URI:append:qcs9100 = " file://files/0001-gbm-decouple-gbm-with-downstream-display-driver.patch "
+SRC_URI:append:qcs9100 = " file://files/0001-gbm-decouple-gbm-with-downstream-display-driver.patch \
+                           file://files/0001-fix-plane-offset-calculation-for-ubwc-formats.patch"
 SRC_URI:append:qcs8300-ride-sx = " file://files/0001-gbm-decouple-gbm-with-downstream-display-driver.patch "
 
 inherit autotools-brokensep pkgconfig
