@@ -102,4 +102,6 @@ SRC_URI:append = " \
     file://qcs6490/0002-UPSTREAM-dt-bindings-remoteproc-qcom-sc7180-pas-Add-.patch \
     file://qcs6490/0003-UPSTREAM-dt-bindings-remoteproc-qcom-sc7180-pas-Fix-.patch \
     file://qcs6490/0006-UPSTREAM-dt-bindings-remoteproc-qcom-sc7180-pas-Add-.patch \
+    file://qcs8300/0001-FROMLIST-dt-bindings-crypto-qcom-prng-document-QCS83.patch \
+    file://qcs8300/0001-FROMLIST-dt-bindings-crypto-qcom-qce-document-the-QC.patch \
     "

@@ -123,6 +123,8 @@ SRC_URI:append = " \
     file://qcs8300/0001-FROMLIST-arm64-dts-qcom-Add-coresight-nodes-for-QCS8.patch \
     file://qcs8300/0002-FROMLIST-arm64-dts-qcom-qcs8300-Add-watchdog-node.patch \
     file://qcs8300/0001-FROMLIST-arm64-dts-qcom-Add-support-for-usb-nodes-on.patch \
+    file://qcs8300/0001-FROMLIST-arm64-dts-qcom-qcs8300-add-TRNG-node.patch \
+    file://qcs8300/0001-FROMLIST-arm64-dts-qcom-qcs8300-add-QCrypto-nodes.patch \
     "
 
 # qcs8300 board dts patches

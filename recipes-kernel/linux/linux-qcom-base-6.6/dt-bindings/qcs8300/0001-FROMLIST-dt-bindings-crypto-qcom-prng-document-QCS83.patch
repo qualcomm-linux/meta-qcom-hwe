@@ -1,0 +1,30 @@
+From 7ed073af02188ebc4c5b7a7f9a5a411c1cf4fabd Mon Sep 17 00:00:00 2001
+From: Yuvaraj Ranganathan <quic_yrangana@quicinc.com>
+Date: Wed, 27 Nov 2024 16:19:56 +0530
+Subject: [PATCH] FROMLIST: dt-bindings: crypto: qcom,prng: document QCS8300
+
+Document QCS8300 compatible for the True Random Number
+Generator.
+
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Signed-off-by: Yuvaraj Ranganathan <quic_yrangana@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241125064317.1748451-2-quic_yrangana@quicinc.com/]
+---
+ Documentation/devicetree/bindings/crypto/qcom,prng.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/crypto/qcom,prng.yaml b/Documentation/devicetree/bindings/crypto/qcom,prng.yaml
+index 04ddcc0f7165..8c5d1a2ad23b 100644
+--- a/Documentation/devicetree/bindings/crypto/qcom,prng.yaml
++++ b/Documentation/devicetree/bindings/crypto/qcom,prng.yaml
+@@ -17,6 +17,7 @@ properties:
+           - qcom,prng-ee  # 8996 and later using EE
+       - items:
+           - enum:
++              - qcom,qcs8300-trng
+               - qcom,sm8450-trng
+           - const: qcom,trng
+ 
+-- 
+2.34.1
+

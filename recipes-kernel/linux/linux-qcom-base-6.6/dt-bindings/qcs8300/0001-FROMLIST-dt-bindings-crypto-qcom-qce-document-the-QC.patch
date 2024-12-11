@@ -1,0 +1,30 @@
+From a4b6a58fec4c260b426ed54a223e50fa3572370d Mon Sep 17 00:00:00 2001
+From: Yuvaraj Ranganathan <quic_yrangana@quicinc.com>
+Date: Sun, 1 Dec 2024 16:27:49 +0530
+Subject: [PATCH] FROMLIST: dt-bindings: crypto: qcom-qce: document the QCS8300
+ crypto engine
+
+Document the crypto engine on the QCS8300 Platform.
+
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Signed-off-by: Yuvaraj Ranganathan <quic_yrangana@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241125111923.2218374-2-quic_yrangana@quicinc.com/]
+---
+ Documentation/devicetree/bindings/crypto/qcom-qce.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/crypto/qcom-qce.yaml b/Documentation/devicetree/bindings/crypto/qcom-qce.yaml
+index 5b1c0b2fcbe6..a1434d832d16 100644
+--- a/Documentation/devicetree/bindings/crypto/qcom-qce.yaml
++++ b/Documentation/devicetree/bindings/crypto/qcom-qce.yaml
+@@ -44,6 +44,7 @@ properties:
+ 
+       - items:
+           - enum:
++              - qcom,qcs8300-qce
+               - qcom,sa8775p-qce
+               - qcom,sm8250-qce
+               - qcom,sm8350-qce
+-- 
+2.34.1
+
