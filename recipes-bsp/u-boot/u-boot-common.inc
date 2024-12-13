@@ -27,7 +27,8 @@ SRC_URI += "file://0001-PENDING-arm64-dts-qcom-qcs9100-Add-support-for-the-Q.pat
 	    file://0009-PENDING-smem-Added-socinfo-header-file.patch \
 	    file://0010-PENDING-arm64-dts-qcom-qcs9100-Added-memory-region-f.patch \
 	    file://0011-PENDING-smem-Updated-smem-driver-to-support-QCS9100.patch \
-	    file://0012-PENDING-efi_loader-Add-multidt-support.patch"
+	    file://0012-PENDING-efi_loader-Add-multidt-support.patch \
+	    file://0013-PENDING-arm64-dts-qcom-qcs9100-Update-memory-map-as-.patch"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"

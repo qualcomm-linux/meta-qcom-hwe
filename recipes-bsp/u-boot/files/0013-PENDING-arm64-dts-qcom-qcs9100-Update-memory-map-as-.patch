@@ -1,0 +1,40 @@
+From dbd37e7fc8c0d7d7ec11712a660b4346abc4fafe Mon Sep 17 00:00:00 2001
+From: Varadarajan Narayanan <quic_varada@quicinc.com>
+Date: Fri, 13 Dec 2024 11:11:54 +0530
+Subject: [PATCH] PENDING: arm64: dts: qcom: qcs9100: Update memory map as per
+ latest
+
+Modified the memory map since there were change in the recent memory map
+
+Signed-off-by: Varadarajan Narayanan <quic_varada@quicinc.com>
+Upstream-Status: Pending
+---
+ dts/upstream/src/arm64/qcom/qcs9100-ride-r3.dts | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/dts/upstream/src/arm64/qcom/qcs9100-ride-r3.dts b/dts/upstream/src/arm64/qcom/qcs9100-ride-r3.dts
+index a02a8faace..f0453315a0 100644
+--- a/dts/upstream/src/arm64/qcom/qcs9100-ride-r3.dts
++++ b/dts/upstream/src/arm64/qcom/qcs9100-ride-r3.dts
+@@ -13,12 +13,12 @@
+         memory@80000000 {
+                 device_type = "memory";
+                 reg = <0x0 0x80000000 0x0 0x3ee00000>,
+-                        <0x0 0xc0000000 0x0 0x0fd00000>,
+-                        <0xD 0x00000000 0x2 0x80000000>,
+-                        <0xA 0x80000000 0x1 0x80000000>,
++                        <0x0 0xc0000000 0x0 0x04d00000>,
++                        <0xD 0x00000000 0x2 0x54100000>,
++                        <0xA 0x80000000 0x1 0x52d00000>,
+                         <0x9 0x00000000 0x1 0x80000000>,
+-                        <0x1 0x00000000 0x3 0x00000000>,
+-                        <0x0 0xd0000000 0x0 0x01900000>,
+-                        <0x0 0xd3500000 0x0 0x2cb00000>;
++                        <0x1 0x00000000 0x2 0xf7500000>,
++                        <0x0 0xd0000000 0x0 0x00100000>,
++                        <0x0 0xd3500000 0x0 0x07c00000>;
+         };
+ };
+-- 
+2.34.1
+
