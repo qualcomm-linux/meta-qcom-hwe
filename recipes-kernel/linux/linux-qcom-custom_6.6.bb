@@ -72,6 +72,11 @@ do_configure:prepend() {
         printf "%s%s" +g $head > ${B}/.scmversion
     fi
 
+    if [ ! -z "${LINUX_VERSION_EXTENSION}" ]; then
+        echo "# Global settings from linux recipe" >> ${B}/.config
+        echo "CONFIG_LOCALVERSION="\"${LINUX_VERSION_EXTENSION}\" >> ${B}/.config
+    fi
+
     # Check for kernel config fragments.  The assumption is that the config
     # fragment will be specified with the absolute path.  For example:
     #   * ${WORKDIR}/config1.cfg
@@ -100,8 +105,6 @@ do_configure:prepend() {
         ( cd ${WORKDIR} && ${S}/scripts/kconfig/merge_config.sh -m -r -O ${B} ${B}/.config ${KERNEL_CONFIG_FRAGMENTS} 1>&2 )
     fi
 
-    kernel_conf_variable LOCALVERSION "\"${LOCALVERSION}\""
-    kernel_conf_variable LOCALVERSION_AUTO y
 }
 
 do_configure:append() {
