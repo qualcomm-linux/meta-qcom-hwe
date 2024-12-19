@@ -23,7 +23,6 @@ RDEPENDS:${PN} = "\
     bt-cert \
     bt-dlkm-kernel \
     bthost-ipc \
-    btftm \
     btdevicetree \
-    bluetooth-tools "
+    "
 
