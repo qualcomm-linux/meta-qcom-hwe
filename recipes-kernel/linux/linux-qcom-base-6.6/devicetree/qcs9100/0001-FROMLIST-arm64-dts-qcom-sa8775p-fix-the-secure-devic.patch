@@ -1,0 +1,31 @@
+From 9ca85c78788a76dbbf53b7a243d1fe6faf2d4e26 Mon Sep 17 00:00:00 2001
+From: Jie Gan <quic_jiegan@quicinc.com>
+Date: Thu, 19 Dec 2024 16:39:43 +0800
+Subject: [PATCH] FROMLIST: arm64: dts: qcom: sa8775p: fix the secure device
+ bootup issue
+
+The secure device(fused) cannot bootup with TPDM_DCC device. So
+disable it in DT.
+
+Signed-off-by: Jie Gan <quic_jiegan@quicinc.com>
+Link: https://lore.kernel.org/all/20241219025216.3463527-1-quic_jiegan@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241219025216.3463527-1-quic_jiegan@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/sa8775p.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sa8775p.dtsi b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+index 3b53258ce9e0..a77da1f7d3aa 100644
+--- a/arch/arm64/boot/dts/qcom/sa8775p.dtsi
++++ b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+@@ -1973,6 +1973,7 @@ tpdm@4003000 {
+ 
+ 			qcom,cmb-element-bits = <32>;
+ 			qcom,cmb-msrs-num = <32>;
++			status = "disabled";
+ 
+ 			out-ports {
+ 				port {
+-- 
+2.34.1
+
