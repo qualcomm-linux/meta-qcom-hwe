@@ -1,0 +1,40 @@
+From 242fcad29a7dc87a2eb37b57844b04f92bfd7051 Mon Sep 17 00:00:00 2001
+From: Yogesh Lal <quic_ylal@quicinc.com>
+Date: Fri, 20 Dec 2024 15:09:07 +0530
+Subject: [PATCH] FROMLIST: irqchip: gic-v3: Handle failure case of CPU enters
+ low power state
+
+Adding a new condition in gic_cpu_pm_notifier to address instances
+where the CPU fails to enter low power mode (CPU_PM_ENTER_FAILED).
+The CPU_PM framework signals CPU_PM_ENTER_FAILED upon such failures.
+
+When the CPU attempts to enter low power mode, it disables the
+redistributor and Group 1 interrupts and reinitializes the system
+registers upon wakeup.
+
+In case of failure while entering low power mode, it is necessary
+to re-enable the redistributor and Group 1 interrupts to restore
+normal operation.
+
+Signed-off-by: Yogesh Lal <quic_ylal@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241220093907.2747601-1-quic_ylal@quicinc.com/]
+---
+ drivers/irqchip/irq-gic-v3.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/irqchip/irq-gic-v3.c b/drivers/irqchip/irq-gic-v3.c
+index f59ac9586b7b..1d001c28fea9 100644
+--- a/drivers/irqchip/irq-gic-v3.c
++++ b/drivers/irqchip/irq-gic-v3.c
+@@ -1453,7 +1453,7 @@ static int gic_retrigger(struct irq_data *data)
+ static int gic_cpu_pm_notifier(struct notifier_block *self,
+ 			       unsigned long cmd, void *v)
+ {
+-	if (cmd == CPU_PM_EXIT) {
++	if (cmd == CPU_PM_EXIT || cmd == CPU_PM_ENTER_FAILED) {
+ 		if (gic_dist_security_disabled())
+ 			gic_enable_redist(true);
+ 		gic_cpu_sys_reg_init();
+-- 
+2.46.0
+
