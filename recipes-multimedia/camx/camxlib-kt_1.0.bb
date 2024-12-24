@@ -30,5 +30,8 @@ FILES:${PN} = "\
     ${nonarch_base_libdir}/firmware/*"
 FILES:${PN}-dev = ""
 
+#Skips check for archtecture
 INSANE_SKIP:${PN}-dbg = "arch"
 INSANE_SKIP:${PN} = "arch"
+# The modules require .so to be dynamicaly loaded
+INSANE_SKIP:${PN} += "dev-so"

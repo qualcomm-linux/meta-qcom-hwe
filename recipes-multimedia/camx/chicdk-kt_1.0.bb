@@ -25,4 +25,6 @@ FILES:${PN}-dev = ""
 
 INSANE_SKIP = "1"
 INSANE_SKIP:${PN} = "already-stripped"
-
+#The modules require .so to be dynamicaly loaded
+INSANE_SKIP:${PN} += "dev-so"
+INSANE_SKIP:${PN} += "file-rdeps"
