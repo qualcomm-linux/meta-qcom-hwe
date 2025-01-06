@@ -160,7 +160,7 @@ jobs:
           cat "${JOB_FILE_NAME}"
           echo "job_file_name=${JOB_FILE_NAME}" >> "${GITHUB_OUTPUT}"
 
-      - uses: foundriesio/lava-action@v2
+      - uses: foundriesio/lava-action@v3
         with:
           lava_token: ${{ secrets.LAVATOKEN }}
           lava_url: 'lava.infra.foundries.io'
