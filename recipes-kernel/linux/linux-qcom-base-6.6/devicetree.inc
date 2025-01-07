@@ -98,12 +98,25 @@ SRC_URI:append = " \
     file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-Add-LLCC-support-for-.patch \
     file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-Add-QUPv3-configurati.patch \
     file://qcs615/0003-FROMLIST-arm64-dts-qcom-qcs615-add-UFS-node.patch \
-    file://qcs615/0003-FROMLIST-arm64-dts-qcom-qcs615-add-ethernet-node.patch \
     file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-add-SDHC1-and-SDHC2.patch \
     file://qcs615/0003-FROMLIST-arm64-dts-qcom-qcs615-add-AOSS_QMP-node.patch \
     file://qcs615/0001-FROMLIST-arm64-dts-qcom-Add-coresight-nodes-for-QCS6.patch \
     file://qcs615/0001-FROMLIST-arm64-dts-qcom-Add-clock-nodes-for-multimed.patch \
     file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-Adds-SPMI-support.patch \
+    file://qcs615/0005-FROMLIST-arm64-dts-qcom-qcs615-enable-pcie-for-qcs61.patch \
+    file://qcs615/0001-BACKPORT-FROMLIST-arm64-dts-qcom-Add-support-for-usb.patch \
+    file://qcs615/0008-FROMLIST-arm64-dts-qcom-Add-display-support-for-QCS615.patch \
+    file://qcs615/0003-FROMLIST-arm64-dts-qcom-add-venus-node-for-the-qcs61.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-Add-cpu-scaling-clock-node.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-add-ethernet-node.patch \
+    file://qcs615/0001-QCLINUX-Revert-arm64-dts-qcom-qcs615-enable-PCIe-for.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-Add-CPU-capacity-and-.patch \
+    file://qcs615/0007-FROMLIST-arm64-dts-qcom-Add-DisplayPort-support-for-.patch \
+    file://qcs615/0002-FROMLIST-arm64-dts-qcom-qcs615-add-the-GPU-SMMU-node.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-add-dma-coherent-for-t.patch \
+    file://qcs615/0002-FROMLIST-arm64-dts-qcom-qcs615-Add-CPU-and-LLCC-BWMO.patch \
+    file://qcs615/0003-FROMLIST-arm64-dts-qcom-qcs615-Add-gpu-and-gmu-nodes.patch \
+    file://qcs615/0001-BACKPORT-FROMLIST-arm64-dts-qcom-qcs615-Add-support-.patch \
     "
 
 # qcs615 board dts patches
@@ -114,6 +127,16 @@ SRC_URI:append = " \
     file://qcs615/0004-FROMLIST-arm64-dts-qcom-qcs615-ride-Enable-ethernet-.patch \
     file://qcs615/0002-FROMLIST-arm64-dts-qcom-qcs615-ride-Enable-SDHC1-and-SDHC2.patch\
     file://qcs615/0002-FROMLIST-arm64-dts-qcom-qcs615-ride-Enable-PMIC-peri.patch \
+    file://qcs615/0006-FROMLIST-arm64-dts-qcom-qcs615-enable-pcie-for-qcs61.patch \
+    file://qcs615/0002-FROMLIST-arm64-dts-qcom-Enable-Primary-USB-controlle.patch \
+    file://qcs615/0009-FROMLIST-arm64-dts-qcom-Add-display-support-for-QCS615-RIDE-b.patch \
+    file://qcs615/0004-FROMLIST-arm64-dts-qcom-qcs615-ride-enable-venus-nod.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-add-WiFi-BT-nodes.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-ride-Fixing-power-iss.patch \
+    file://qcs615/0008-FROMLIST-arm64-dts-qcom-Enable-DisplayPort-on-QCS615.patch \
+    file://qcs615/0004-FROMLIST-arm64-dts-qcom-qcs615-ride-Enable-Adreno-61.patch \
+    file://qcs615/0002-BACKPORT-FROMLIST-arm64-dts-qcom-qcs615-ride-Enable-.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-ride-Tune-RX-sampling.patch \
     "
 
 # qcs8300 dtsi patches

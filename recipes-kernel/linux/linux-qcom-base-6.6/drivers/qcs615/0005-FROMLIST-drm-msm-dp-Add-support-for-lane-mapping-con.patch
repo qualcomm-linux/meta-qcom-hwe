@@ -1,0 +1,150 @@
+From 7a01d948bc3375675b8ab0bbad48d60c11b38a6c Mon Sep 17 00:00:00 2001
+From: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Date: Fri, 22 Nov 2024 16:33:20 +0800
+Subject: [PATCH 5/8] FROMLIST: drm/msm/dp: Add support for lane mapping
+ configuration
+
+Add the ability to configure lane mapping for the DP controller. This is
+required when the platform's lane mapping does not follow the default
+order (0, 1, 2, 3). The mapping rules are now configurable via the
+`data-lane` property in the devicetree. This property defines the
+logical-to-physical lane mapping sequence, ensuring correct lane
+assignment for non-default configurations.
+
+Signed-off-by: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Link: https://lore.kernel.org/all/20241129-add-displayport-support-for-qcs615-platform-v1-5-09a4338d93ef@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241129-add-displayport-support-for-qcs615-platform-v1-5-09a4338d93ef@quicinc.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_catalog.c | 11 +++++------
+ drivers/gpu/drm/msm/dp/dp_catalog.h |  2 +-
+ drivers/gpu/drm/msm/dp/dp_ctrl.c    |  2 +-
+ drivers/gpu/drm/msm/dp/dp_display.c |  1 +
+ drivers/gpu/drm/msm/dp/dp_panel.h   |  1 +
+ drivers/gpu/drm/msm/dp/dp_parser.c  | 11 +++++++++--
+ drivers/gpu/drm/msm/dp/dp_parser.h  |  1 +
+ 7 files changed, 19 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_catalog.c b/drivers/gpu/drm/msm/dp/dp_catalog.c
+index 5142aeb705a4..492ea4091c5e 100644
+--- a/drivers/gpu/drm/msm/dp/dp_catalog.c
++++ b/drivers/gpu/drm/msm/dp/dp_catalog.c
+@@ -351,17 +351,16 @@ void dp_catalog_ctrl_config_ctrl(struct dp_catalog *dp_catalog, u32 cfg)
+ 	dp_write_link(catalog, REG_DP_CONFIGURATION_CTRL, cfg);
+ }
+ 
+-void dp_catalog_ctrl_lane_mapping(struct dp_catalog *dp_catalog)
++void dp_catalog_ctrl_lane_mapping(struct dp_catalog *dp_catalog, u32 *l_map)
+ {
+ 	struct dp_catalog_private *catalog = container_of(dp_catalog,
+ 				struct dp_catalog_private, dp_catalog);
+-	u32 ln_0 = 0, ln_1 = 1, ln_2 = 2, ln_3 = 3; /* One-to-One mapping */
+ 	u32 ln_mapping;
+ 
+-	ln_mapping = ln_0 << LANE0_MAPPING_SHIFT;
+-	ln_mapping |= ln_1 << LANE1_MAPPING_SHIFT;
+-	ln_mapping |= ln_2 << LANE2_MAPPING_SHIFT;
+-	ln_mapping |= ln_3 << LANE3_MAPPING_SHIFT;
++	ln_mapping = l_map[0] << LANE0_MAPPING_SHIFT;
++	ln_mapping |= l_map[1] << LANE1_MAPPING_SHIFT;
++	ln_mapping |= l_map[2] << LANE2_MAPPING_SHIFT;
++	ln_mapping |= l_map[3] << LANE3_MAPPING_SHIFT;
+ 
+ 	dp_write_link(catalog, REG_DP_LOGICAL2PHYSICAL_LANE_MAPPING,
+ 			ln_mapping);
+diff --git a/drivers/gpu/drm/msm/dp/dp_catalog.h b/drivers/gpu/drm/msm/dp/dp_catalog.h
+index 38786e855b51..85b01753e24a 100644
+--- a/drivers/gpu/drm/msm/dp/dp_catalog.h
++++ b/drivers/gpu/drm/msm/dp/dp_catalog.h
+@@ -91,7 +91,7 @@ u32 dp_catalog_aux_get_irq(struct dp_catalog *dp_catalog);
+ /* DP Controller APIs */
+ void dp_catalog_ctrl_state_ctrl(struct dp_catalog *dp_catalog, u32 state);
+ void dp_catalog_ctrl_config_ctrl(struct dp_catalog *dp_catalog, u32 config);
+-void dp_catalog_ctrl_lane_mapping(struct dp_catalog *dp_catalog);
++void dp_catalog_ctrl_lane_mapping(struct dp_catalog *dp_catalog, u32 *l_map);
+ void dp_catalog_ctrl_mainlink_ctrl(struct dp_catalog *dp_catalog, bool enable);
+ void dp_catalog_ctrl_psr_mainlink_enable(struct dp_catalog *dp_catalog, bool enable);
+ void dp_catalog_ctrl_config_misc(struct dp_catalog *dp_catalog, u32 cc, u32 tb);
+diff --git a/drivers/gpu/drm/msm/dp/dp_ctrl.c b/drivers/gpu/drm/msm/dp/dp_ctrl.c
+index 7472dfd631b8..1c128a54ec33 100644
+--- a/drivers/gpu/drm/msm/dp/dp_ctrl.c
++++ b/drivers/gpu/drm/msm/dp/dp_ctrl.c
+@@ -160,7 +160,7 @@ static void dp_ctrl_configure_source_params(struct dp_ctrl_private *ctrl)
+ {
+ 	u32 cc, tb;
+ 
+-	dp_catalog_ctrl_lane_mapping(ctrl->catalog);
++	dp_catalog_ctrl_lane_mapping(ctrl->catalog, ctrl->panel->lane_map);
+ 	dp_catalog_ctrl_mainlink_ctrl(ctrl->catalog, true);
+ 
+ 	dp_ctrl_config_ctrl(ctrl);
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index 5e25c3e36a5d..6ea1d6d10aa3 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -416,6 +416,7 @@ static int dp_display_process_hpd_high(struct dp_display_private *dp)
+ 
+ 	dp->panel->max_dp_lanes = dp->parser->max_dp_lanes;
+ 	dp->panel->max_dp_link_rate = dp->parser->max_dp_link_rate;
++	memcpy(dp->panel->lane_map, dp->parser->lane_map, DP_MAX_NUM_DP_LANES * sizeof(u32));
+ 
+ 	drm_dbg_dp(dp->drm_dev, "max_lanes=%d max_link_rate=%d\n",
+ 		dp->panel->max_dp_lanes, dp->panel->max_dp_link_rate);
+diff --git a/drivers/gpu/drm/msm/dp/dp_panel.h b/drivers/gpu/drm/msm/dp/dp_panel.h
+index ed1030e17e1b..03e42d1f1daf 100644
+--- a/drivers/gpu/drm/msm/dp/dp_panel.h
++++ b/drivers/gpu/drm/msm/dp/dp_panel.h
+@@ -54,6 +54,7 @@ struct dp_panel {
+ 	bool video_test;
+ 
+ 	u32 vic;
++	u32 lane_map[4];
+ 	u32 max_dp_lanes;
+ 	u32 max_dp_link_rate;
+ 
+diff --git a/drivers/gpu/drm/msm/dp/dp_parser.c b/drivers/gpu/drm/msm/dp/dp_parser.c
+index 7032dcc8842b..ea663aad4c0f 100644
+--- a/drivers/gpu/drm/msm/dp/dp_parser.c
++++ b/drivers/gpu/drm/msm/dp/dp_parser.c
+@@ -118,7 +118,9 @@ static u32 dp_parser_link_frequencies(struct device_node *of_node)
+ static int dp_parser_misc(struct dp_parser *parser)
+ {
+ 	struct device_node *of_node = parser->pdev->dev.of_node;
++	struct device_node *endpoint;
+ 	int cnt;
++	u32 lane_map[DP_MAX_NUM_DP_LANES] = {0, 1, 2, 3};
+ 
+ 	/*
+ 	 * data-lanes is the property of dp_out endpoint
+@@ -129,10 +131,15 @@ static int dp_parser_misc(struct dp_parser *parser)
+ 		cnt = drm_of_get_data_lanes_count(of_node, 1, DP_MAX_NUM_DP_LANES);
+ 	}
+ 
+-	if (cnt > 0)
++	if (cnt > 0) {
+ 		parser->max_dp_lanes = cnt;
+-	else
++		endpoint = of_graph_get_endpoint_by_regs(of_node, 1, -1);
++		of_property_read_u32_array(endpoint, "data-lanes", lane_map, cnt);
++	} else {
+ 		parser->max_dp_lanes = DP_MAX_NUM_DP_LANES; /* 4 lanes */
++	}
++
++	memcpy(parser->lane_map, lane_map, parser->max_dp_lanes * sizeof(u32));
+ 
+ 	parser->max_dp_link_rate = dp_parser_link_frequencies(of_node);
+ 	if (!parser->max_dp_link_rate)
+diff --git a/drivers/gpu/drm/msm/dp/dp_parser.h b/drivers/gpu/drm/msm/dp/dp_parser.h
+index 1f068626d445..ade0e7ec6dfc 100644
+--- a/drivers/gpu/drm/msm/dp/dp_parser.h
++++ b/drivers/gpu/drm/msm/dp/dp_parser.h
+@@ -119,6 +119,7 @@ struct dp_parser {
+ 	struct dp_pinctrl pinctrl;
+ 	struct dp_io io;
+ 	struct dp_display_data disp_data;
++	u32 lane_map[DP_MAX_NUM_DP_LANES];
+ 	u32 max_dp_lanes;
+ 	u32 max_dp_link_rate;
+ 	struct drm_bridge *next_bridge;
+-- 
+2.25.1
+

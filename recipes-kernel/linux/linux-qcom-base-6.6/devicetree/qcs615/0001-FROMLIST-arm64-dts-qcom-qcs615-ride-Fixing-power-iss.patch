@@ -1,0 +1,165 @@
+From 4b7ba12dcaf4a813b7a2849c49cef6ee82265e53 Mon Sep 17 00:00:00 2001
+From: Tingguo Cheng <quic_tingguoc@quicinc.com>
+Date: Wed, 4 Dec 2024 17:00:00 +0800
+Subject: [PATCH] FROMLIST: arm64: dts: qcom: qcs615-ride: Fixing power issue
+ in LPM
+
+Change all LPM to HPM for regulators init-mode and disallowed setting
+mode. LPM mode provides at most 10/30mA current for consumers such as
+UFS,eMMC,PCIe. That caused problems because consumers take much more
+than that. At the same time, a lot of drivers didn't set load in code
+that makes it impossible for regulator framework to know exaclty when
+to switch mode.
+
+Signed-off-by: Tingguo Cheng <quic_tingguoc@quicinc.com>
+Link: https://lore.kernel.org/all/20241211-bug-fix-qcs615-ride-dts-lpm-power-issue-v1-1-a08d12c415f0@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241211-bug-fix-qcs615-ride-dts-lpm-power-issue-v1-1-a08d12c415f0@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615-ride.dts | 54 ++++--------------------
+ 1 file changed, 8 insertions(+), 46 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615-ride.dts b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+index 478b09420161..ff9ddaa32f92 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+@@ -75,30 +75,21 @@ vreg_l1a: ldo1 {
+ 			regulator-name = "vreg_l1a";
+ 			regulator-min-microvolt = <488000>;
+ 			regulator-max-microvolt = <852000>;
+-			regulator-initial-mode = <RPMH_REGULATOR_MODE_LPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l2a: ldo2 {
+ 			regulator-name = "vreg_l2a";
+ 			regulator-min-microvolt = <1650000>;
+ 			regulator-max-microvolt = <3100000>;
+-			regulator-initial-mode = <RPMH_REGULATOR_MODE_LPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l3a: ldo3 {
+ 			regulator-name = "vreg_l3a";
+ 			regulator-min-microvolt = <1000000>;
+ 			regulator-max-microvolt = <1248000>;
+-			regulator-initial-mode = <RPMH_REGULATOR_MODE_LPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l5a: ldo5 {
+@@ -106,9 +97,6 @@ vreg_l5a: ldo5 {
+ 			regulator-min-microvolt = <875000>;
+ 			regulator-max-microvolt = <975000>;
+ 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l7a: ldo7 {
+@@ -116,9 +104,6 @@ vreg_l7a: ldo7 {
+ 			regulator-min-microvolt = <1800000>;
+ 			regulator-max-microvolt = <1900000>;
+ 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l8a: ldo8 {
+@@ -126,9 +111,6 @@ vreg_l8a: ldo8 {
+ 			regulator-min-microvolt = <1150000>;
+ 			regulator-max-microvolt = <1350000>;
+ 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l10a: ldo10 {
+@@ -136,59 +118,41 @@ vreg_l10a: ldo10 {
+ 			regulator-min-microvolt = <2950000>;
+ 			regulator-max-microvolt = <3312000>;
+ 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l11a: ldo11 {
+ 			regulator-name = "vreg_l11a";
+ 			regulator-min-microvolt = <1232000>;
+ 			regulator-max-microvolt = <1260000>;
+-			regulator-initial-mode = <RPMH_REGULATOR_MODE_LPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l12a: ldo12 {
+ 			regulator-name = "vreg_l12a";
+ 			regulator-min-microvolt = <1800000>;
+ 			regulator-max-microvolt = <1890000>;
+-			regulator-initial-mode = <RPMH_REGULATOR_MODE_LPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l13a: ldo13 {
+ 			regulator-name = "vreg_l13a";
+ 			regulator-min-microvolt = <3000000>;
+ 			regulator-max-microvolt = <3230000>;
+-			regulator-initial-mode = <RPMH_REGULATOR_MODE_LPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l15a: ldo15 {
+ 			regulator-name = "vreg_l15a";
+ 			regulator-min-microvolt = <1800000>;
+ 			regulator-max-microvolt = <1904000>;
+-			regulator-initial-mode = <RPMH_REGULATOR_MODE_LPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l16a: ldo16 {
+ 			regulator-name = "vreg_l16a";
+ 			regulator-min-microvolt = <3000000>;
+ 			regulator-max-microvolt = <3312000>;
+-			regulator-initial-mode = <RPMH_REGULATOR_MODE_LPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+-						   RPMH_REGULATOR_MODE_HPM>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 
+ 		vreg_l17a: ldo17 {
+@@ -196,8 +160,6 @@ vreg_l17a: ldo17 {
+ 			regulator-min-microvolt = <2950000>;
+ 			regulator-max-microvolt = <3312000>;
+ 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+-			regulator-allow-set-load;
+-			regulator-allowed-modes = <RPMH_REGULATOR_MODE_HPM>;
+ 		};
+ 	};
+ };
+-- 
+2.34.1
+

@@ -1,0 +1,45 @@
+From 5aefe14a22122997de5c0d01fa356e70eddc9c17 Mon Sep 17 00:00:00 2001
+From: Qingqing Zhou <quic_qqzhou@quicinc.com>
+Date: Fri, 25 Oct 2024 11:48:47 +0530
+Subject: [PATCH] FROMGIT: dt-bindings: arm-smmu: document QCS615 GPU SMMU
+
+Add the compatible for Qualcomm QCS615 GPU SMMU.
+
+Signed-off-by: Qingqing Zhou <quic_qqzhou@quicinc.com>
+Link: https://lore.kernel.org/all/20241122074922.28153-2-quic_qqzhou@quicinc.com/
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/will/linux.git/commit/?id=d1e22c7145af]
+---
+ Documentation/devicetree/bindings/iommu/arm,smmu.yaml | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/iommu/arm,smmu.yaml b/Documentation/devicetree/bindings/iommu/arm,smmu.yaml
+index d8047099ba08..c9c76abdb8e2 100644
+--- a/Documentation/devicetree/bindings/iommu/arm,smmu.yaml
++++ b/Documentation/devicetree/bindings/iommu/arm,smmu.yaml
+@@ -83,6 +83,7 @@ properties:
+       - description: Qcom Adreno GPUs implementing "qcom,smmu-500" and "arm,mmu-500"
+         items:
+           - enum:
++              - qcom,qcs615-smmu-500
+               - qcom,sa8775p-smmu-500
+               - qcom,sc7280-smmu-500
+               - qcom,sc8280xp-smmu-500
+@@ -434,6 +435,7 @@ allOf:
+         compatible:
+           items:
+             - enum:
++                - qcom,qcs615-smmu-500
+                 - qcom,sm6115-smmu-500
+                 - qcom,sm6125-smmu-500
+             - const: qcom,adreno-smmu
+@@ -463,7 +465,6 @@ allOf:
+               - marvell,ap806-smmu-500
+               - nvidia,smmu-500
+               - qcom,qcm2290-smmu-500
+-              - qcom,qcs615-smmu-500
+               - qcom,qcs8300-smmu-500
+               - qcom,qdu1000-smmu-500
+               - qcom,sc7180-smmu-500
+-- 
+2.17.1
+

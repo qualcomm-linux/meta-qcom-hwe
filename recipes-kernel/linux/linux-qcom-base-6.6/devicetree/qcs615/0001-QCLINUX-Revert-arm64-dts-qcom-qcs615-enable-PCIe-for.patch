@@ -1,0 +1,49 @@
+From 070f68838b79041565004871cfef5d316f825c44 Mon Sep 17 00:00:00 2001
+From: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+Date: Mon, 2 Dec 2024 17:39:58 +0800
+Subject: [PATCH] QCLINUX: Revert: "arm64: dts: qcom: qcs615: enable PCIe for
+ qcs615 soc"
+
+This reverts commit ed60d4877d81fbb1c3c95cd6316eeebcd3b7ed45.
+
+Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+Upstream-Status: Inappropriate [Revert]
+---
+ arch/arm64/boot/dts/qcom/qcs615.dtsi | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615.dtsi b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+index 50c1559582da..2d8730f41f99 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+@@ -3840,14 +3840,12 @@ pcie: pcie@1c08000 {
+ 				  "msi4",
+ 				  "msi5",
+ 				  "msi6",
+-				  "msi7",
+-				  "global";
++				  "msi7";
+ 
+-		interrupt-map = <0 0 0 0 &intc 0 0 0 140 IRQ_TYPE_LEVEL_HIGH>,
+-				<0 0 0 1 &intc 0 0 0 149 IRQ_TYPE_LEVEL_HIGH>,
+-				<0 0 0 2 &intc 0 0 0 150 IRQ_TYPE_LEVEL_HIGH>,
+-				<0 0 0 3 &intc 0 0 0 151 IRQ_TYPE_LEVEL_HIGH>,
+-				<0 0 0 4 &intc 0 0 0 152 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-map = <0 0 0 1 &intc GIC_SPI 149 IRQ_TYPE_LEVEL_HIGH>,
++				<0 0 0 2 &intc GIC_SPI 150 IRQ_TYPE_LEVEL_HIGH>,
++				<0 0 0 3 &intc GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH>,
++				<0 0 0 4 &intc GIC_SPI 152 IRQ_TYPE_LEVEL_HIGH>;
+ 
+ 		#interrupt-cells = <1>;
+ 		interrupt-map-mask = <0 0 0 0x7>;
+@@ -3884,6 +3882,7 @@ &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+ 		phy-names = "pciephy";
+ 
+ 		power-domains = <&gcc PCIE_0_GDSC>;
++		max-link-speed = <2>;
+ 
+ 		dma-coherent;
+ 
+-- 
+2.34.1
+

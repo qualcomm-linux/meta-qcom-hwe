@@ -1,0 +1,39 @@
+From a4b146bb9abfc16e95f018e66f03a4c78cb7667f Mon Sep 17 00:00:00 2001
+From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Date: Thu, 7 Nov 2024 16:40:29 +0800
+Subject: [PATCH 1/5] FROMLIST: dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy:
+ Document the QCS615 QMP PCIe PHY Gen3 x1
+
+Document the QMP PCIe PHY on the QCS615 platform.
+
+Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+Link: https://lore.kernel.org/all/20241122023314.1616353-2-quic_ziyuzhan@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241122023314.1616353-2-quic_ziyuzhan@quicinc.com/]
+---
+ .../devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml     | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
+index dcf4fa55fbba..d13eb46adbbb 100644
+--- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
+@@ -16,6 +16,7 @@ description:
+ properties:
+   compatible:
+     enum:
++      - qcom,qcs615-qmp-gen3x1-pcie-phy
+       - qcom,sa8775p-qmp-gen4x2-pcie-phy
+       - qcom,sa8775p-qmp-gen4x4-pcie-phy
+       - qcom,sc8180x-qmp-pcie-phy
+@@ -168,6 +169,7 @@ allOf:
+         compatible:
+           contains:
+             enum:
++              - qcom,qcs615-qmp-gen3x1-pcie-phy
+               - qcom,sc8280xp-qmp-gen3x1-pcie-phy
+               - qcom,sc8280xp-qmp-gen3x2-pcie-phy
+               - qcom,sc8280xp-qmp-gen3x4-pcie-phy
+-- 
+2.34.1
+

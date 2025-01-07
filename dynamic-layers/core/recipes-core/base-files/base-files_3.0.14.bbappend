@@ -7,13 +7,15 @@ SRC_URI:append:qcom = " file://base-files.conf "
 
 do_install:append:qcom(){
     if ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'true', 'false', d)}; then
-        install -d ${D}/etc/tmpfiles.d
-        install -m 0644 ${WORKDIR}/base-files.conf ${D}/etc/tmpfiles.d/base-files.conf
+        if ${@bb.utils.contains('DISTRO_FEATURES', 'sota', 'true', 'false', d)}; then
+            install -d ${D}/etc/tmpfiles.d
+            install -m 0644 ${WORKDIR}/base-files.conf ${D}/etc/tmpfiles.d/base-files.conf
 
-        rm -rf ${D}/${localstatedir} ${D}/home ${D}/mnt ${D}/media
+            rm -rf ${D}/${localstatedir} ${D}/home ${D}/mnt ${D}/media
 
-        # Create /var/volatile at build-time to skip error with empty_var_volatile task
-        mkdir -p ${D}${localstatedir}/volatile/
+            # Create /var/volatile at build-time to skip error with empty_var_volatile task
+            mkdir -p ${D}${localstatedir}/volatile/
+        fi
     fi
 }
 

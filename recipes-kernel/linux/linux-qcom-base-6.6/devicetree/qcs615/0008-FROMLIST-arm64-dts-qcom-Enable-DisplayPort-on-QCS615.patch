@@ -1,0 +1,67 @@
+From a93da60eb39abebaad192e744e8a80629056daf7 Mon Sep 17 00:00:00 2001
+From: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Date: Fri, 22 Nov 2024 16:47:29 +0800
+Subject: [PATCH 8/8] FROMLIST: arm64: dts: qcom: Enable DisplayPort on QCS615
+ RIDE platform
+
+Enable the DisplayPort node, config related regulator, lane mapping,
+hpd-gpios on the Qualcomm QCS615 RIDE platform.
+
+Signed-off-by: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Link: https://lore.kernel.org/all/20241210-add-displayport-support-to-qcs615-devicetree-v1-0-02f84a92c44b@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241210-add-displayport-support-to-qcs615-devicetree-v1-0-02f84a92c44b@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615-ride.dts | 30 ++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615-ride.dts b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+index 4d74d3793aa9..50d9028162b2 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+@@ -114,6 +114,20 @@ vreg_pmu_pcie_1p8: ldo9 {
+ 			};
+ 		};
+ 	};
++
++	dp2-connector {
++		compatible = "dp-connector";
++		label = "DP2";
++		type = "mini";
++
++		hpd-gpios = <&ioexp 8 0>;
++
++		port {
++			dp2_connector_in: endpoint {
++				remote-endpoint = <&mdss_dp0_out>;
++			};
++		};
++	};
+ };
+ 
+ &apps_rsc {
+@@ -378,6 +392,22 @@ &mdss_dsi0_phy {
+ 	status = "okay";
+ };
+ 
++&mdss_dp0 {
++	status = "okay";
++};
++
++&mdss_dp0_out {
++	data-lanes = <3 2 0 1>;
++	link-frequencies = /bits/ 64 <1620000000 2700000000 5400000000>;
++	remote-endpoint = <&dp2_connector_in>;
++};
++
++&mdss_dp_phy {
++	vdda-phy-supply = <&vreg_l11a>;
++	vdda-pll-supply = <&vreg_l5a>;
++	status = "okay";
++};
++
+ &pon_pwrkey {
+ 	status = "okay";
+ };
+-- 
+2.25.1
+

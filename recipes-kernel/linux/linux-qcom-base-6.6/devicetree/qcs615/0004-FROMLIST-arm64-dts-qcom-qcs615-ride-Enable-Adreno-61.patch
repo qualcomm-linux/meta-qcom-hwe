@@ -1,0 +1,37 @@
+From 28b850d7c6f5ce82a8b8c1282cd5d9904125f52f Mon Sep 17 00:00:00 2001
+From: Haitao Xu <quic_haitxu@quicinc.com>
+Date: Thu, 28 Nov 2024 09:38:04 +0800
+Subject: [PATCH 4/4] FROMLIST: arm64: dts: qcom: qcs615-ride: Enable Adreno
+ 612 GPU
+
+Enable GPU for qcs615-ride platform and provide path for zap
+shader.
+
+Signed-off-by: Jie Zhang <quic_jiezh@quicinc.com>
+Signed-off-by: Akhil P Oommen <quic_akhilpo@quicinc.com>
+Signed-off-by: Haitao Xu <quic_haitxu@quicinc.com>
+Link: https://lore.kernel.org/all/20241213-qcs615-gpu-dt-v2-4-47f3b312b178@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241213-qcs615-gpu-dt-v2-4-47f3b312b178@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615-ride.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615-ride.dts b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+index 478b09420161..58101f934d4e 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+@@ -526,3 +526,11 @@ &venus {
+ &watchdog {
+ 	clocks = <&sleep_clk>;
+ };
++
++&gpu {
++	status = "okay";
++};
++
++&gpu_zap_shader {
++	firmware-name = "qcom/qcs615/a612_zap.mbn";
++};
+-- 
+2.34.1
+

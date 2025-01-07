@@ -1,0 +1,127 @@
+From 10018936f9220ed64036f1730a6c14124851f9f5 Mon Sep 17 00:00:00 2001
+From: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Date: Thu, 12 Dec 2024 19:04:11 +0800
+Subject: [PATCH] FROMLIST: drm/msm/dpu: Filter modes based on adjusted mode
+ clock
+
+Filter out modes that have a clock rate greater than the max core clock
+rate when adjusted for the perf clock factor
+
+This is especially important for chipsets such as QCS615 that have lower
+limits for the MDP max core clock.
+
+Since the core CRTC clock is at least the mode clock (adjusted for the
+perf clock factor), the modes supported by the driver should be less
+than the max core clock rate.
+
+Signed-off-by: Jessica Zhang <quic_jesszhan@quicinc.com>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Signed-off-by: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Link: https://lore.kernel.org/all/20241212-filter-mode-clock-v1-1-f4441988d6aa@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241212-filter-mode-clock-v1-1-f4441988d6aa@quicinc.com/]
+---
+ drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.c | 29 ++++++++++++++-----
+ drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.h |  3 ++
+ drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c      | 11 +++++++
+ 3 files changed, 35 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.c b/drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.c
+index 68fae048a9a8..a1bcbf7d4d13 100644
+--- a/drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.c
++++ b/drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.c
+@@ -31,6 +31,26 @@ enum dpu_perf_mode {
+ 	DPU_PERF_MODE_MAX
+ };
+ 
++/**
++ * dpu_core_perf_adjusted_crtc_clk - Adjust given crtc clock rate according to
++ *   the perf clock factor.
++ * @crtc_clk_rate - Unadjusted crtc clock rate
++ * @perf_cfg: performance configuration
++ */
++u64 dpu_core_perf_adjusted_crtc_clk(u64 crtc_clk_rate,
++					const struct dpu_perf_cfg *perf_cfg)
++{
++	u32 clk_factor;
++
++	clk_factor = perf_cfg->clk_inefficiency_factor;
++	if (clk_factor) {
++		crtc_clk_rate *= clk_factor;
++		do_div(crtc_clk_rate, 100);
++	}
++
++	return crtc_clk_rate;
++}
++
+ /**
+  * _dpu_core_perf_calc_bw() - to calculate BW per crtc
+  * @perf_cfg: performance configuration
+@@ -76,7 +96,6 @@ static u64 _dpu_core_perf_calc_clk(const struct dpu_perf_cfg *perf_cfg,
+ 	struct dpu_plane_state *pstate;
+ 	struct drm_display_mode *mode;
+ 	u64 crtc_clk;
+-	u32 clk_factor;
+ 
+ 	mode = &state->adjusted_mode;
+ 
+@@ -90,13 +109,7 @@ static u64 _dpu_core_perf_calc_clk(const struct dpu_perf_cfg *perf_cfg,
+ 		crtc_clk = max(pstate->plane_clk, crtc_clk);
+ 	}
+ 
+-	clk_factor = perf_cfg->clk_inefficiency_factor;
+-	if (clk_factor) {
+-		crtc_clk *= clk_factor;
+-		do_div(crtc_clk, 100);
+-	}
+-
+-	return crtc_clk;
++	return dpu_core_perf_adjusted_crtc_clk(crtc_clk, perf_cfg);
+ }
+ 
+ static struct dpu_kms *_dpu_crtc_get_kms(struct drm_crtc *crtc)
+diff --git a/drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.h b/drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.h
+index 4186977390bd..5b82d1034fab 100644
+--- a/drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.h
++++ b/drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.h
+@@ -54,6 +54,9 @@ struct dpu_core_perf {
+ 	u64 fix_core_ab_vote;
+ };
+ 
++u64 dpu_core_perf_adjusted_crtc_clk(u64 clk_rate,
++					const struct dpu_perf_cfg *perf_cfg);
++
+ /**
+  * dpu_core_perf_crtc_check - validate performance of the given crtc state
+  * @crtc: Pointer to crtc
+diff --git a/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c b/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c
+index b7ba63615255..980fb491e06e 100644
+--- a/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c
++++ b/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c
+@@ -1260,6 +1260,7 @@ static enum drm_mode_status dpu_crtc_mode_valid(struct drm_crtc *crtc,
+ 						const struct drm_display_mode *mode)
+ {
+ 	struct dpu_kms *dpu_kms = _dpu_crtc_get_kms(crtc);
++	u64 adjusted_mode_clk;
+ 
+ 	/* if there is no 3d_mux block we cannot merge LMs so we cannot
+ 	 * split the large layer into 2 LMs, filter out such modes
+@@ -1268,6 +1269,16 @@ static enum drm_mode_status dpu_crtc_mode_valid(struct drm_crtc *crtc,
+ 	    mode->hdisplay > dpu_kms->catalog->caps->max_mixer_width)
+ 		return MODE_BAD_HVALUE;
+ 
++	adjusted_mode_clk = dpu_core_perf_adjusted_crtc_clk(mode->clock,
++							    dpu_kms->perf.perf_cfg);
++
++	/*
++	 * The given mode, adjusted for the perf clock factor, should not exceed
++	 * the max core clock rate
++	 */
++	if (adjusted_mode_clk > dpu_kms->perf.max_core_clk_rate / 1000)
++		return MODE_CLOCK_HIGH;
++
+ 	/*
+ 	 * max crtc width is equal to the max mixer width * 2 and max height is 4K
+ 	 */
+-- 
+2.25.1
+

@@ -1,0 +1,30 @@
+From 75fef91af8d2a3dc950b22109e8e29ffdad6f900 Mon Sep 17 00:00:00 2001
+From: Yijie Yang <quic_yijiyang@quicinc.com>
+Date: Tue, 17 Dec 2024 14:26:18 +0800
+Subject: [PATCH] FROMLIST: arm64: dts: qcom: qcs615-ride: Tune RX sampling
+ occasion
+
+The timing of sampling at the RX side for qcs615-ride needs adjustment.
+It varies from board to board.
+
+Signed-off-by: Yijie Yang <quic_yijiyang@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241225-support_10m100m-v1-3-4b52ef48b488@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615-ride.dts | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615-ride.dts b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+index fd9905a5cd64..093ea5a64e76 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+@@ -276,6 +276,7 @@ &ethernet {
+ 
+ 	snps,mtl-rx-config = <&mtl_rx_setup>;
+ 	snps,mtl-tx-config = <&mtl_tx_setup>;
++	snps,rx-prog-swap;
+ 
+ 	status = "okay";
+ 
+-- 
+2.34.1
+

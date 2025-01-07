@@ -1,0 +1,67 @@
+From ad5ee70758fb7a683903246034daccd6fd03dd0c Mon Sep 17 00:00:00 2001
+From: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Date: Sun, 8 Dec 2024 23:41:25 +0800
+Subject: [PATCH 4/4] FROMLIST: drm/msm/dpu: filter out too wide modes if no
+ 3dmux is present
+
+On chipsets such as QCS615, there is no 3dmux present. In such
+a case, a layer exceeding the max_mixer_width cannot be split,
+hence cannot be supported.
+
+Filter out the modes which exceed the max_mixer_width when there
+is no 3dmux present. Also, add a check in the dpu_crtc_atomic_check()
+to return failure for such modes.
+
+Signed-off-by: Abhinav Kumar <quic_abhinavk@quicinc.com>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Tested-by: Xiangxu Yin <quic_xiangxuy@quicinc.com> # QCS615
+Signed-off-by: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Link: https://lore.kernel.org/r/20241209-no_3dmux-v3-1-48aaa555b0d3@quicinc.com
+Upstream-Status: Submitted [https://lore.kernel.org/r/20241209-no_3dmux-v3-1-48aaa555b0d3@quicinc.com]
+---
+ drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c b/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c
+index 0561f1722a81..fb3cf82f40de 100644
+--- a/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c
++++ b/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ /*
+- * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2022-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+  * Copyright (c) 2014-2021 The Linux Foundation. All rights reserved.
+  * Copyright (C) 2013 Red Hat
+  * Author: Rob Clark <robdclark@gmail.com>
+@@ -731,6 +731,13 @@ static int _dpu_crtc_check_and_setup_lm_bounds(struct drm_crtc *crtc,
+ 	struct dpu_kms *dpu_kms = _dpu_crtc_get_kms(crtc);
+ 	int i;
+ 
++	/* if we cannot merge 2 LMs (no 3d mux) better to fail earlier
++	 * before even checking the width after the split
++	 */
++	if (!dpu_kms->catalog->caps->has_3d_merge &&
++	    adj_mode->hdisplay > dpu_kms->catalog->caps->max_mixer_width)
++		return -E2BIG;
++
+ 	for (i = 0; i < cstate->num_mixers; i++) {
+ 		struct drm_rect *r = &cstate->lm_bounds[i];
+ 		r->x1 = crtc_split_width * i;
+@@ -1254,6 +1261,13 @@ static enum drm_mode_status dpu_crtc_mode_valid(struct drm_crtc *crtc,
+ {
+ 	struct dpu_kms *dpu_kms = _dpu_crtc_get_kms(crtc);
+ 
++	/* if there is no 3d_mux block we cannot merge LMs so we cannot
++	 * split the large layer into 2 LMs, filter out such modes
++	 */
++	if (!dpu_kms->catalog->caps->has_3d_merge &&
++	    mode->hdisplay > dpu_kms->catalog->caps->max_mixer_width)
++		return MODE_BAD_HVALUE;
++
+ 	/*
+ 	 * max crtc width is equal to the max mixer width * 2 and max height is 4K
+ 	 */
+-- 
+2.25.1
+

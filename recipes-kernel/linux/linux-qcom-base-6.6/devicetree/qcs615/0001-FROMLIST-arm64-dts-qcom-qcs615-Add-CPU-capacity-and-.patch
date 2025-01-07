@@ -1,0 +1,96 @@
+From 33f04e2a5ad9e626d072fcab93553be53e98c51a Mon Sep 17 00:00:00 2001
+From: Lijuan Gao <quic_lijuang@quicinc.com>
+Date: Fri, 13 Dec 2024 11:25:04 +0800
+Subject: [PATCH] FROMLIST: arm64: dts: qcom: qcs615: Add CPU capacity and DPC
+ properties
+
+Add "capacity-dmips-mhz" and "dynamic-power-coefficient" to the QCS615 SoC.
+They are used to build the energy model, which in turn is used by EAS to
+take placement decisions.
+
+Signed-off-by: Lijuan Gao <quic_lijuang@quicinc.com>
+Link: https://lore.kernel.org/all/20241211-add_cpu_capacity_and_dpc_properties-v1-1-03aaee023a77@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241211-add_cpu_capacity_and_dpc_properties-v1-1-03aaee023a77@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615.dtsi b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+index d32b41552a6c..5dba7bcf76fe 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+@@ -51,6 +51,8 @@ cpu0: cpu@0 {
+ 			enable-method = "psci";
+ 			power-domains = <&cpu_pd0>;
+ 			power-domain-names = "psci";
++			capacity-dmips-mhz = <1024>;
++			dynamic-power-coefficient = <100>;
+ 			next-level-cache = <&l2_0>;
+ 			clocks = <&cpufreq_hw 0>;
+ 			qcom,freq-domain = <&cpufreq_hw 0>;
+@@ -71,6 +73,8 @@ cpu1: cpu@100 {
+ 			enable-method = "psci";
+ 			power-domains = <&cpu_pd1>;
+ 			power-domain-names = "psci";
++			capacity-dmips-mhz = <1024>;
++			dynamic-power-coefficient = <100>;
+ 			next-level-cache = <&l2_100>;
+ 			clocks = <&cpufreq_hw 0>;
+ 			qcom,freq-domain = <&cpufreq_hw 0>;
+@@ -90,6 +94,8 @@ cpu2: cpu@200 {
+ 			enable-method = "psci";
+ 			power-domains = <&cpu_pd2>;
+ 			power-domain-names = "psci";
++			capacity-dmips-mhz = <1024>;
++			dynamic-power-coefficient = <100>;
+ 			next-level-cache = <&l2_200>;
+ 			clocks = <&cpufreq_hw 0>;
+ 			qcom,freq-domain = <&cpufreq_hw 0>;
+@@ -109,6 +115,8 @@ cpu3: cpu@300 {
+ 			enable-method = "psci";
+ 			power-domains = <&cpu_pd3>;
+ 			power-domain-names = "psci";
++			capacity-dmips-mhz = <1024>;
++			dynamic-power-coefficient = <100>;
+ 			next-level-cache = <&l2_300>;
+ 			clocks = <&cpufreq_hw 0>;
+ 			qcom,freq-domain = <&cpufreq_hw 0>;
+@@ -128,6 +136,8 @@ cpu4: cpu@400 {
+ 			enable-method = "psci";
+ 			power-domains = <&cpu_pd4>;
+ 			power-domain-names = "psci";
++			capacity-dmips-mhz = <1024>;
++			dynamic-power-coefficient = <100>;
+ 			next-level-cache = <&l2_400>;
+ 			clocks = <&cpufreq_hw 0>;
+ 			qcom,freq-domain = <&cpufreq_hw 0>;
+@@ -147,6 +157,8 @@ cpu5: cpu@500 {
+ 			enable-method = "psci";
+ 			power-domains = <&cpu_pd5>;
+ 			power-domain-names = "psci";
++			capacity-dmips-mhz = <1024>;
++			dynamic-power-coefficient = <100>;
+ 			next-level-cache = <&l2_500>;
+ 			clocks = <&cpufreq_hw 0>;
+ 			qcom,freq-domain = <&cpufreq_hw 0>;
+@@ -166,6 +178,8 @@ cpu6: cpu@600 {
+ 			enable-method = "psci";
+ 			power-domains = <&cpu_pd6>;
+ 			power-domain-names = "psci";
++			capacity-dmips-mhz = <1740>;
++			dynamic-power-coefficient = <404>;
+ 			next-level-cache = <&l2_600>;
+ 			clocks = <&cpufreq_hw 1>;
+ 			qcom,freq-domain = <&cpufreq_hw 1>;
+@@ -186,6 +200,8 @@ cpu7: cpu@700 {
+ 			enable-method = "psci";
+ 			power-domains = <&cpu_pd7>;
+ 			power-domain-names = "psci";
++			capacity-dmips-mhz = <1740>;
++			dynamic-power-coefficient = <404>;
+ 			next-level-cache = <&l2_700>;
+ 			clocks = <&cpufreq_hw 1>;
+ 			qcom,freq-domain = <&cpufreq_hw 1>;
+-- 
+2.46.0
+

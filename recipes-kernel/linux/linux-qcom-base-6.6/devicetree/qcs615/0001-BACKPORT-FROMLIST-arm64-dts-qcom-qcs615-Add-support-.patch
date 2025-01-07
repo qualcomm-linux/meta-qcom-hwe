@@ -1,0 +1,118 @@
+From 651e0df2910d2c107351fc0b5690af5b650af5f1 Mon Sep 17 00:00:00 2001
+From: Krishna Kurapati <krishna.kurapati@oss.qualcomm.com>
+Date: Wed, 18 Dec 2024 20:12:56 +0800
+Subject: [PATCH 1/2] BACKPORT: FROMLIST: arm64: dts: qcom: qcs615: Add support
+ for secondary USB node on QCS615
+
+Add support for secondary USB controller and its high-speed phy
+on QCS615.
+
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Signed-off-by: Krishna Kurapati <krishna.kurapati@oss.qualcomm.com>
+Co-developed-by: Song Xue <quic_songxue@quicinc.com>
+Signed-off-by: Song Xue <quic_songxue@quicinc.com>
+Link: https://lore.kernel.org/all/20241218-add_usb_host_mode_for_qcs615-v3-1-d9d29fe39a4b@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241218-add_usb_host_mode_for_qcs615-v3-1-d9d29fe39a4b@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615.dtsi | 78 ++++++++++++++++++++++++++++
+ 1 file changed, 78 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615.dtsi b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+index e6332d6b28ea..7d8d7a6ab805 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+@@ -3190,6 +3190,22 @@ usb_1_hsphy: phy@88e2000 {
+ 			status = "disabled";
+ 		};
+ 
++		usb_hsphy_2: phy@88e3000 {
++			compatible = "qcom,qcs615-qusb2-phy";
++			reg = <0x0 0x088e3000 0x0 0x180>;
++
++			clocks = <&gcc GCC_AHB2PHY_WEST_CLK>,
++				 <&rpmhcc RPMH_CXO_CLK>;
++			clock-names = "cfg_ahb",
++				      "ref";
++
++			resets = <&gcc GCC_QUSB2PHY_SEC_BCR>;
++
++			#phy-cells = <0>;
++
++			status = "disabled";
++		};
++
+ 		usb_qmpphy: phy@88e6000 {
+ 			compatible = "qcom,qcs615-qmp-usb3-phy";
+ 			reg = <0x0 0x88e6000 0x0 0x1000>;
+@@ -3400,6 +3416,68 @@ usb_1_dwc3: usb@a600000 {
+ 			};
+ 		};
+ 
++		usb_2: usb@a8f8800 {
++			compatible = "qcom,qcs615-dwc3", "qcom,dwc3";
++			reg = <0x0 0x0a8f8800 0x0 0x400>;
++
++			clocks = <&gcc GCC_CFG_NOC_USB2_SEC_AXI_CLK>,
++				 <&gcc GCC_USB20_SEC_MASTER_CLK>,
++				 <&gcc GCC_AGGRE_USB2_SEC_AXI_CLK>,
++				 <&gcc GCC_USB20_SEC_SLEEP_CLK>,
++				 <&gcc GCC_USB20_SEC_MOCK_UTMI_CLK>,
++				 <&gcc GCC_USB2_PRIM_CLKREF_CLK>;
++			clock-names = "cfg_noc",
++				      "core",
++				      "iface",
++				      "sleep",
++				      "mock_utmi",
++				      "xo";
++
++			assigned-clocks = <&gcc GCC_USB20_SEC_MOCK_UTMI_CLK>,
++					  <&gcc GCC_USB20_SEC_MASTER_CLK>;
++			assigned-clock-rates = <19200000>, <200000000>;
++
++			interrupts-extended = <&intc GIC_SPI 663 IRQ_TYPE_LEVEL_HIGH>,
++					      <&intc GIC_SPI 662 IRQ_TYPE_LEVEL_HIGH>,
++					      <&pdc 11 IRQ_TYPE_EDGE_BOTH>,
++					      <&pdc 10 IRQ_TYPE_EDGE_BOTH>;
++			interrupt-names = "pwr_event",
++					  "hs_phy_irq",
++					  "dp_hs_phy_irq",
++					  "dm_hs_phy_irq";
++
++			power-domains = <&gcc USB20_SEC_GDSC>;
++			required-opps = <&rpmhpd_opp_nom>;
++
++			resets = <&gcc GCC_USB20_SEC_BCR>;
++
++			qcom,select-utmi-as-pipe-clk;
++
++			#address-cells = <2>;
++			#size-cells = <2>;
++			ranges;
++
++			status = "disabled";
++
++			usb_2_dwc3: usb@a800000 {
++				compatible = "snps,dwc3";
++				reg = <0x0 0x0a800000 0x0 0xcd00>;
++
++				iommus = <&apps_smmu 0xe0 0x0>;
++				interrupts = <GIC_SPI 664 IRQ_TYPE_LEVEL_HIGH>;
++
++				phys = <&usb_hsphy_2>;
++				phy-names = "usb2-phy";
++
++				snps,dis_u2_susphy_quirk;
++				snps,dis_enblslpm_quirk;
++				snps,has-lpm-erratum;
++				snps,hird-threshold = /bits/ 8 <0x10>;
++
++				maximum-speed = "high-speed";
++			};
++		};
++
+ 		videocc: clock-controller@ab00000 {
+ 			compatible = "qcom,qcs615-videocc";
+ 			reg = <0x0 0x0ab00000 0x0 0x10000>;
+-- 
+2.25.1
+

@@ -1,0 +1,51 @@
+From d7924d6a91df94fffb7c254984e503571bdeb634 Mon Sep 17 00:00:00 2001
+From: Haitao Xu <quic_haitxu@quicinc.com>
+Date: Tue, 17 Dec 2024 17:30:48 +0800
+Subject: [PATCH 2/4] FROMLIST: dt-bindings: display/msm/gmu: Document RGMU
+
+RGMU a.k.a Reduced Graphics Management Unit is a small state machine
+with the sole purpose of providing IFPC support. Compared to GMU, it
+doesn't manage GPU clock, voltage scaling, bw voting or any other
+functionalities. All it does is detect an idle GPU and toggle the
+GDSC switch. So it doesn't require iommu & opp table.
+
+Signed-off-by: Akhil P Oommen <quic_akhilpo@quicinc.com>
+Signed-off-by: Haitao Xu <quic_haitxu@quicinc.com>
+Link: https://lore.kernel.org/all/20241213-qcs615-gpu-dt-v2-2-47f3b312b178@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241213-qcs615-gpu-dt-v2-2-47f3b312b178@quicinc.com/]
+---
+ Documentation/devicetree/bindings/display/msm/gmu.yaml | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/display/msm/gmu.yaml b/Documentation/devicetree/bindings/display/msm/gmu.yaml
+index d65926b4f054..ba8b44c6bcb4 100644
+--- a/Documentation/devicetree/bindings/display/msm/gmu.yaml
++++ b/Documentation/devicetree/bindings/display/msm/gmu.yaml
+@@ -24,6 +24,7 @@ properties:
+           - pattern: '^qcom,adreno-gmu-6[0-9][0-9]\.[0-9]$'
+           - const: qcom,adreno-gmu
+       - const: qcom,adreno-gmu-wrapper
++      - const: qcom,adreno-rgmu
+ 
+   reg:
+     minItems: 1
+@@ -217,12 +218,14 @@ allOf:
+       properties:
+         compatible:
+           contains:
+-            const: qcom,adreno-gmu-wrapper
++            enum:
++              - qcom,adreno-gmu-wrapper
++              - qcom,adreno-rgmu
+     then:
+       properties:
+         reg:
+           items:
+-            - description: GMU wrapper register space
++            - description: RGMU/GMU wrapper register space
+         reg-names:
+           items:
+             - const: gmu
+-- 
+2.34.1
+

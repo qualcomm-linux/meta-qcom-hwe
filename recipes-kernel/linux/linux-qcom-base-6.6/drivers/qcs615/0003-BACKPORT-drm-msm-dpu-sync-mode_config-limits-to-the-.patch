@@ -1,0 +1,76 @@
+From 75cdd75b17b7a3d2a0b3c30c49be82f001ac935a Mon Sep 17 00:00:00 2001
+From: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Date: Sun, 8 Dec 2024 23:36:18 +0800
+Subject: [PATCH 3/4] BACKPORT: drm/msm/dpu: sync mode_config limits to the FB
+ limits in dpu_plane.c
+
+Lift mode_config limits set by the DPU driver to the actual FB limits as
+handled by the dpu_plane.c. Move 2*max_lm_width check where it belongs,
+to the drm_crtc_helper_funcs::mode_valid() callback.
+
+Reviewed-by: Abhinav Kumar <quic_abhinavk@quicinc.com>
+Tested-by: Abhinav Kumar <quic_abhinavk@quicinc.com> # sc7280
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Signed-off-by: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Link: https://lore.kernel.org/r/20240903-dpu-mode-config-width-v6-15-617e1ecc4b7a@linaro.org
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git 2261751d5f2233a7a5d4791d6d13a0271e838ca5]
+---
+ drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c | 14 ++++++++++++++
+ drivers/gpu/drm/msm/disp/dpu1/dpu_kms.c  |  9 ++-------
+ 2 files changed, 16 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c b/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c
+index ad57368dc13f..0561f1722a81 100644
+--- a/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c
++++ b/drivers/gpu/drm/msm/disp/dpu1/dpu_crtc.c
+@@ -1249,6 +1249,19 @@ static int dpu_crtc_atomic_check(struct drm_crtc *crtc,
+ 	return 0;
+ }
+ 
++static enum drm_mode_status dpu_crtc_mode_valid(struct drm_crtc *crtc,
++						const struct drm_display_mode *mode)
++{
++	struct dpu_kms *dpu_kms = _dpu_crtc_get_kms(crtc);
++
++	/*
++	 * max crtc width is equal to the max mixer width * 2 and max height is 4K
++	 */
++	return drm_mode_validate_size(mode,
++				      2 * dpu_kms->catalog->caps->max_mixer_width,
++				      4096);
++}
++
+ int dpu_crtc_vblank(struct drm_crtc *crtc, bool en)
+ {
+ 	struct dpu_crtc *dpu_crtc = to_dpu_crtc(crtc);
+@@ -1465,6 +1478,7 @@ static const struct drm_crtc_helper_funcs dpu_crtc_helper_funcs = {
+ 	.atomic_check = dpu_crtc_atomic_check,
+ 	.atomic_begin = dpu_crtc_atomic_begin,
+ 	.atomic_flush = dpu_crtc_atomic_flush,
++	.mode_valid = dpu_crtc_mode_valid,
+ 	.get_scanout_position = dpu_crtc_get_scanout_position,
+ };
+ 
+diff --git a/drivers/gpu/drm/msm/disp/dpu1/dpu_kms.c b/drivers/gpu/drm/msm/disp/dpu1/dpu_kms.c
+index f281a2d83072..c499aedca74d 100644
+--- a/drivers/gpu/drm/msm/disp/dpu1/dpu_kms.c
++++ b/drivers/gpu/drm/msm/disp/dpu1/dpu_kms.c
+@@ -1201,13 +1201,8 @@ static int dpu_kms_hw_init(struct msm_kms *kms)
+ 	dev->mode_config.min_width = 0;
+ 	dev->mode_config.min_height = 0;
+ 
+-	/*
+-	 * max crtc width is equal to the max mixer width * 2 and max height is
+-	 * is 4K
+-	 */
+-	dev->mode_config.max_width =
+-			dpu_kms->catalog->caps->max_mixer_width * 2;
+-	dev->mode_config.max_height = 4096;
++	dev->mode_config.max_width = DPU_MAX_IMG_WIDTH;
++	dev->mode_config.max_height = DPU_MAX_IMG_HEIGHT;
+ 
+ 	dev->max_vblank_count = 0xffffffff;
+ 	/* Disable vblank irqs aggressively for power-saving */
+-- 
+2.25.1
+

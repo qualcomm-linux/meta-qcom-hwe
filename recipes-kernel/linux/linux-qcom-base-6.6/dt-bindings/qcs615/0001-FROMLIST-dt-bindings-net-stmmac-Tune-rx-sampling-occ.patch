@@ -1,0 +1,34 @@
+From 0cf3246f1e69ec5a5fde881dbd6c0fbd2c5fcc1f Mon Sep 17 00:00:00 2001
+From: Yijie Yang <quic_yijiyang@quicinc.com>
+Date: Tue, 17 Dec 2024 14:15:33 +0800
+Subject: [PATCH] FROMLIST: dt-bindings: net: stmmac: Tune rx sampling occasion
+
+Add documentation detailing the capability for tuning the RX sampling
+occasion of the DesignWare-based MAC.
+
+Signed-off-by: Yijie Yang <quic_yijiyang@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241225-support_10m100m-v1-1-4b52ef48b488@quicinc.com/]
+---
+ Documentation/devicetree/bindings/net/snps,dwmac.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/snps,dwmac.yaml b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+index f35f7702a12c..479547bf5856 100644
+--- a/Documentation/devicetree/bindings/net/snps,dwmac.yaml
++++ b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+@@ -622,6 +622,12 @@ allOf:
+           $ref: /schemas/types.yaml#/definitions/uint32
+           enum: [1, 2, 4, 8, 16, 32]
+ 
++        snps,rx-prog-swap:
++          type: boolean
++          description:
++            Swap the sampling occasion on the RX side. This can be used for
++            tuning when connected to a third-party PHY.
++
+         snps,no-pbl-x8:
+           $ref: /schemas/types.yaml#/definitions/flag
+           description:
+-- 
+2.34.1
+

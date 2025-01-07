@@ -1,0 +1,33 @@
+From 7547b864c5ef6ec637a897b419d1984a2433bb0e Mon Sep 17 00:00:00 2001
+From: Renjiang Han <quic_renjiang@quicinc.com>
+Date: Wed, 13 Nov 2024 15:21:19 +0800
+Subject: [PATCH 4/4] FROMLIST: arm64: dts: qcom: qcs615-ride: enable venus node
+
+Enable the venus node so that the video codec will start working.
+
+Signed-off-by: Renjiang Han <quic_renjiang@quicinc.com>
+Signed-off-by: Wangao Wang <quic_wangaow@quicinc.com>
+Link: https://lore.kernel.org/linux-arm-msm/20241112-add-venus-for-qcs615-v2-4-e67947f957af@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/linux-arm-msm/20241112-add-venus-for-qcs615-v2-4-e67947f957af@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615-ride.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615-ride.dts b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+index b9b4a8917aba..72694b6fa628 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+@@ -552,6 +552,10 @@ &usb_1_dwc3 {
+ 	dr_mode = "peripheral";
+ };
+ 
++&venus {
++	status = "okay";
++};
++
+ &watchdog {
+ 	clocks = <&sleep_clk>;
+ };
+-- 
+2.47.0
+

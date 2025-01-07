@@ -1,0 +1,63 @@
+From 9857c918919f47c06bc9f90b830c4fd92dbd3dc2 Mon Sep 17 00:00:00 2001
+From: Song Xue <quic_songxue@quicinc.com>
+Date: Thu, 21 Nov 2024 16:09:27 +0800
+Subject: [PATCH] FROMLIST: phy: qcom-qusb2: Add regulator_set_load to Qualcomm
+ usb phy
+
+Set the current load before enable regulator supplies at QUSB phy.
+
+Encountered one issue where the board powered down instantly once the UVC
+camera was attached to USB port while adding host mode on usb port and
+testing a UVC camera with the driver on QCS615 platform. The extensible
+boot loader mentioned that OCP(Over Current Protection) occurred at LDO12
+from regulators-0 upon powered on board again. That indicates that the
+current load set for QUSB phy, which use the regulator supply, is lower
+than expected.
+
+As per QUSB spec, set the maximum current load at 30mA to avoid overcurrent
+load when attach a device to the USB port.
+
+Fixes: 937e17f36a32 ("phy: qcom-qusb2: Power-on PHY before initialization")
+Signed-off-by: Song Xue <quic_songxue@quicinc.com>
+Link: https://lore.kernel.org/all/20241121-add_set_load_to_qusb_phy-v2-1-1c5da1befec0@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241121-add_set_load_to_qusb_phy-v2-1-1c5da1befec0@quicinc.com/]
+---
+ drivers/phy/qualcomm/phy-qcom-qusb2.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/phy/qualcomm/phy-qcom-qusb2.c b/drivers/phy/qualcomm/phy-qcom-qusb2.c
+index 227041e096bc..ae30d3a393cc 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qusb2.c
++++ b/drivers/phy/qualcomm/phy-qcom-qusb2.c
+@@ -748,16 +748,27 @@ static int __maybe_unused qusb2_phy_runtime_resume(struct device *dev)
+ 	return ret;
+ }
+ 
++#define QUSB2PHY_HPM_LOAD 30000 /*uA*/
++
+ static int qusb2_phy_init(struct phy *phy)
+ {
+ 	struct qusb2_phy *qphy = phy_get_drvdata(phy);
+ 	const struct qusb2_phy_cfg *cfg = qphy->cfg;
+ 	unsigned int val = 0;
+ 	unsigned int clk_scheme;
+-	int ret;
++	int ret, i;
+ 
+ 	dev_vdbg(&phy->dev, "%s(): Initializing QUSB2 phy\n", __func__);
+ 
++	/* set the current load */
++	for (i = 0; i < ARRAY_SIZE(qphy->vregs); i++) {
++		ret = regulator_set_load(qphy->vregs[i].consumer, QUSB2PHY_HPM_LOAD);
++		if (ret) {
++			dev_err(&phy->dev, "failed to set load at %s\n", qphy->vregs[i].supply);
++			return ret;
++		}
++	}
++
+ 	/* turn on regulator supplies */
+ 	ret = regulator_bulk_enable(ARRAY_SIZE(qphy->vregs), qphy->vregs);
+ 	if (ret)
+-- 
+2.25.1
+

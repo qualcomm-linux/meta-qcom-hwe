@@ -1,0 +1,57 @@
+From 953dc79e2e8335911e1b9f931bc0da64cb013eb4 Mon Sep 17 00:00:00 2001
+From: Krishna Kurapati <quic_kriskura@quicinc.com>
+Date: Thu, 21 Nov 2024 12:00:07 +0530
+Subject: [PATCH 2/2] FROMLIST: arm64: dts: qcom: Enable Primary USB controller
+ on QCS615 Ride
+
+Enable primary USB controller on QCS615 Ride platform. The primary USB
+controller is made "peripheral", as this is intended to be connected to
+a host for debugging use cases.
+
+For using the controller in host mode, changing the dr_mode and adding
+appropriate pinctrl nodes to provide vbus would be sufficient.
+
+Signed-off-by: Krishna Kurapati <quic_kriskura@quicinc.com>
+Link: https://lore.kernel.org/all/20241121063007.2737908-3-quic_kriskura@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241121063007.2737908-3-quic_kriskura@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615-ride.dts | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615-ride.dts b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+index 664778550529..18136b3d2770 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+@@ -420,6 +420,29 @@ &ufs_mem_phy {
+ 	status = "okay";
+ };
+ 
++&usb_1_hsphy {
++	vdd-supply = <&vreg_l5a>;
++	vdda-pll-supply = <&vreg_l12a>;
++	vdda-phy-dpdm-supply = <&vreg_l13a>;
++
++	status = "okay";
++};
++
++&usb_qmpphy {
++	vdda-phy-supply = <&vreg_l5a>;
++	vdda-pll-supply = <&vreg_l12a>;
++
++	status = "okay";
++};
++
++&usb_1 {
++	status = "okay";
++};
++
++&usb_1_dwc3 {
++	dr_mode = "peripheral";
++};
++
+ &watchdog {
+ 	clocks = <&sleep_clk>;
+ };
+-- 
+2.25.1
+

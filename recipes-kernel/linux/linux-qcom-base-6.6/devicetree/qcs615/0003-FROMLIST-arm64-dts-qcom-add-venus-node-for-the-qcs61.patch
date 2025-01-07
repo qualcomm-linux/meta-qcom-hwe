@@ -1,0 +1,122 @@
+From f06bee265f1c1806861cdc18e14ef866b12e158d Mon Sep 17 00:00:00 2001
+From: Renjiang Han <quic_renjiang@quicinc.com>
+Date: Wed, 13 Nov 2024 15:18:07 +0800
+Subject: [PATCH 3/4] FROMLIST: arm64: dts: qcom: add venus node for the qcs615
+
+Add venus node into devicetree for the qcs615 video.
+
+Signed-off-by: Renjiang Han <quic_renjiang@quicinc.com>
+Signed-off-by: Wangao Wang <quic_wangaow@quicinc.com>
+Link: https://lore.kernel.org/linux-arm-msm/20241112-add-venus-for-qcs615-v2-3-e67947f957af@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/linux-arm-msm/20241112-add-venus-for-qcs615-v2-3-e67947f957af@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615.dtsi | 86 ++++++++++++++++++++++++++++
+ 1 file changed, 86 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615.dtsi b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+index 207bd2632e29..7234e4e8b7ae 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+@@ -427,6 +427,11 @@ smem_region: smem@86000000 {
+ 			no-map;
+ 			hwlocks = <&tcsr_mutex 3>;
+ 		};
++
++		pil_video_mem: pil-video@93400000 {
++			reg = <0x0 0x93400000 0x0 0x500000>;
++			no-map;
++		};
+ 	};
+ 
+ 	soc: soc@0 {
+@@ -3036,6 +3041,87 @@ cti@7900000 {
+ 			clock-names = "apb_pclk";
+ 		};
+ 
++		venus: video-codec@aa00000 {
++			compatible = "qcom,qcs615-venus";
++			reg = <0x0 0xaa00000 0x0 0x100000>;
++			interrupts = <GIC_SPI 174 IRQ_TYPE_LEVEL_HIGH>;
++
++			clocks = <&videocc VIDEO_CC_VENUS_CTL_CORE_CLK>,
++				 <&videocc VIDEO_CC_VENUS_AHB_CLK>,
++				 <&videocc VIDEO_CC_VENUS_CTL_AXI_CLK>,
++				 <&videocc VIDEO_CC_VCODEC0_CORE_CLK>,
++				 <&videocc VIDEO_CC_VCODEC0_AXI_CLK>;
++			clock-names = "core",
++				      "iface",
++				      "bus",
++				      "vcodec0_core",
++				      "vcodec0_bus";
++
++			power-domains = <&videocc VENUS_GDSC>,
++					<&videocc VCODEC0_GDSC>,
++					<&rpmhpd RPMHPD_CX>;
++			power-domain-names = "venus",
++					     "vcodec0",
++					     "cx";
++
++			operating-points-v2 = <&venus_opp_table>;
++
++			interconnects = <&mmss_noc MASTER_VIDEO_P0 0
++					 &mc_virt SLAVE_EBI1 0>,
++					<&gem_noc MASTER_APPSS_PROC 0
++					 &config_noc SLAVE_VENUS_CFG 0>;
++			interconnect-names = "video-mem",
++					     "cpu-cfg";
++
++			iommus = <&apps_smmu 0xe40 0x20>;
++
++			memory-region = <&pil_video_mem>;
++
++			status = "disabled";
++
++			video-decoder {
++				compatible = "venus-decoder";
++			};
++
++			video-encoder {
++				compatible = "venus-encoder";
++			};
++
++			venus_opp_table: opp-table {
++				compatible = "operating-points-v2";
++
++				opp-133330000 {
++					opp-hz = /bits/ 64 <133330000>;
++					required-opps = <&rpmhpd_opp_low_svs>;
++				};
++
++				opp-240000000 {
++					opp-hz = /bits/ 64 <240000000>;
++					required-opps = <&rpmhpd_opp_svs>;
++				};
++
++				opp-300000000 {
++					opp-hz = /bits/ 64 <300000000>;
++					required-opps = <&rpmhpd_opp_svs_l1>;
++				};
++
++				opp-380000000 {
++					opp-hz = /bits/ 64 <380000000>;
++					required-opps = <&rpmhpd_opp_nom>;
++				};
++
++				opp-410000000 {
++					opp-hz = /bits/ 64 <410000000>;
++					required-opps = <&rpmhpd_opp_turbo>;
++				};
++
++				opp-460000000 {
++					opp-hz = /bits/ 64 <460000000>;
++					required-opps = <&rpmhpd_opp_turbo_l1>;
++				};
++			};
++		};
++
+ 		gpucc: clock-controller@5090000 {
+ 			compatible = "qcom,qcs615-gpucc";
+ 			reg = <0x0 0x05090000 0x0 0x9000>;
+-- 
+2.47.0
+

@@ -1,0 +1,77 @@
+From 8a90ff3bab8ebd3447fd60e2a57a6779f3aa2840 Mon Sep 17 00:00:00 2001
+From: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Date: Fri, 22 Nov 2024 16:39:04 +0800
+Subject: [PATCH 6/8] FROMLIST: drm/msm/dp: Retry Link Training 2 with lower
+ pattern
+
+Add a mechanism to retry Link Training 2 by lowering the pattern level
+when the link training #2 first attempt fails. This approach enhances
+compatibility, particularly addressing issues caused by certain hub
+configurations.
+
+Signed-off-by: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Link: https://lore.kernel.org/all/20241129-add-displayport-support-for-qcs615-platform-v1-7-09a4338d93ef@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241129-add-displayport-support-for-qcs615-platform-v1-7-09a4338d93ef@quicinc.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_ctrl.c | 30 ++++++++++++++++++++++++++----
+ 1 file changed, 26 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_ctrl.c b/drivers/gpu/drm/msm/dp/dp_ctrl.c
+index 1c128a54ec33..b795f341d913 100644
+--- a/drivers/gpu/drm/msm/dp/dp_ctrl.c
++++ b/drivers/gpu/drm/msm/dp/dp_ctrl.c
+@@ -1187,7 +1187,7 @@ static void dp_ctrl_clear_training_pattern(struct dp_ctrl_private *ctrl)
+ }
+ 
+ static int dp_ctrl_link_train_2(struct dp_ctrl_private *ctrl,
+-			int *training_step)
++			int *training_step, bool downgrade)
+ {
+ 	int tries = 0, ret = 0;
+ 	u8 pattern;
+@@ -1210,6 +1210,24 @@ static int dp_ctrl_link_train_2(struct dp_ctrl_private *ctrl,
+ 		state_ctrl_bit = 2;
+ 	}
+ 
++	if (downgrade) {
++		switch (pattern) {
++		case DP_TRAINING_PATTERN_4:
++			pattern = DP_TRAINING_PATTERN_3;
++			state_ctrl_bit = 3;
++			break;
++		case DP_TRAINING_PATTERN_3:
++			pattern = DP_TRAINING_PATTERN_2;
++			state_ctrl_bit = 2;
++			break;
++		default:
++			break;
++		}
++	}
++
++	drm_dbg_dp(ctrl->drm_dev, "pattern(%d) state_ctrl_bit(%d) downgrade(%d)\n",
++		pattern, state_ctrl_bit, downgrade);
++
+ 	ret = dp_catalog_ctrl_set_pattern_state_bit(ctrl->catalog, state_ctrl_bit);
+ 	if (ret)
+ 		return ret;
+@@ -1278,10 +1296,14 @@ static int dp_ctrl_link_train(struct dp_ctrl_private *ctrl,
+ 	/* print success info as this is a result of user initiated action */
+ 	drm_dbg_dp(ctrl->drm_dev, "link training #1 successful\n");
+ 
+-	ret = dp_ctrl_link_train_2(ctrl, training_step);
++	ret = dp_ctrl_link_train_2(ctrl, training_step, false);
+ 	if (ret) {
+-		DRM_ERROR("link training #2 failed. ret=%d\n", ret);
+-		goto end;
++		drm_dbg_dp(ctrl->drm_dev, "link training #2 failed, retry downgrade.\n");
++		ret = dp_ctrl_link_train_2(ctrl, training_step, true);
++		if (ret) {
++			DRM_ERROR("link training #2 failed, ret=%d\n", ret);
++			goto end;
++		}
+ 	}
+ 
+ 	/* print success info as this is a result of user initiated action */
+-- 
+2.25.1
+

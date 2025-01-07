@@ -176,4 +176,26 @@ SRC_URI:append = " \
     file://qcs9100/0001-FROMLIST-misc-fastrpc-Add-support-for-multiple-PD-from-one-pr.patch \
     file://qcs9100/0002-FROMLIST-misc-fastrpc-Rename-tgid-and-pid-to-client_id.patch \
     file://common/0001-FROMLIST-irqchip-gic-v3-Handle-failure-case-of-CPU-e.patch \
+    file://qcs615/0002-FROMLIST-phy-qcom-qmp-Add-phy-register-and-clk-setti.patch \
+    file://qcs615/0004-FROMLIST-PCI-qcom-Add-QCS615-PCIe-support.patch \
+    file://qcs615/0004-FROMLIST-drm-msm-mdss-Add-SM6150-support.patch \
+    file://qcs615/0005-FROMLIST-drm-msm-dpu-Add-SM6150-support.patch \
+    file://qcs615/0006-FROMLIST-drm-msm-dsi-Add-dsi-phy-support-for-SM6150.patch \
+    file://qcs615/0007-FROMLIST-drm-msm-dsi-Add-support-for-SM6150.patch \
+    file://qcs615/0002-FROMLIST-media-venus-core-add-qcs615-platform-data.patch \
+    file://common/0001-FROMLIST-phy-qcom-qusb2-Add-regulator_set_load-to-Qu.patch \
+    file://qcs615/0001-FROMLIST-net-stmmac-dwmac-qcom-ethqos-add-support-fo.patch \
+    file://common/0028-FROMLIST-mmc-sdhci-msm-Enable-MMC_CAP_AGGRESSIVE_PM-.patch \
+    file://qcs615/0003-FROMLIST-phy-qcom-qmp-usbc-Add-DP-phy-mode-support-o.patch \
+    file://qcs615/0004-FROMLIST-drm-msm-dp-Add-DisplayPort-support-for-QCS6.patch \
+    file://qcs615/0005-FROMLIST-drm-msm-dp-Add-support-for-lane-mapping-con.patch \
+    file://qcs615/0006-FROMLIST-drm-msm-dp-Retry-Link-Training-2-with-lower.patch \
+    file://qcs615/0001-BACKPORT-drm-msm-dpu-check-for-overflow-in-_dpu_crtc_.patch \
+    file://qcs615/0002-BACKPORT-drm-msm-dpu-merge-MAX_IMG_WIDTH-HEIGHT-with.patch \
+    file://qcs615/0003-BACKPORT-drm-msm-dpu-sync-mode_config-limits-to-the-.patch \
+    file://qcs615/0004-FROMLIST-drm-msm-dpu-filter-out-too-wide-modes-if-no.patch \
+    file://qcs615/0001-FROMLIST-drm-msm-dp-call-dp_hpd_plug_handle-unplug_h.patch \
+    file://qcs615/0001-FROMLIST-drm-msm-dpu-Filter-modes-based-on-adjusted-.patch \
+    file://qcs615/0001-FROMLIST-arm64-gfx-qcom-qcs615-Add-support-for-Adren.patch \
+    file://qcs615/0001-FROMLIST-net-stmmac-qcom-ethqos-Enable-RX-programmab.patch \
     "

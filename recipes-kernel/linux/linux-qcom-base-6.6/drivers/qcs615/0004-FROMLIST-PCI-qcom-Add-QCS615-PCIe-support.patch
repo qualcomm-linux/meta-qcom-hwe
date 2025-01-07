@@ -1,0 +1,36 @@
+From 75a8af42712f415e7c7481c352a2f9ccdc65f79f Mon Sep 17 00:00:00 2001
+From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Date: Mon, 14 Oct 2024 16:08:17 +0800
+Subject: [PATCH 2/2] FROMLIST: PCI: qcom: Add QCS615 PCIe support
+
+Add the compatible and the driver data for QCS615 PCIe controller.
+
+There is only one controller instance found on this platform, out of which
+is Gen3 with speeds of up to 8.0GT/s.
+
+The version of the controller is 1.38.0 for all instances, but they are
+compatible with 1.9.0 config.
+
+Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+Link: https://lore.kernel.org/all/20241122023314.1616353-5-quic_ziyuzhan@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241122023314.1616353-5-quic_ziyuzhan@quicinc.com/]
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index d3ca6d349313..deef853c983d 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1620,6 +1620,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-ipq8074-gen3", .data = &cfg_2_9_0 },
+ 	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
+ 	{ .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
++	{ .compatible = "qcom,pcie-qcs615", .data = &cfg_1_9_0 },
+ 	{ .compatible = "qcom,pcie-sa8540p", .data = &cfg_1_9_0 },
+ 	{ .compatible = "qcom,pcie-sa8775p", .data = &cfg_1_9_0},
+ 	{ .compatible = "qcom,pcie-sc7280", .data = &cfg_1_9_0 },
+-- 
+2.47.0
+

@@ -1,0 +1,46 @@
+From 74567f5035ca6146bd0177d3d7d422bf28891196 Mon Sep 17 00:00:00 2001
+From: Li Liu <quic_lliu6@quicinc.com>
+Date: Tue, 15 Oct 2024 14:13:22 +0800
+Subject: [PATCH 4/9] FROMLIST: drm/msm: mdss: Add SM6150 support
+
+Add support for MDSS on SM6150.
+
+Change-Id: I7788247b30caf365305f2ec27a1bddda94b18d59
+Signed-off-by: Li Liu <quic_lliu6@quicinc.com>
+Signed-off-by: Fange Zhang <quic_fangez@quicinc.com>
+Link: https://lore.kernel.org/all/20241122-add-display-support-for-qcs615-platform-v3-4-35252e3a51fe@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241122-add-display-support-for-qcs615-platform-v3-4-35252e3a51fe@quicinc.com/]
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+---
+ drivers/gpu/drm/msm/msm_mdss.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/gpu/drm/msm/msm_mdss.c b/drivers/gpu/drm/msm/msm_mdss.c
+index 9e83fac262d4..f9ab468d0642 100644
+--- a/drivers/gpu/drm/msm/msm_mdss.c
++++ b/drivers/gpu/drm/msm/msm_mdss.c
+@@ -613,6 +613,13 @@ static const struct msm_mdss_data sm6125_data = {
+ 	.reg_bus_bw = 76800,
+ };
+ 
++static const struct msm_mdss_data sm6150_data = {
++	.ubwc_enc_version = UBWC_2_0,
++	.ubwc_dec_version = UBWC_2_0,
++	.highest_bank_bit = 1,
++	.reg_bus_bw = 76800,
++};
++
+ static const struct msm_mdss_data sm8250_data = {
+ 	.ubwc_enc_version = UBWC_4_0,
+ 	.ubwc_dec_version = UBWC_4_0,
+@@ -657,6 +664,7 @@ static const struct of_device_id mdss_dt_match[] = {
+ 	{ .compatible = "qcom,sc8280xp-mdss", .data = &sc8280xp_data },
+ 	{ .compatible = "qcom,sm6115-mdss", .data = &sm6115_data },
+ 	{ .compatible = "qcom,sm6125-mdss", .data = &sm6125_data },
++	{ .compatible = "qcom,sm6150-mdss", .data = &sm6150_data },
+ 	{ .compatible = "qcom,sm6350-mdss", .data = &sm6350_data },
+ 	{ .compatible = "qcom,sm6375-mdss", .data = &sm6350_data },
+ 	{ .compatible = "qcom,sm8150-mdss", .data = &sm8150_data },
+-- 
+2.34.1
+

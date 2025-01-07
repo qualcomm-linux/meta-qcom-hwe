@@ -1,0 +1,46 @@
+From a9723d488ba9f54c46d5955a0dd0f485d0c397d2 Mon Sep 17 00:00:00 2001
+From: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Date: Wed, 11 Dec 2024 20:58:18 +0800
+Subject: [PATCH] FROMLIST: drm/msm/dp: call
+ dp_hpd_plug_handle()/unplug_handle() directly for external HPD
+
+dp_bridge_hpd_notify() delivered from output_poll_execute() thread
+returns the incorrect HPD status as the MSM DP driver returns the value
+of link_ready and not the HPD status currently in the .detect()
+callback.
+
+And because the HPD event thread has not run yet, this results in two
+complementary
+events.
+
+To address this, fix dp_bridge_hpd_notify() to call
+dp_hpd_plug_handle/unplug_handle()
+directly to return consistent values for the above scenarios.
+
+Signed-off-by: Kuogee Hsieh <quic_khsieh@quicinc.com>
+Signed-off-by: Abhinav Kumar <quic_abhinavk@quicinc.com>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Signed-off-by: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+link: https://lore.kernel.org/all/20240406031548.25829-1-quic_abhinavk@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20240406031548.25829-1-quic_abhinavk@quicinc.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_display.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index 1a78a70f3c04..d5050fb514f2 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -1815,7 +1815,7 @@ void dp_bridge_hpd_notify(struct drm_bridge *bridge,
+ 	}
+ 
+ 	if (!dp_display->is_connected && status == connector_status_connected)
+-		dp_add_event(dp, EV_HPD_PLUG_INT, 0, 0);
++		dp_hpd_plug_handle(dp, 0);
+ 	else if (dp_display->is_connected && status == connector_status_disconnected)
+-		dp_add_event(dp, EV_HPD_UNPLUG_INT, 0, 0);
++		dp_hpd_unplug_handle(dp, 0);
+ }
+-- 
+2.25.1
+

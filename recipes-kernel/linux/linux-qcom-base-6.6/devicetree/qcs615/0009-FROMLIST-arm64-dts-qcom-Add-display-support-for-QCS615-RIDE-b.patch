@@ -1,0 +1,108 @@
+From 41f69e900e9366ee9724f385e0d8814fe40c16bc Mon Sep 17 00:00:00 2001
+From: Li Liu <quic_lliu6@quicinc.com>
+Date: Tue, 15 Oct 2024 10:58:10 +0800
+Subject: [PATCH 9/9] FROMLIST: arm64: dts: qcom: Add display support for
+ QCS615 RIDE board
+
+Add display MDSS and DSI configuration for QCS615.
+QCS615 has a DP port, and DP support will be added in a later patch.
+
+Change-Id: I19931ecdb20570ccff5e62a896c35d77405f18a6
+Signed-off-by: Li Liu <quic_lliu6@quicinc.com>
+Signed-off-by: Fange Zhang <quic_fangez@quicinc.com>
+Link: https://lore.kernel.org/all/20241122-add-display-support-for-qcs615-platform-v3-9-35252e3a51fe@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241122-add-display-support-for-qcs615-platform-v3-9-35252e3a51fe@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615-ride.dts | 76 ++++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615-ride.dts b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+index 15f7391ef191..06c30823f786 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
+@@ -262,6 +262,82 @@ &gcc {
+ 		 <&sleep_clk>;
+ };
+ 
++&i2c2 {
++	clock-frequency = <400000>;
++	status = "okay";
++
++	ioexp: gpio@3e {
++		compatible = "semtech,sx1509q";
++		reg = <0x3e>;
++		interrupt-parent = <&tlmm>;
++		interrupts = <58 0>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		interrupt-controller;
++		#interrupt-cells = <2>;
++		semtech,probe-reset;
++	};
++
++	i2c-mux@77 {
++		compatible = "nxp,pca9542";
++		reg = <0x77>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++		i2c@0 {
++			reg = <0>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			anx7625@58 {
++				compatible = "analogix,anx7625";
++				reg = <0x58>;
++				interrupt-parent = <&ioexp>;
++				interrupts = <0 0>;
++				enable-gpios = <&tlmm 4 GPIO_ACTIVE_HIGH>;
++				reset-gpios = <&tlmm 5 GPIO_ACTIVE_HIGH>;
++				wakeup-source;
++
++				ports {
++					#address-cells = <1>;
++					#size-cells = <0>;
++
++					port@0 {
++						reg = <0>;
++						anx_7625_in: endpoint {
++							remote-endpoint = <&mdss_dsi0_out>;
++						};
++					};
++
++					port@1 {
++						reg = <1>;
++						anx_7625_out: endpoint {
++						};
++					};
++				};
++			};
++		};
++	};
++};
++
++&mdss {
++	status = "okay";
++};
++
++&mdss_dsi0 {
++	vdda-supply = <&vreg_l11a>;
++	status = "okay";
++};
++
++&mdss_dsi0_out {
++	remote-endpoint = <&anx_7625_in>;
++	data-lanes = <0 1 2 3>;
++};
++
++&mdss_dsi0_phy {
++	vdds-supply = <&vreg_l5a>;
++	status = "okay";
++};
++
+ &pon_pwrkey {
+ 	status = "okay";
+ };
+-- 
+2.34.1
+

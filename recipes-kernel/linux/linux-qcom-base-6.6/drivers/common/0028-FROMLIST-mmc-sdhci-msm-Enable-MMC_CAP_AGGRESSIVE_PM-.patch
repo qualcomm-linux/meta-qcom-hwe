@@ -1,0 +1,31 @@
+From 72e5f3c4eede103e99bbccad5fba0a62661bc7a1 Mon Sep 17 00:00:00 2001
+From: Sarthak Garg <quic_sartgarg@quicinc.com>
+Date: Mon, 4 Nov 2024 11:37:22 +0530
+Subject: [PATCH] FROMLIST: mmc: sdhci-msm: Enable MMC_CAP_AGGRESSIVE_PM for
+ qualcomm controllers
+
+Enable MMC_CAP_AGGRESSIVE_PM for qualcomm controllers.
+This enables runtime PM for eMMC/SD card.
+
+Signed-off-by: Sarthak Garg <quic_sartgarg@quicinc.com>
+Link: https://lore.kernel.org/linux-arm-msm/20241104060722.10642-1-quic_sartgarg@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/linux-arm-msm/20241104060722.10642-1-quic_sartgarg@quicinc.com/]
+---
+ drivers/mmc/host/sdhci-msm.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/mmc/host/sdhci-msm.c b/drivers/mmc/host/sdhci-msm.c
+index e113b99a3eab..3f477d1ecf97 100644
+--- a/drivers/mmc/host/sdhci-msm.c
++++ b/drivers/mmc/host/sdhci-msm.c
+@@ -2626,6 +2626,7 @@ static int sdhci_msm_probe(struct platform_device *pdev)
+ 		goto clk_disable;
+ 	}
+ 
++	msm_host->mmc->caps |= MMC_CAP_AGGRESSIVE_PM;
+ 	msm_host->mmc->caps |= MMC_CAP_WAIT_WHILE_BUSY | MMC_CAP_NEED_RSP_BUSY;
+ 
+ 	/* Set the timeout value to max possible */
+-- 
+2.34.1
+

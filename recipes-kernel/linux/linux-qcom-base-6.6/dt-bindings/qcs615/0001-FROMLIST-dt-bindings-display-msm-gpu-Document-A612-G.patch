@@ -1,0 +1,66 @@
+From 80b2b5ff474d918e5fe7c6fa5e5492889067ae24 Mon Sep 17 00:00:00 2001
+From: Haitao Xu <quic_haitxu@quicinc.com>
+Date: Thu, 19 Dec 2024 14:03:42 +0800
+Subject: [PATCH 1/4] FROMLIST: dt-bindings: display/msm: gpu: Document A612  GPU
+
+A612 GPU requires an additional smmu_vote clock. Update the bindings to
+reflect this.
+
+Signed-off-by: Akhil P Oommen <quic_akhilpo@quicinc.com>
+Signed-off-by: Haitao Xu <quic_haitxu@quicinc.com>
+Link: https://lore.kernel.org/all/20241213-qcs615-gpu-dt-v2-1-47f3b312b178@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241213-qcs615-gpu-dt-v2-1-47f3b312b178@quicinc.com/]
+---
+ .../devicetree/bindings/display/msm/gpu.yaml  | 36 +++++++++++++++++++
+ 1 file changed, 36 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/display/msm/gpu.yaml b/Documentation/devicetree/bindings/display/msm/gpu.yaml
+index 56b9b247e8c2..f38617ad8fca 100644
+--- a/Documentation/devicetree/bindings/display/msm/gpu.yaml
++++ b/Documentation/devicetree/bindings/display/msm/gpu.yaml
+@@ -198,6 +198,42 @@ allOf:
+       required:
+         - clocks
+         - clock-names
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,adreno-612.0
++    then:
++      properties:
++        clocks:
++          minItems: 5
++          maxItems: 5
++
++        clock-names:
++          items:
++            - const: core
++              description: GPU Core clock
++            - const: mem_iface
++              description: GPU Memory Interface clock
++            - const: alt_mem_iface
++              description: GPU Alternative Memory Interface clock
++            - const: gmu
++              description: CX GMU clock
++            - const: xo
++              description: GPUCC clocksource clock
++
++        reg-names:
++          minItems: 1
++          items:
++            - const: kgsl_3d0_reg_memory
++            - const: cx_dbgc
++
++      required:
++        - clocks
++        - clock-names
++
+     else:
+       if:
+         properties:
+-- 
+2.34.1
+

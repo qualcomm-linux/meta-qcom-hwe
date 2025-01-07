@@ -1,0 +1,29 @@
+From 8554f29f1398babad6acf6b6902191acd1a4b354 Mon Sep 17 00:00:00 2001
+From: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Date: Fri, 22 Nov 2024 16:22:48 +0800
+Subject: [PATCH 1/8] FROMLIST: dt-bindings: display/msm: Document DP on QCS615
+
+Document the DP hardware found on the Qualcomm QCS615 platform.
+
+Signed-off-by: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Link: https://lore.kernel.org/all/20241129-add-displayport-support-for-qcs615-platform-v1-1-09a4338d93ef@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241129-add-displayport-support-for-qcs615-platform-v1-1-09a4338d93ef@quicinc.com/]
+---
+ Documentation/devicetree/bindings/display/msm/dp-controller.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/display/msm/dp-controller.yaml b/Documentation/devicetree/bindings/display/msm/dp-controller.yaml
+index 44094a19cd13..3e3433dc274f 100644
+--- a/Documentation/devicetree/bindings/display/msm/dp-controller.yaml
++++ b/Documentation/devicetree/bindings/display/msm/dp-controller.yaml
+@@ -26,6 +26,7 @@ properties:
+           - qcom,sc8280xp-dp
+           - qcom,sc8280xp-edp
+           - qcom,sdm845-dp
++          - qcom,sm6150-dp
+           - qcom,sm8350-dp
+       - items:
+           - enum:
+-- 
+2.25.1
+

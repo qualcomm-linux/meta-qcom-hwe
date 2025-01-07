@@ -1,0 +1,248 @@
+From 066627ba32fe86897b9236568bd9e542f6f9f543 Mon Sep 17 00:00:00 2001
+From: Haitao Xu <quic_haitxu@quicinc.com>
+Date: Thu, 19 Dec 2024 17:45:57 +0800
+Subject: [PATCH] FROMLIST: arm64: gfx: qcom: qcs615: Add support for Adreno 612
+
+Add support for Adreno 612 GPU found in SM6150/QCS615 chipsets.
+A612 falls under ADRENO_6XX_GEN1 family and is a cut down version
+of A615 GPU.
+
+A612 has a new IP called Reduced Graphics Management Unit or RGMU
+which is a small state machine which helps to toggle GX GDSC
+(connected to CX rail) to implement IFPC feature. It doesn't support
+any other features of a full fledged GMU like clock control, resource
+voting to rpmh etc. So we need linux clock driver support like other
+gmu-wrapper implementations to control gpu core clock and gpu GX gdsc.
+Since there is no benefit with enabling RGMU at the moment, RGMU is
+entirely skipped in this patch.
+
+Signed-off-by: Jie Zhang <quic_jiezh@quicinc.com>
+Signed-off-by: Akhil P Oommen <quic_akhilpo@quicinc.com>
+Signed-off-by: Haitao Xu <quic_haitxu@quicinc.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Link: https://lore.kernel.org/all/20241213-a612-gpu-support-v3-1-0e9b25570a69@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241213-a612-gpu-support-v3-1-0e9b25570a69@quicinc.com/
+---
+ drivers/gpu/drm/msm/adreno/a6xx_gpu.c      | 49 +++++++++++++++-------
+ drivers/gpu/drm/msm/adreno/adreno_device.c | 11 +++++
+ drivers/gpu/drm/msm/adreno/adreno_gpu.h    | 12 ++++++
+ 3 files changed, 58 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/adreno/a6xx_gpu.c b/drivers/gpu/drm/msm/adreno/a6xx_gpu.c
+index 504a17f45065..6b97c46208fe 100644
+--- a/drivers/gpu/drm/msm/adreno/a6xx_gpu.c
++++ b/drivers/gpu/drm/msm/adreno/a6xx_gpu.c
+@@ -709,7 +709,7 @@ static void a6xx_set_hwcg(struct msm_gpu *gpu, bool state)
+ 
+ 	if (adreno_is_a630(adreno_gpu))
+ 		clock_cntl_on = 0x8aa8aa02;
+-	else if (adreno_is_a610(adreno_gpu))
++	else if (adreno_is_a610(adreno_gpu) || adreno_is_a612(adreno_gpu))
+ 		clock_cntl_on = 0xaaa8aa82;
+ 	else
+ 		clock_cntl_on = 0x8aa8aa82;
+@@ -721,14 +721,22 @@ static void a6xx_set_hwcg(struct msm_gpu *gpu, bool state)
+ 		return;
+ 
+ 	/* Disable SP clock before programming HWCG registers */
+-	if (!adreno_is_a610(adreno_gpu))
++	if (!adreno_is_a610_family(adreno_gpu))
+ 		gmu_rmw(gmu, REG_A6XX_GPU_GMU_GX_SPTPRAC_CLOCK_CONTROL, 1, 0);
+ 
+ 	for (i = 0; (reg = &adreno_gpu->info->hwcg[i], reg->offset); i++)
+ 		gpu_write(gpu, reg->offset, state ? reg->value : 0);
+ 
++	if (adreno_is_a612(adreno_gpu))	{
++		gpu_write(gpu, REG_A6XX_GPU_GMU_AO_GMU_CGC_MODE_CNTL, 0x00000022);
++		gmu_write(&a6xx_gpu->gmu, REG_A6XX_GPU_GMU_AO_GMU_CGC_DELAY_CNTL,
++			state ? 0x11 : 0);
++		gmu_write(&a6xx_gpu->gmu, REG_A6XX_GPU_GMU_AO_GMU_CGC_HYST_CNTL,
++			state ? 0x55 : 0);
++	}
++
+ 	/* Enable SP clock */
+-	if (!adreno_is_a610(adreno_gpu))
++	if (!adreno_is_a610_family(adreno_gpu))
+ 		gmu_rmw(gmu, REG_A6XX_GPU_GMU_GX_SPTPRAC_CLOCK_CONTROL, 0, 1);
+ 
+ 	gpu_write(gpu, REG_A6XX_RBBM_CLOCK_CNTL, state ? clock_cntl_on : 0);
+@@ -981,6 +989,9 @@ static void a6xx_set_ubwc_config(struct msm_gpu *gpu)
+ 		ubwc_mode = 1;
+ 	}
+ 
++	if (adreno_is_a612(adreno_gpu))
++		hbb_lo = 0;
++
+ 	/* a618 is using the hw default values */
+ 	if (adreno_is_a618(adreno_gpu))
+ 		return;
+@@ -1272,6 +1283,7 @@ static int hw_init(struct msm_gpu *gpu)
+ 
+ 	/* VBIF/GBIF start*/
+ 	if (adreno_is_a610(adreno_gpu) ||
++	    adreno_is_a612(adreno_gpu) ||
+ 	    adreno_is_a640_family(adreno_gpu) ||
+ 	    adreno_is_a650_family(adreno_gpu)) {
+ 		gpu_write(gpu, REG_A6XX_GBIF_QSB_SIDE0, 0x00071620);
+@@ -1308,7 +1320,7 @@ static int hw_init(struct msm_gpu *gpu)
+ 	if (adreno_is_a640_family(adreno_gpu) || adreno_is_a650_family(adreno_gpu)) {
+ 		gpu_write(gpu, REG_A6XX_CP_ROQ_THRESHOLDS_2, 0x02000140);
+ 		gpu_write(gpu, REG_A6XX_CP_ROQ_THRESHOLDS_1, 0x8040362c);
+-	} else if (adreno_is_a610(adreno_gpu)) {
++	} else if (adreno_is_a610_family(adreno_gpu)) {
+ 		gpu_write(gpu, REG_A6XX_CP_ROQ_THRESHOLDS_2, 0x00800060);
+ 		gpu_write(gpu, REG_A6XX_CP_ROQ_THRESHOLDS_1, 0x40201b16);
+ 	} else {
+@@ -1320,7 +1332,7 @@ static int hw_init(struct msm_gpu *gpu)
+ 		gpu_write(gpu, REG_A6XX_CP_LPAC_PROG_FIFO_SIZE, 0x00000020);
+ 
+ 	/* Setting the mem pool size */
+-	if (adreno_is_a610(adreno_gpu)) {
++	if (adreno_is_a610(adreno_gpu) || adreno_is_a612(adreno_gpu)) {
+ 		gpu_write(gpu, REG_A6XX_CP_MEM_POOL_SIZE, 48);
+ 		gpu_write(gpu, REG_A6XX_CP_MEM_POOL_DBG_ADDR, 47);
+ 	} else
+@@ -1338,7 +1350,7 @@ static int hw_init(struct msm_gpu *gpu)
+ 		gpu_write(gpu, REG_A6XX_PC_DBG_ECO_CNTL, 0x00300200);
+ 	else if (adreno_is_a619(adreno_gpu))
+ 		gpu_write(gpu, REG_A6XX_PC_DBG_ECO_CNTL, 0x00018000);
+-	else if (adreno_is_a610(adreno_gpu))
++	else if (adreno_is_a610(adreno_gpu) || adreno_is_a612(adreno_gpu))
+ 		gpu_write(gpu, REG_A6XX_PC_DBG_ECO_CNTL, 0x00080000);
+ 	else
+ 		gpu_write(gpu, REG_A6XX_PC_DBG_ECO_CNTL, 0x00180000);
+@@ -1359,6 +1371,8 @@ static int hw_init(struct msm_gpu *gpu)
+ 		gpu_write(gpu, REG_A6XX_RBBM_INTERFACE_HANG_INT_CNTL, (1 << 30) | 0x3fffff);
+ 	else if (adreno_is_a610(adreno_gpu))
+ 		gpu_write(gpu, REG_A6XX_RBBM_INTERFACE_HANG_INT_CNTL, (1 << 30) | 0x3ffff);
++	else if (adreno_is_a612(adreno_gpu))
++		gpu_write(gpu, REG_A6XX_RBBM_INTERFACE_HANG_INT_CNTL, (1 << 30) | 0xcffff);
+ 	else
+ 		gpu_write(gpu, REG_A6XX_RBBM_INTERFACE_HANG_INT_CNTL, (1 << 30) | 0x1fffff);
+ 
+@@ -1827,8 +1841,8 @@ static void a6xx_llc_activate(struct a6xx_gpu *a6xx_gpu)
+ 
+ static void a6xx_llc_slices_destroy(struct a6xx_gpu *a6xx_gpu)
+ {
+-	/* No LLCC on non-RPMh (and by extension, non-GMU) SoCs */
+-	if (adreno_has_gmu_wrapper(&a6xx_gpu->base))
++	/* A612 is actually not a gmu-wrapper and has LLCC */
++	if (adreno_has_gmu_wrapper(&a6xx_gpu->base) && !adreno_is_a612(&a6xx_gpu->base))
+ 		return;
+ 
+ 	llcc_slice_putd(a6xx_gpu->llc_slice);
+@@ -1840,8 +1854,8 @@ static void a6xx_llc_slices_init(struct platform_device *pdev,
+ {
+ 	struct device_node *phandle;
+ 
+-	/* No LLCC on non-RPMh (and by extension, non-GMU) SoCs */
+-	if (adreno_has_gmu_wrapper(&a6xx_gpu->base))
++	/* A612 is actually not a gmu-wrapper and has LLCC */
++	if (adreno_has_gmu_wrapper(&a6xx_gpu->base) && !adreno_is_a612(&a6xx_gpu->base))
+ 		return;
+ 
+ 	/*
+@@ -1995,6 +2009,9 @@ static int a6xx_pm_resume(struct msm_gpu *gpu)
+ 	if (!ret)
+ 		msm_devfreq_resume(gpu);
+ 
++	if (adreno_is_a612(&a6xx_gpu->base))
++		a6xx_llc_activate(a6xx_gpu);
++
+ 	return ret;
+ }
+ 
+@@ -2034,6 +2051,9 @@ static int a6xx_pm_suspend(struct msm_gpu *gpu)
+ 
+ 	trace_msm_gpu_suspend(0);
+ 
++	if (adreno_is_a612(&a6xx_gpu->base))
++		a6xx_llc_deactivate(a6xx_gpu);
++
+ 	msm_devfreq_suspend(gpu);
+ 
+ 	mutex_lock(&a6xx_gpu->gmu.lock);
+@@ -2356,16 +2376,15 @@ struct msm_gpu *a6xx_gpu_init(struct drm_device *dev)
+ 	/* FIXME: How do we gracefully handle this? */
+ 	BUG_ON(!node);
+ 
+-	adreno_gpu->gmu_is_wrapper = of_device_is_compatible(node, "qcom,adreno-gmu-wrapper");
++	/* We do not support RGMU at the moment, so assume it is a gmu wrapper for now */
++	adreno_gpu->gmu_is_wrapper = of_device_is_compatible(node, "qcom,adreno-gmu-wrapper") ||
++		of_device_is_compatible(node, "qcom,adreno-rgmu");
+ 
+ 	adreno_gpu->base.hw_apriv =
+ 		!!(config->info->quirks & ADRENO_QUIRK_HAS_HW_APRIV);
+ 
+-	a6xx_llc_slices_init(pdev, a6xx_gpu);
+-
+ 	ret = a6xx_set_supported_hw(&pdev->dev, config->info);
+ 	if (ret) {
+-		a6xx_llc_slices_destroy(a6xx_gpu);
+ 		kfree(a6xx_gpu);
+ 		return ERR_PTR(ret);
+ 	}
+@@ -2379,6 +2398,8 @@ struct msm_gpu *a6xx_gpu_init(struct drm_device *dev)
+ 		return ERR_PTR(ret);
+ 	}
+ 
++	a6xx_llc_slices_init(pdev, a6xx_gpu);
++
+ 	/*
+ 	 * For now only clamp to idle freq for devices where this is known not
+ 	 * to cause power supply issues:
+diff --git a/drivers/gpu/drm/msm/adreno/adreno_device.c b/drivers/gpu/drm/msm/adreno/adreno_device.c
+index ecd87c587896..3c4a6d770cf3 100644
+--- a/drivers/gpu/drm/msm/adreno/adreno_device.c
++++ b/drivers/gpu/drm/msm/adreno/adreno_device.c
+@@ -293,6 +293,17 @@ static const struct adreno_info gpulist[] = {
+ 			{ 157, 3 },
+ 			{ 127, 4 },
+ 		),
++	}, {
++		.chip_ids = ADRENO_CHIP_IDS(0x06010200),
++		.family = ADRENO_6XX_GEN1,
++		.fw = {
++			[ADRENO_FW_SQE] = "a630_sqe.fw",
++		},
++		.gmem = (SZ_128K + SZ_4K),
++		.inactive_period = DRM_MSM_INACTIVE_PERIOD,
++		.init = a6xx_gpu_init,
++		.zapfw = "a612_zap.mbn",
++		.hwcg = a612_hwcg,
+ 	}, {
+ 		.chip_ids = ADRENO_CHIP_IDS(0x06010800),
+ 		.family = ADRENO_6XX_GEN1,
+diff --git a/drivers/gpu/drm/msm/adreno/adreno_gpu.h b/drivers/gpu/drm/msm/adreno/adreno_gpu.h
+index 53ae1ba0ce63..4bb9a0865329 100644
+--- a/drivers/gpu/drm/msm/adreno/adreno_gpu.h
++++ b/drivers/gpu/drm/msm/adreno/adreno_gpu.h
+@@ -321,6 +321,11 @@ static inline int adreno_is_a610(const struct adreno_gpu *gpu)
+ 	return adreno_is_revn(gpu, 610);
+ }
+ 
++static inline int adreno_is_a612(const struct adreno_gpu *gpu)
++{
++	return gpu->info->chip_ids[0] == 0x06010200;
++}
++
+ static inline int adreno_is_a618(const struct adreno_gpu *gpu)
+ {
+ 	return adreno_is_revn(gpu, 618);
+@@ -376,6 +381,13 @@ static inline int adreno_is_a690(const struct adreno_gpu *gpu)
+ 	return gpu->info->chip_ids[0] == 0x06090000;
+ }
+ 
++static inline int adreno_is_a610_family(const struct adreno_gpu *gpu)
++{
++	if (WARN_ON_ONCE(!gpu->info))
++		return false;
++	return adreno_is_a610(gpu) || adreno_is_a612(gpu);
++}
++
+ /* check for a615, a616, a618, a619 or any a630 derivatives */
+ static inline int adreno_is_a630_family(const struct adreno_gpu *gpu)
+ {
+-- 
+2.34.1
+

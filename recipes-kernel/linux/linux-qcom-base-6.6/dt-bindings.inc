@@ -104,4 +104,19 @@ SRC_URI:append = " \
     file://qcs6490/0006-UPSTREAM-dt-bindings-remoteproc-qcom-sc7180-pas-Add-.patch \
     file://qcs8300/0001-FROMLIST-dt-bindings-crypto-qcom-prng-document-QCS83.patch \
     file://qcs8300/0001-FROMLIST-dt-bindings-crypto-qcom-qce-document-the-QC.patch \
+    file://qcs615/0001-FROMLIST-dt-bindings-phy-qcom-sc8280xp-qmp-pcie-phy-.patch \
+    file://qcs615/0003-FROMLIST-dt-bindings-PCI-qcom-Document-the-QCS615-PC.patch \
+    file://qcs615/0001-FROMLIST-dt-bindings-display-msm-Add-SM6150-DSI-phy.patch \
+    file://qcs615/0002-FROMLIST-dt-bindings-display-msm-dsi-controller-main.patch \
+    file://qcs615/0003-FROMLIST-dt-bindings-display-msm-Add-SM6150-MDSS-DPU.patch \
+    file://qcs615/0001-FROMLIST-dt-bindings-qcom-qcs615-venus-add-support-f.patch \
+    file://qcs615/0001-FROMLIST-dt-bindings-net-qcom-ethqos-revise-descript.patch \
+    file://qcs615/0002-FROMLIST-dt-bindings-net-snps-dwmac-add-description-.patch \
+    file://qcs615/0001-FROMLIST-dt-bindings-display-msm-Document-DP-on-QCS6.patch \
+    file://qcs615/0002-FROMLIST-dt-bindings-phy-qcom-msm8998-qmp-usb3-phy-A.patch \
+    file://qcs615/0001-FROMGIT-dt-bindings-arm-smmu-document-QCS615-GPU-SMMU.patch \
+    file://qcs615/0001-FROMLIST-dt-bindings-interconnect-qcom-bwmon-Documen.patch \
+    file://qcs615/0001-FROMLIST-dt-bindings-display-msm-gpu-Document-A612-G.patch \
+    file://qcs615/0002-FROMLIST-dt-bindings-display-msm-gmu-Document-RGMU.patch \
+    file://qcs615/0001-FROMLIST-dt-bindings-net-stmmac-Tune-rx-sampling-occ.patch \
     "

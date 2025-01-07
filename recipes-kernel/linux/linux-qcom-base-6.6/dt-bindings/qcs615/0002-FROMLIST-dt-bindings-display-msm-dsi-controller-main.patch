@@ -1,0 +1,40 @@
+From 8100d597b888c82f2d5bb212f01e30713138fc68 Mon Sep 17 00:00:00 2001
+From: Li Liu <quic_lliu6@quicinc.com>
+Date: Thu, 10 Oct 2024 16:12:58 +0800
+Subject: [PATCH 2/9] FROMLIST: dt-bindings: display/msm: dsi-controller-main:
+ Document SM6150
+
+Document general compatibility of the DSI controller on SM6150.
+
+Change-Id: I93e1748bb0ab62ce5daf8d967211f7ba984b485a
+Signed-off-by: Li Liu <quic_lliu6@quicinc.com>
+Signed-off-by: Fange Zhang <quic_fangez@quicinc.com>
+Link: https://lore.kernel.org/all/20241122-add-display-support-for-qcs615-platform-v3-2-35252e3a51fe@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241122-add-display-support-for-qcs615-platform-v3-2-35252e3a51fe@quicinc.com/]
+---
+ .../devicetree/bindings/display/msm/dsi-controller-main.yaml    | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/display/msm/dsi-controller-main.yaml b/Documentation/devicetree/bindings/display/msm/dsi-controller-main.yaml
+index c6dbab65d5f7..c6472cbf99cd 100644
+--- a/Documentation/devicetree/bindings/display/msm/dsi-controller-main.yaml
++++ b/Documentation/devicetree/bindings/display/msm/dsi-controller-main.yaml
+@@ -28,6 +28,7 @@ properties:
+               - qcom,sdm845-dsi-ctrl
+               - qcom,sm6115-dsi-ctrl
+               - qcom,sm6125-dsi-ctrl
++              - qcom,sm6150-dsi-ctrl
+               - qcom,sm6350-dsi-ctrl
+               - qcom,sm6375-dsi-ctrl
+               - qcom,sm8150-dsi-ctrl
+@@ -328,6 +329,7 @@ allOf:
+             enum:
+               - qcom,sc7180-dsi-ctrl
+               - qcom,sc7280-dsi-ctrl
++              - qcom,sm6150-dsi-ctrl
+               - qcom,sm8150-dsi-ctrl
+               - qcom,sm8250-dsi-ctrl
+               - qcom,sm8350-dsi-ctrl
+-- 
+2.34.1
+

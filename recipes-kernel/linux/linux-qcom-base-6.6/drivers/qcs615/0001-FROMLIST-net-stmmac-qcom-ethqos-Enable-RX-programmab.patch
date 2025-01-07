@@ -1,0 +1,104 @@
+From 98e10f9cca9377e6a97db8b0359e7a658675d665 Mon Sep 17 00:00:00 2001
+From: Yijie Yang <quic_yijiyang@quicinc.com>
+Date: Tue, 26 Nov 2024 14:47:07 +0800
+Subject: [PATCH] FROMLIST: net: stmmac: qcom-ethqos: Enable RX programmable
+ swap on qcs615
+
+In 100M/10M mode for qcom-ethqos, the DLL will be set to bypass mode.
+Therefore, RGMII_CONFIG2_RX_PROG_SWAP should be enabled to ensure correct
+data sampling.
+Although the EMAC version of qcs615 is below 3, this setting is still
+required.
+
+Signed-off-by: Yijie Yang <quic_yijiyang@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241225-support_10m100m-v1-2-4b52ef48b488@quicinc.com/]
+---
+ .../stmicro/stmmac/dwmac-qcom-ethqos.c        | 37 +++++++++----------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-qcom-ethqos.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-qcom-ethqos.c
+index 1ac72e09445d..8cf959533235 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac-qcom-ethqos.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-qcom-ethqos.c
+@@ -120,6 +120,7 @@ struct qcom_ethqos {
+ 	bool rgmii_config_loopback_en;
+ 	bool has_emac_ge_3;
+ 	bool needs_sgmii_loopback;
++	bool needs_rx_prog_swap;
+ };
+ 
+ static int rgmii_readl(struct qcom_ethqos *ethqos, unsigned int offset)
+@@ -416,6 +417,7 @@ static int ethqos_rgmii_macro_init(struct qcom_ethqos *ethqos)
+ 	struct device *dev = &ethqos->pdev->dev;
+ 	int phase_shift;
+ 	int loopback;
++	int rx_prog_swap;
+ 
+ 	/* Determine if the PHY adds a 2 ns TX delay or the MAC handles it */
+ 	if (ethqos->phy_mode == PHY_INTERFACE_MODE_RGMII_ID ||
+@@ -434,6 +436,11 @@ static int ethqos_rgmii_macro_init(struct qcom_ethqos *ethqos)
+ 	else
+ 		loopback = 0;
+ 
++	if (ethqos->needs_rx_prog_swap || ethqos->has_emac_ge_3)
++		rx_prog_swap = RGMII_CONFIG2_RX_PROG_SWAP;
++	else
++		rx_prog_swap = 0;
++
+ 	/* Select RGMII, write 0 to interface select */
+ 	rgmii_updatel(ethqos, RGMII_CONFIG_INTF_SEL,
+ 		      0, RGMII_IO_MACRO_CONFIG);
+@@ -495,16 +502,10 @@ static int ethqos_rgmii_macro_init(struct qcom_ethqos *ethqos)
+ 			      phase_shift, RGMII_IO_MACRO_CONFIG2);
+ 		rgmii_updatel(ethqos, RGMII_CONFIG_MAX_SPD_PRG_2,
+ 			      BIT(6), RGMII_IO_MACRO_CONFIG);
+-		rgmii_updatel(ethqos, RGMII_CONFIG2_RSVD_CONFIG15,
+-			      0, RGMII_IO_MACRO_CONFIG2);
+-
+-		if (ethqos->has_emac_ge_3)
+-			rgmii_updatel(ethqos, RGMII_CONFIG2_RX_PROG_SWAP,
+-				      RGMII_CONFIG2_RX_PROG_SWAP,
+-				      RGMII_IO_MACRO_CONFIG2);
+-		else
+-			rgmii_updatel(ethqos, RGMII_CONFIG2_RX_PROG_SWAP,
+-				      0, RGMII_IO_MACRO_CONFIG2);
++		rgmii_updatel(ethqos, RGMII_CONFIG2_RSVD_CONFIG15, 0,
++			      RGMII_IO_MACRO_CONFIG2);
++		rgmii_updatel(ethqos, RGMII_CONFIG2_RX_PROG_SWAP, rx_prog_swap,
++			      RGMII_IO_MACRO_CONFIG2);
+ 
+ 		/* Write 0x5 to PRG_RCLK_DLY_CODE */
+ 		rgmii_updatel(ethqos, SDCC_DDR_CONFIG_EXT_PRG_RCLK_DLY_CODE,
+@@ -536,15 +537,11 @@ static int ethqos_rgmii_macro_init(struct qcom_ethqos *ethqos)
+ 		rgmii_updatel(ethqos, RGMII_CONFIG_MAX_SPD_PRG_9,
+ 			      BIT(12) | GENMASK(9, 8),
+ 			      RGMII_IO_MACRO_CONFIG);
+-		rgmii_updatel(ethqos, RGMII_CONFIG2_RSVD_CONFIG15,
+-			      0, RGMII_IO_MACRO_CONFIG2);
+-		if (ethqos->has_emac_ge_3)
+-			rgmii_updatel(ethqos, RGMII_CONFIG2_RX_PROG_SWAP,
+-				      RGMII_CONFIG2_RX_PROG_SWAP,
+-				      RGMII_IO_MACRO_CONFIG2);
+-		else
+-			rgmii_updatel(ethqos, RGMII_CONFIG2_RX_PROG_SWAP,
+-				      0, RGMII_IO_MACRO_CONFIG2);
++		rgmii_updatel(ethqos, RGMII_CONFIG2_RSVD_CONFIG15, 0,
++			      RGMII_IO_MACRO_CONFIG2);
++		rgmii_updatel(ethqos, RGMII_CONFIG2_RX_PROG_SWAP, rx_prog_swap,
++			      RGMII_IO_MACRO_CONFIG2);
++
+ 		/* Write 0x5 to PRG_RCLK_DLY_CODE */
+ 		rgmii_updatel(ethqos, SDCC_DDR_CONFIG_EXT_PRG_RCLK_DLY_CODE,
+ 			      (BIT(29) | BIT(27)), SDCC_HC_REG_DDR_CONFIG);
+@@ -856,6 +853,8 @@ static int qcom_ethqos_probe(struct platform_device *pdev)
+ 	ethqos->rgmii_config_loopback_en = data->rgmii_config_loopback_en;
+ 	ethqos->has_emac_ge_3 = data->has_emac_ge_3;
+ 	ethqos->needs_sgmii_loopback = data->needs_sgmii_loopback;
++	ethqos->needs_rx_prog_swap =
++		of_property_read_bool(np, "snps,rx-prog-swap");
+ 
+ 	ethqos->link_clk = devm_clk_get(dev, data->link_clk_name ?: "rgmii");
+ 	if (IS_ERR(ethqos->link_clk))
+-- 
+2.34.1
+

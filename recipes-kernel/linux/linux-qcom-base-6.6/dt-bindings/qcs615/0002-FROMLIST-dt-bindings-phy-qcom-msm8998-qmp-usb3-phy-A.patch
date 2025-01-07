@@ -1,0 +1,71 @@
+From a3fd51e4670d79493089a23bf282ade41ac5fd7a Mon Sep 17 00:00:00 2001
+From: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Date: Fri, 22 Nov 2024 16:24:48 +0800
+Subject: [PATCH 2/8] FROMLIST: dt-bindings: phy: qcom,msm8998-qmp-usb3-phy:
+ Add QCS615 DP PHY
+
+Declare the DP QMP PHY present on the Qualcomm QCS615 platforms.
+
+Signed-off-by: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Link: https://lore.kernel.org/all/20241129-add-displayport-support-for-qcs615-platform-v1-2-09a4338d93ef@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241129-add-displayport-support-for-qcs615-platform-v1-2-09a4338d93ef@quicinc.com/]
+---
+ .../phy/qcom,msm8998-qmp-usb3-phy.yaml        | 21 +++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/phy/qcom,msm8998-qmp-usb3-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,msm8998-qmp-usb3-phy.yaml
+index 1636285fbe53..eb21cfe73452 100644
+--- a/Documentation/devicetree/bindings/phy/qcom,msm8998-qmp-usb3-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/qcom,msm8998-qmp-usb3-phy.yaml
+@@ -18,6 +18,7 @@ properties:
+     enum:
+       - qcom,msm8998-qmp-usb3-phy
+       - qcom,qcm2290-qmp-usb3-phy
++      - qcom,qcs615-qmp-dp-phy
+       - qcom,qcs615-qmp-usb3-phy
+       - qcom,sdm660-qmp-usb3-phy
+       - qcom,sm6115-qmp-usb3-phy
+@@ -47,7 +48,7 @@ properties:
+     const: 0
+ 
+   clock-output-names:
+-    maxItems: 1
++    maxItems: 2
+ 
+   "#phy-cells":
+     const: 0
+@@ -62,7 +63,8 @@ properties:
+     items:
+       - items:
+           - description: phandle to TCSR hardware block
+-          - description: offset of the VLS CLAMP register
++          - description: offset of the VLS CLAMP register in USB mode
++                         and offset of the DP Phy mode register in DP mode
+     description: Clamp register present in the TCSR
+ 
+   ports:
+@@ -128,6 +130,21 @@ allOf:
+             - const: com_aux
+             - const: pipe
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,qcs615-qmp-dp-phy
++    then:
++      properties:
++        clocks:
++          maxItems: 2
++        clock-names:
++          items:
++            - const: cfg_ahb
++            - const: ref
++
+ additionalProperties: false
+ 
+ examples:
+-- 
+2.25.1
+

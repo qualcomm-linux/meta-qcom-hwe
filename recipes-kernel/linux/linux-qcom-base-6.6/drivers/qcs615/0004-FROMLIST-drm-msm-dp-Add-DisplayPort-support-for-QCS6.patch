@@ -1,0 +1,38 @@
+From 9fb54c3006ab7fae091d99c8010d606ca7455e76 Mon Sep 17 00:00:00 2001
+From: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Date: Fri, 22 Nov 2024 16:31:36 +0800
+Subject: [PATCH 4/8] FROMLIST: drm/msm/dp: Add DisplayPort support for QCS615
+
+The Qualcomm QCS615 platform comes with a DisplayPort controller use the
+same base offset as sc7180. add support for this in DP driver.
+
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Signed-off-by: Xiangxu Yin <quic_xiangxuy@quicinc.com>
+Link: https://lore.kernel.org/all/20241129-add-displayport-support-for-qcs615-platform-v1-4-09a4338d93ef@quicinc.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20241129-add-displayport-support-for-qcs615-platform-v1-4-09a4338d93ef@quicinc.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_display.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index 9a1040ffa3fe..5e25c3e36a5d 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -1,5 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ /*
++ * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
+  * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
+  */
+ 
+@@ -195,6 +196,7 @@ static const struct of_device_id dp_dt_match[] = {
+ 	{ .compatible = "qcom,sc8280xp-dp", .data = &sc8280xp_dp_descs },
+ 	{ .compatible = "qcom,sc8280xp-edp", .data = &sc8280xp_edp_descs },
+ 	{ .compatible = "qcom,sdm845-dp", .data = &sc7180_dp_descs },
++	{ .compatible = "qcom,sm6150-dp", .data = &sc7180_dp_descs },
+ 	{ .compatible = "qcom,sm8350-dp", .data = &sm8350_dp_descs },
+ 	{ .compatible = "qcom,sm8650-dp", .data = &sm8650_dp_descs },
+ 	{}
+-- 
+2.25.1
+
