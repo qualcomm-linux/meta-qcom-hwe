@@ -1,0 +1,34 @@
+From a1a71b1dac09599137ee8a3da64c219d262be674 Mon Sep 17 00:00:00 2001
+From: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Date: Wed, 11 Dec 2024 16:43:37 +0800
+Subject: [PATCH] Resolved the uninitialized error of libcamera when compiling
+ the debug version.
+
+The current upstream code has resolved this issue,
+but the upstream patch[1] is not compatible with the version we are using.
+Therefore, we have created this patch to address the problem.
+
+Upstream-Status: Pending
+
+[1] https://patchwork.libcamera.org/patch/17284/
+
+Signed-off-by: Wenmeng Liu <quic_wenmliu@quicinc.com>
+---
+ src/libcamera/device_enumerator_sysfs.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libcamera/device_enumerator_sysfs.cpp b/src/libcamera/device_enumerator_sysfs.cpp
+index 686bb809..9acd5838 100644
+--- a/src/libcamera/device_enumerator_sysfs.cpp
++++ b/src/libcamera/device_enumerator_sysfs.cpp
+@@ -33,7 +33,7 @@ int DeviceEnumeratorSysfs::init()
+ int DeviceEnumeratorSysfs::enumerate()
+ {
+ 	struct dirent *ent;
+-	DIR *dir;
++	DIR *dir = nullptr;
+
+ 	static const char * const sysfs_dirs[] = {
+ 		"/sys/subsystem/media/devices",
+--
+2.34.1

@@ -144,15 +144,24 @@ case "$1" in
             fi
         fi
 
-        # Wait wayland socket node create.
+        # Wait for wayland socket node to be created with a maximum of 100 attempts.
+        attempts=0
+        max_attempts=100
+
         filename=$(find $XDG_RUNTIME_DIR -maxdepth 1 -name 'wayland-*' -print -quit)
-        while [ -z "$filename" ]; do
+        while [ -z "$filename" ] && [ $attempts -lt $max_attempts ]; do
             sleep 0.1
+            attempts=$((attempts + 1))
             filename=$(find $XDG_RUNTIME_DIR -maxdepth 1 -name 'wayland-*' -print -quit)
         done
 
-        chown -hR system:video $XDG_RUNTIME_DIR
-        chmod 756 /dev/socket/weston/wayland-1
+        if [ -z "$filename" ]; then
+            echo "Failed to find wayland socket after $max_attempts attempts."
+        else
+            echo "Found wayland socket: $filename"
+            chown -hR system:video $XDG_RUNTIME_DIR
+            chmod 756 /dev/socket/weston/wayland-1
+        fi
   ;;
 
   stop)

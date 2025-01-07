@@ -10,6 +10,9 @@ PROVIDES = "${PACKAGES}"
 
 PACKAGES = "${PN}"
 
+#qcs615 is a common SOC_FAMILY name for all Talos board
+RDEPENDS:${PN}:qcom-base-bsp:qcs615= "libcamera v4l-utils"
+
 #qcm6490 is a common SOC_FAMILY name for all Kodiak board
 RDEPENDS:${PN}:qcom-custom-bsp:qcm6490= "camx-kt camxlib-kt chicdk-kt"
 
