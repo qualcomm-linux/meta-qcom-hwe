@@ -41,7 +41,7 @@ actions:
 - test:
     definitions:
     - from: git
-      name: smoke-test
+      name: "{{DEVICE_TYPE}}-smoke-test"
       path: automated/linux/smoke/smoke.yaml
       repository: https://github.com/linaro/test-definitions.git
       parameters:

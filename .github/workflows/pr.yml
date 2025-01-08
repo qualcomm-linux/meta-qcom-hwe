@@ -1,0 +1,9 @@
+name: Build on PR
+
+on:
+  pull_request:
+
+jobs:
+  build-pr:
+    uses: ./.github/workflows/build-yocto.yml
+

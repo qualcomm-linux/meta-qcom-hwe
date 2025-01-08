@@ -1,0 +1,16 @@
+name: Test PR build
+
+on:
+  workflow_run:
+    workflows: ["Build on PR"]
+    types:
+      - completed
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yaml
+    secrets: inherit
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    with:
+      url: ${{ github.event.workflow_run.outputs.artifacts_url }}
+

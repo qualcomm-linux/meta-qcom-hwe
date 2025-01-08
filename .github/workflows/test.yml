@@ -1,0 +1,67 @@
+name: Tests
+
+on:
+  workflow_call:
+    inputs:
+      url:
+        required: true
+        type: string
+
+jobs:
+  prepare-job-list:
+    runs-on: ubuntu-latest
+    outputs:
+      jobmatrix: ${{ steps.listjobs.outputs.jobmatrix }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Print trigger
+        run: |
+          echo "Triggered by ${{ github.event_name }}"
+          echo "Build URL: ${{ inputs.url }}"
+      - name: "List jobs"
+        id: listjobs
+        run: |
+          JOBFILES=$(find ci/lava/ -name *.yaml)
+          JOBFILES=$(echo "$JOBFILES" | sed -e "s/^/\"/" | sed -e "s/$/\",/" | tr -d "\n" | sed -e "s/.$//")
+          JOBFILES="[${JOBFILES}]"
+          J=$(jq -cn --argjson jobfiles "$JOBFILES" '{target: $jobfiles}')
+          echo "jobmatrix=$J" >> $GITHUB_OUTPUT
+          echo "Preparing testjob files"
+
+  submit-job:
+    needs: prepare-job-list
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.retrieve-job-list.outputs.jobmatrix) }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "Update test definition ${{ matrix.target }}"
+        run: |
+          TARGET=${{ matrix.target }}
+          FIND_PATH="${TARGET#*/}"
+          DEVICE_TYPE="${FIND_PATH%/*}"
+          BUILD_FILE_NAME="core-image-base-${DEVICE_TYPE}.rootfs.qcomflash.tar.gz"
+          BUILD_DOWNLOAD_URL="${{inputs.url}}/${DEVICE_TYPE}/${BUILD_FILE_NAME}"
+          sed -i "s|{{DEVICE_TYPE}}|${DEVICE_TYPE}|g" "${{ matrix.target }}"
+          sed -i "s|{{GITHUB_SHA}}|${GITHUB_SHA}|g" "${{ matrix.target }}"
+          sed -i "s|{{BUILD_DOWNLOAD_URL}}|${BUILD_DOWNLOAD_URL}|g" "${{ matrix.target }}"
+          sed -i "s|{{BUILD_FILE_NAME}}|${BUILD_FILE_NAME}|g" "${{ matrix.target }}"
+          cat "${{ matrix.target }}"
+
+      - name: Submit ${{ matrix.target }}
+        timeout-minutes: 20
+        uses: foundriesio/lava-action@v4
+        with:
+          lava_token: ${{ secrets.LAVATOKEN }}
+          lava_url: 'lava.infra.foundries.io'
+          job_definition: ${{ matrix.target }}
+          wait_for_job: true
+          fail_action_on_failure: true
+          save_result_as_artifact: true
