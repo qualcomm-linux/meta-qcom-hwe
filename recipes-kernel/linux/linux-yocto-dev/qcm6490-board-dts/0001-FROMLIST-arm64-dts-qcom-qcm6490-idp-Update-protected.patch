@@ -15,7 +15,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/r/20240318053555.20405-8-qui
  1 file changed, 27 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/qcom/qcm6490-idp.dts b/arch/arm64/boot/dts/qcom/qcm6490-idp.dts
-index 2a5631b0fa40..3baea71e0248 100644
+index c5fb153614e1..68baf5c75f36 100644
 --- a/arch/arm64/boot/dts/qcom/qcm6490-idp.dts
 +++ b/arch/arm64/boot/dts/qcom/qcm6490-idp.dts
 @@ -1,6 +1,6 @@
@@ -26,8 +26,8 @@ index 2a5631b0fa40..3baea71e0248 100644
   */
  
  /dts-v1/;
-@@ -412,6 +412,32 @@ vreg_bob_3p296: bob {
- 	};
+@@ -625,6 +625,32 @@ &pon_resin {
+ 	status = "okay";
  };
  
 +&gcc {
@@ -60,5 +60,5 @@ index 2a5631b0fa40..3baea71e0248 100644
  	status = "okay";
  };
 -- 
-2.25.1
+2.39.5
 

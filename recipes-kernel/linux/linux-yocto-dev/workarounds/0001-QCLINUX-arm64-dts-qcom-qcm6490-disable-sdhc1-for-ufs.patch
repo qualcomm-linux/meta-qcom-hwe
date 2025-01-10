@@ -17,10 +17,10 @@ Upstream-Status: Pending
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/qcom/qcm6490-idp.dts b/arch/arm64/boot/dts/qcom/qcm6490-idp.dts
-index 424cd9c2b092..7f682093e954 100644
+index 68baf5c75f36..4d70c78ec5b1 100644
 --- a/arch/arm64/boot/dts/qcom/qcm6490-idp.dts
 +++ b/arch/arm64/boot/dts/qcom/qcm6490-idp.dts
-@@ -450,7 +450,7 @@ &sdhc_1 {
+@@ -698,7 +698,7 @@ &sdhc_1 {
  	vmmc-supply = <&vreg_l7b_2p952>;
  	vqmmc-supply = <&vreg_l19b_1p8>;
  
@@ -28,7 +28,7 @@ index 424cd9c2b092..7f682093e954 100644
 +	status = "disabled";
  };
  
- &tlmm {
+ &sdhc_2 {
 -- 
-2.25.1
+2.39.5
 

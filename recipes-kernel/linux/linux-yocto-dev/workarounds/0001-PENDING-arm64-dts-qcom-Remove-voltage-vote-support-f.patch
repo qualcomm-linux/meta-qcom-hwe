@@ -20,10 +20,10 @@ Upstream-Status: Denied [https://lore.kernel.org/linux-arm-msm/jid5coqe4tpsafbi2
  1 file changed, 14 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/qcom/qcm6490-idp.dts b/arch/arm64/boot/dts/qcom/qcm6490-idp.dts
-index fcd065d2036d..7d3bc0d4e2a3 100644
+index 4d70c78ec5b1..e52dfc030e9c 100644
 --- a/arch/arm64/boot/dts/qcom/qcm6490-idp.dts
 +++ b/arch/arm64/boot/dts/qcom/qcm6490-idp.dts
-@@ -541,6 +541,20 @@ &usb_1_qmpphy {
+@@ -771,6 +771,20 @@ &usb_1_qmpphy {
  	status = "okay";
  };
  
@@ -43,7 +43,7 @@ index fcd065d2036d..7d3bc0d4e2a3 100644
 +
  &wifi {
  	memory-region = <&wlan_fw_mem>;
- };
+ 	qcom,ath11k-calibration-variant = "Qualcomm_qcm6490idp";
 -- 
-2.25.1
+2.39.5
 
