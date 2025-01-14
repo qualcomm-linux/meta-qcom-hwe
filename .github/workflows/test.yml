@@ -35,7 +35,7 @@ jobs:
     needs: prepare-job-list
     runs-on: ubuntu-latest
     strategy:
-      matrix: ${{ fromJson(needs.retrieve-job-list.outputs.jobmatrix) }}
+      matrix: ${{ fromJson(needs.prepare-job-list.outputs.jobmatrix) }}
     steps:
       - name: Clone repository
         uses: actions/checkout@v4

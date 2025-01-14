@@ -13,4 +13,4 @@ jobs:
     needs: build
     secrets: inherit
     with:
-      url: ${{ needs.build.outputs.artifact_url }}
+      url: ${{ needs.build.outputs.artifacts_url }}
