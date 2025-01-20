@@ -1,4 +1,9 @@
 #!/bin/sh
+#
+# Copyright (c) 2021-2024 Linaro
+#
+# SPDX-License-Identifier: MIT
+#
 
 set -e
 
