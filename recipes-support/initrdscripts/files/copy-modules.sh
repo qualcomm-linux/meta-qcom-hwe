@@ -1,6 +1,6 @@
 #!/bin/sh
 # Copyright (C) 2022 Linaro Ltd.
-# Licensed on MIT
+# SPDX-License-Identifier: MIT
 
 copy_modules_enabled() {
 	[ -n "${bootparam_copy_modules}" -a -d /lib/modules/`uname -r` ]
