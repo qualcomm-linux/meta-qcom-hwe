@@ -1,3 +1,13 @@
+#
+# Copyright (c) 2015-2023 Linaro
+# Copyright (c) 2016 Matt Madison <matt@madison.systems>
+# Copyright (c) 2017 Artur Mądrzak <artur@madrzak.eu>
+# Copyright (c) 2024 Ola Jeppsson <ola@snap.com>
+# Copyright (c) 2024 Qualcomm Innovation Center, Inc.
+#
+# SPDX-License-Identifier: MIT
+#
+
 QIMG_DEPLOYDIR = "${WORKDIR}/qcom_deploy-${PN}"
 
 # Define INITRAMFS_IMAGE to create kernel+initramfs Android boot images in
