@@ -1,4 +1,9 @@
 #!/bin/sh
+#
+# Copyright (c) 2024 Linaro
+#
+# SPDX-License-Identifier: MIT
+#
 
 JSON="$2"
 
