@@ -4,7 +4,6 @@ S = "${WORKDIR}/sources"
 UNPACKDIR = "${S}"
 
 CDT_FILE ?= ""
-CDT_FILE:qcs6490-rb3gen2-core-kit ?= "cdt_core_kit"
 
 INHIBIT_DEFAULT_DEPS = "1"
 
