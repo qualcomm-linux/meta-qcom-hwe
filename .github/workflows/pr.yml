@@ -3,6 +3,12 @@ name: Build on PR
 on:
   pull_request:
 
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+  packages: read
+
 jobs:
   event-file:
     name: "Upload event file"

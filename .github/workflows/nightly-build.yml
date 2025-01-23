@@ -6,6 +6,12 @@ on:
   # so that build notification emails will be sent out properly.
   - cron: "22 1 * * *"   # daily job - pick a random "minute"  - top of hour can be busy in github
 
+permissions:
+  checks: write
+  pull-requests: write
+  contents: read
+  packages: read
+
 jobs:
   build-nightly:
     uses: ./.github/workflows/build-yocto.yml
