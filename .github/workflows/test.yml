@@ -67,3 +67,27 @@ jobs:
           wait_for_job: true
           fail_action_on_failure: true
           save_result_as_artifact: true
+
+  publish-test-results:
+    name: "Publish Tests Results"
+    needs: submit-job
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: "List files"
+        run: |
+          echo $GITHUB_WORKSPACE
+          ls -R $GITHUB_WORKSPACE
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: "${{ github.workspace }}/artifacts/**/*.xml"
