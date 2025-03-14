@@ -469,6 +469,8 @@ SRC_URI:append = " \
     file://common/0025-FROMLIST-media-iris-Add-internal-buffer-calculation-.patch \
     file://common/0026-FROMLIST-media-iris-Add-codec-specific-check-for-VP9.patch \
     file://common/0001-QCLINUX-media-iris-add-support-for-GDSC-switch-and-P.patch \
+    file://common/0004-FROMLIST-camss-update-CSIPHY-driver-on-camss-for-qcs.patch \
+    file://common/0005-FROMLIST-camss-Fix-CAMSS-CSIPHY-Clock.patch \
     file://common/0142-FORMLIST-driver-bluetooth-hci_qca-disable-hci_aut.patch \
     file://common/0001-FROMLIST-misc-fastrpc-Fix-channel-resource-access-in.patch \
     file://common/0001-FROMLIST-dt-bindings-thermal-Add-qcom-qmi-cooling-ya.patch \

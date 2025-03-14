@@ -157,6 +157,7 @@ SRC_URI:append = " \
     file://qcs9100/0001-FROMGIT-dt-bindings-media-qcom-sm8550-iris-document-.patch \
     file://common/0002-FROMGIT-dt-bindings-media-qcom-sm8550-iris-document-.patch \
     file://qcs8300/0003-FROMGIT-dt-bindings-media-qcom-sm8550-iris-document-.patch \
+    file://qcs9100/0001-FROMLIST-dt-bindings-i2c-qcom-cci-Document-sa8775p-c.patch \
     file://common/0001-FROMLIST-dt-bindings-qcom-se-common-Add-QUP-Peripher.patch \
     file://qcs9100/0001-UPSTREAM-dt-bindings-display-msm-dsi-phy-7nm-document-the-SA8775P-DSI-PHY.patch \
     file://qcs9100/0002-UPSTREAM-dt-bindings-msm-dsi-controller-main-document-the-SA8.patch \
