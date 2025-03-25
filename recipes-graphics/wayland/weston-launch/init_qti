@@ -160,7 +160,7 @@ case "$1" in
         else
             echo "Found wayland socket: $filename"
             chown -hR system:video $XDG_RUNTIME_DIR
-            chmod 756 /dev/socket/weston/wayland-1
+            chmod 776 /dev/socket/weston/wayland-1
         fi
   ;;
 

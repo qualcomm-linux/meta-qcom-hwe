@@ -20,6 +20,7 @@ SRCREV     = "d6ebee13e44cc0d5ebf1fbd7751cb613567eb164"
 
 SRC_URI  = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=le-camera-server \
             file://cam-server-env"
+SRC_URI:append = " file://0001-cam-server-Change-cam_server-directory-and-socket-pe.patch"
 
 S = "${WORKDIR}/le-camera-server"
 

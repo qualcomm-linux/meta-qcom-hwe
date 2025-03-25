@@ -1,0 +1,48 @@
+From a8604b24a57dba891be16a363c8d4d7dc0c14e84 Mon Sep 17 00:00:00 2001
+From: Kemal Rasim Sh <quic_kshakir@quicinc.com>
+Date: Wed, 8 Jan 2025 15:37:38 +0200
+Subject: [PATCH] cam-server: Change cam_server directory and socket
+ permissions
+
+    Issue: Cannot access camera-server from containers.
+
+    Fix: Leverage cam_server directory and socket permissions.
+
+Change-Id: I5af8d5d222fb3c4d56afc66d3a7e322e4ddaa565
+---
+ qmmf-server/service/cam-server-base.service   | 1 +
+ recorder/src/service/qmmf_recorder_service.cc | 6 ++++++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/qmmf-server/service/cam-server-base.service b/qmmf-server/service/cam-server-base.service
+index 29f59eb..73efe65 100644
+--- a/qmmf-server/service/cam-server-base.service
++++ b/qmmf-server/service/cam-server-base.service
+@@ -41,6 +41,7 @@ SupplementaryGroups=system
+ Restart=always
+ EnvironmentFile=/etc/cam-server-env
+ ExecStartPre=/bin/mkdir -p /tmp/socket/cam_server
++ExecStartPre=+/bin/chmod 0775 /tmp/socket/cam_server
+ CacheDirectory=camera
+ ExecStart=/usr/bin/cam-server
+ 
+diff --git a/recorder/src/service/qmmf_recorder_service.cc b/recorder/src/service/qmmf_recorder_service.cc
+index f1204cd..023c2fe 100644
+--- a/recorder/src/service/qmmf_recorder_service.cc
++++ b/recorder/src/service/qmmf_recorder_service.cc
+@@ -806,6 +806,12 @@ status_t RecorderService::SetupSocket() {
+     return -errno;
+   }
+ 
++  // Set permissions for the socket
++  if (chmod(addr.sun_path, 0775) == -1) {
++    QMMF_ERROR("%s: chmod failure - %s", __func__, strerror(errno));
++    return -errno;
++  }
++
+   // Listen for incoming connections
+   if (listen(socket_, 5) == -1) {
+     QMMF_ERROR("%s: listen failure %s", __func__, strerror(errno));
+-- 
+2.34.1
+
