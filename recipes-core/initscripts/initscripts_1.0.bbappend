@@ -4,7 +4,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI:append:qcom = " \
     file://automountsdcard.rules \
     file://automountsdcard.sh \
-    file://sdcard-mount.service \
+    file://sdcard-mount@.service \
     file://coresight_reset_source_sink.sh \
     file://debug-config.service \
     file://debug_config.sh \
@@ -53,7 +53,7 @@ do_install:append:qcom() {
     install -m 0644 ${WORKDIR}/automountsdcard.rules ${D}${libdir}/udev/rules.d/automountsdcard.rules
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/automountsdcard.sh ${D}${bindir}/automountsdcard.sh
-    install -m 0755 ${WORKDIR}/sdcard-mount.service ${D}${systemd_unitdir}/system/sdcard-mount.service
+    install -m 0755 ${WORKDIR}/sdcard-mount@.service ${D}${systemd_unitdir}/system/sdcard-mount@.service
 }
 
 S = "${WORKDIR}"
@@ -86,4 +86,4 @@ PACKAGES =+ "${PN}-debug-config"
 FILES:${PN}-debug-config += "${systemd_unitdir}/system/debug-config.service ${systemd_unitdir}/system/multi-user.target.wants/debug-config.service ${sysconfdir}/initscripts/debug_config_qcm6490.sh ${sysconfdir}/initscripts/debug_config_qcs9100.sh ${sysconfdir}/initscripts/debug_config.sh ${sysconfdir}/initscripts/coresight_reset_source_sink.sh"
 
 PACKAGES =+ "${PN}-automount-sdcard"
-FILES:${PN}-automount-sdcard =+ "${libdir}/udev/rules.d/automountsdcard.rules ${bindir}/automountsdcard.sh ${systemd_unitdir}/system/sdcard-mount.service"
+FILES:${PN}-automount-sdcard =+ "${libdir}/udev/rules.d/automountsdcard.rules ${bindir}/automountsdcard.sh ${systemd_unitdir}/system/sdcard-mount@.service"
