@@ -1,0 +1,31 @@
+From 6ba34a6471475a80fd5c38a9d879bb6d707c1248 Mon Sep 17 00:00:00 2001
+From: Nirmesh Kumar Singh <quic_nkumarsi@quicinc.com>
+Date: Mon, 14 Apr 2025 20:51:00 +0530
+Subject: [PATCH] QCLINUX: arm64: dts: qcom: Add msm-id & board-id for qcs8275
+ IQ8
+
+Enable DT identification support for qcs8275 IQ8 EVK board.
+
+Signed-off-by: Nirmesh Kumar Singh <quic_nkumarsi@quicinc.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index 02ebe87a3c61..838e52d0b670 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -11,6 +11,9 @@ / {
+ 	model = "Qualcomm Technologies, Inc. IQ 8275 EVK";
+ 	compatible = "qcom,qcs8275-iq-8275-evk", "qcom,qcs8275", "qcom,qcs8300";
+ 
++	qcom,msm-id = <675 0x10000>;
++	qcom,board-id = <0x00010020 0>, <0x00010019 0>;
++
+ 	aliases {
+ 		serial0 = &uart7;
+ 	};
+-- 
+2.34.1
+
