@@ -1,0 +1,86 @@
+From 797068853f82111367c6790ad826a30eb428d6ad Mon Sep 17 00:00:00 2001
+From: quic-xuezha <quic_xuezha@quicinc.com>
+Date: Mon, 10 Mar 2025 15:24:28 +0800
+Subject: [PATCH] Fix assert failure in Sobel test when enable FastCV
+
+Signed-off-by: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Upstream-Status: Backport [https://github.com/opencv/opencv/commit/797068853f82111367c6790ad826a30eb428d6ad]
+---
+ .../fastcv/include/fastcv_hal_imgproc.hpp     |  6 +++---
+ 3rdparty/fastcv/src/fastcv_hal_imgproc.cpp    | 19 ++++++++++---------
+ 2 files changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/3rdparty/fastcv/include/fastcv_hal_imgproc.hpp b/3rdparty/fastcv/include/fastcv_hal_imgproc.hpp
+index c9360f95ed..d95c05bc50 100644
+--- a/3rdparty/fastcv/include/fastcv_hal_imgproc.hpp
++++ b/3rdparty/fastcv/include/fastcv_hal_imgproc.hpp
+@@ -247,15 +247,15 @@ int fastcv_hal_cvtBGRtoYUVApprox(
+ /// @param width Source image width
+ /// @param height Source image height
+ /// @param cn Number of channels
+-/// @param lowThreshold low hresholds value
++/// @param lowThreshold low thresholds value
+ /// @param highThreshold high thresholds value
+ /// @param ksize Kernel size for Sobel operator.
+ /// @param L2gradient Flag, indicating use of L2 or L1 norma.
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ int fastcv_hal_canny(
+-    const uchar* 	src_data,
++    const uchar*    src_data,
+     size_t          src_step,
+-    uchar* 			dst_data,
++    uchar*          dst_data,
+     size_t          dst_step,
+     int             width,
+     int             height,
+diff --git a/3rdparty/fastcv/src/fastcv_hal_imgproc.cpp b/3rdparty/fastcv/src/fastcv_hal_imgproc.cpp
+index d1e972b672..e4bb70232b 100644
+--- a/3rdparty/fastcv/src/fastcv_hal_imgproc.cpp
++++ b/3rdparty/fastcv/src/fastcv_hal_imgproc.cpp
+@@ -75,13 +75,13 @@ class FcvSobelLoop_Invoker : public cv::ParallelLoopBody
+         // Need additional lines to be border.
+         if(range.start > 0)
+         {
+-            topLines     += halfKernelSize;
+-            paddedHeight += halfKernelSize;
++            topLines     += MIN(range.start, halfKernelSize);
++            paddedHeight += MIN(range.start, halfKernelSize);
+         }
+ 
+         if(range.end < height)
+         {
+-            paddedHeight += halfKernelSize;
++            paddedHeight += MIN(height-range.end, halfKernelSize);
+         }
+ 
+         cv::Mat srcPadded = src(cv::Rect(0, range.start-topLines, width, paddedHeight));
+@@ -305,8 +305,9 @@ int fastcv_hal_sobel(
+     else
+     {
+         int nThreads = cv::getNumThreads();
+-        int nStripes = nThreads > 1 ? 3*nThreads : 1;
+-
++        // In each stripe, the height should be equal or larger than ksize.
++        // Use 3*nThreads stripes to avoid too many threads.
++        int nStripes = nThreads > 1 ? MIN(height / (int)ksize, 3 * nThreads) : 1;
+         cv::parallel_for_(cv::Range(0, height), FcvSobelLoop_Invoker(src, dst, dx, dy, ksize, fcvBorder, 0), nStripes);
+     }
+ 
+@@ -1017,10 +1018,10 @@ int fastcv_hal_canny(
+ 
+     if (lowThreshold > highThreshold)
+         CV_HAL_RETURN_NOT_IMPLEMENTED("lowThreshold is greater then highThreshold");
+-	
+-	const double epsilon = 1e-9;
+-	
+-	if (std::abs(lowThreshold - std::round(lowThreshold)) > epsilon || std::abs(highThreshold - std::round(highThreshold)) > epsilon)
++
++    const double epsilon = 1e-9;
++
++    if (std::abs(lowThreshold - std::round(lowThreshold)) > epsilon || std::abs(highThreshold - std::round(highThreshold)) > epsilon)
+         CV_HAL_RETURN_NOT_IMPLEMENTED("threshold with decimal values not supported");
+ 
+     INITIALIZATION_CHECK;
+-- 
+2.34.1
+

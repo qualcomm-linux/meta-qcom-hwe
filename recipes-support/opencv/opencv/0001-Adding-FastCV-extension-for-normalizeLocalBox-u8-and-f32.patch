@@ -1,0 +1,177 @@
+From 43a4786af73e641c0527f042cacfa0540ccdc0de Mon Sep 17 00:00:00 2001
+From: adsha-quic <quic_adsha@quicinc.com>
+Date: Thu, 10 Apr 2025 10:21:35 +0530
+Subject: [PATCH]Adding FastCV extension for normalizeLocalBox u8 and f32 
+
+Signed-off-by: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Upstream-Status: Backport [https://github.com/opencv/opencv_contrib/commit/43a4786af73e641c0527f042cacfa0540ccdc0de]
+---
+ .../fastcv/include/opencv2/fastcv/blur.hpp    | 18 ++++++++++++-
+ modules/fastcv/perf/perf_blur.cpp             | 27 ++++++++++++++++++-
+ modules/fastcv/src/blur.cpp                   | 23 +++++++++++++++-
+ modules/fastcv/test/test_blur.cpp             | 23 +++++++++++++++-
+ 4 files changed, 87 insertions(+), 4 deletions(-)
+
+diff --git a/modules/fastcv/include/opencv2/fastcv/blur.hpp b/modules/fastcv/include/opencv2/fastcv/blur.hpp
+index 99d1cd3d..fdb2326d 100644
+--- a/modules/fastcv/include/opencv2/fastcv/blur.hpp
++++ b/modules/fastcv/include/opencv2/fastcv/blur.hpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -58,6 +58,22 @@ CV_EXPORTS_W void filter2D(InputArray _src, OutputArray _dst, int ddepth, InputA
+ CV_EXPORTS_W void sepFilter2D(InputArray _src, OutputArray _dst, int ddepth, InputArray _kernelX, InputArray _kernelY);
+ //! @}
+ 
++//! @addtogroup fastcv
++//! @{
++
++/**
++ * @brief Calculates the local subtractive and contrastive normalization of the image.
++ *        Each pixel of the image is normalized by the mean and standard deviation of the patch centred at the pixel.
++ *        It is optimized for Qualcomm's processors.
++ * @param _src Input image, should have one channel CV_8U or CV_32F
++ * @param _dst Output array, should be one channel, CV_8S if src of type CV_8U, or CV_32F if src of CV_32F
++ * @param pSize Patch size for mean and std dev calculation
++ * @param useStdDev If 1, bot mean and std dev will be used for normalization, if 0, only mean used
++ */
++CV_EXPORTS_W void normalizeLocalBox(InputArray _src, OutputArray _dst, Size pSize, bool useStdDev);
++
++//! @}
++
+ } // fastcv::
+ } // cv::
+ 
+diff --git a/modules/fastcv/perf/perf_blur.cpp b/modules/fastcv/perf/perf_blur.cpp
+index bca8f809..8c8fd59b 100644
+--- a/modules/fastcv/perf/perf_blur.cpp
++++ b/modules/fastcv/perf/perf_blur.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -120,4 +120,29 @@ PERF_TEST_P(SepFilter2DPerfTest, run,
+     SANITY_CHECK_NOTHING();
+ }
+ 
++typedef perf::TestBaseWithParam<tuple<Size, int, Size, int>> NormalizeLocalBoxPerfTest;
++
++PERF_TEST_P(NormalizeLocalBoxPerfTest, run,
++    ::testing::Combine(::testing::Values(perf::szVGA, perf::sz720p, perf::sz1080p), // image size
++                       ::testing::Values(CV_8U,CV_32F),                             // src image depth
++                       ::testing::Values(Size(3,3),Size(5,5)),                      // patch size
++                       ::testing::Values(0,1)                                       // use std dev or not
++                       )
++           )
++{
++    cv::Size srcSize = get<0>(GetParam());
++    int depth = get<1>(GetParam());
++    Size sz = get<2>(GetParam());
++    bool useStdDev = get<3>(GetParam());
++
++    cv::Mat src(srcSize, depth);
++    cv::Mat dst;
++    RNG& rng = cv::theRNG();
++    cvtest::randUni(rng, src, Scalar::all(0), Scalar::all(255));
++
++    TEST_CYCLE() cv::fastcv::normalizeLocalBox(src, dst, sz, useStdDev);
++
++    SANITY_CHECK_NOTHING();
++}
++
+ } // namespace
+\ No newline at end of file
+diff --git a/modules/fastcv/src/blur.cpp b/modules/fastcv/src/blur.cpp
+index 66058a37..3ce22e07 100644
+--- a/modules/fastcv/src/blur.cpp
++++ b/modules/fastcv/src/blur.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -361,5 +361,26 @@ void sepFilter2D(InputArray _src, OutputArray _dst, int ddepth, InputArray _kern
+     }
+ }
+ 
++void normalizeLocalBox(InputArray _src, OutputArray _dst, Size pSize, bool useStdDev)
++{
++    CV_Assert(!_src.empty());
++    int type = _src.type();
++    CV_Assert(type == CV_8UC1 || type == CV_32FC1);
++
++    Size size = _src.size();
++    int dst_type = type == CV_8UC1 ? CV_8SC1 : CV_32FC1;
++    _dst.create(size, dst_type);
++
++    Mat src = _src.getMat();
++    Mat dst = _dst.getMat();
++
++    if(type == CV_8UC1)
++        fcvNormalizeLocalBoxu8(src.data, src.cols, src.rows, src.step[0],
++                              pSize.width, pSize.height, useStdDev, (int8_t*)dst.data, dst.step[0]);
++    else if(type == CV_32FC1)
++        fcvNormalizeLocalBoxf32((float*)src.data, src.cols, src.rows, src.step[0],
++                              pSize.width, pSize.height, useStdDev, (float*)dst.data, dst.step[0]);
++}
++
+ } // fastcv::
+ } // cv::
+\ No newline at end of file
+diff --git a/modules/fastcv/test/test_blur.cpp b/modules/fastcv/test/test_blur.cpp
+index 1dde0261..dd7aaacf 100644
+--- a/modules/fastcv/test/test_blur.cpp
++++ b/modules/fastcv/test/test_blur.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -108,6 +108,24 @@ TEST_P(SepFilter2DTest, accuracy)
+     EXPECT_LT(num_diff_pixels, (src.rows+src.cols)*ksize);
+ }
+ 
++typedef testing::TestWithParam<tuple<int>> NormalizeLocalBoxTest;
++
++TEST_P(NormalizeLocalBoxTest, accuracy)
++{
++    bool use_stddev = get<0>(GetParam());
++    cv::Mat src, dst;
++    src = imread(cvtest::findDataFile("cv/shared/baboon.png"), cv::IMREAD_GRAYSCALE);
++
++    cv::fastcv::normalizeLocalBox(src, dst, Size(5,5), use_stddev);
++    Scalar s = cv::mean(dst);
++
++    if(use_stddev)
++       EXPECT_LT(s[0],1);
++    else
++       EXPECT_LT(s[0],50);
++}
++
++
+ INSTANTIATE_TEST_CASE_P(FastCV_Extension, GaussianBlurTest, Combine(
+ /*image size*/     ::testing::Values(perf::szVGA, perf::sz720p, perf::sz1080p),
+ /*image depth*/    ::testing::Values(CV_8U,CV_16S,CV_32S),
+@@ -126,4 +144,7 @@ INSTANTIATE_TEST_CASE_P(FastCV_Extension, SepFilter2DTest, Combine(
+ /*kernel size*/    Values(3, 5, 7, 9, 11)
+ ));
+ 
++INSTANTIATE_TEST_CASE_P(FastCV_Extension, NormalizeLocalBoxTest, Values(0,1));
++
++
+ }} // namespaces opencv_test, ::
+\ No newline at end of file
+-- 
+2.34.1
+

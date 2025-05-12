@@ -1,0 +1,55 @@
+From 84e8a73a347c46ee8bebd5d1b20c48f233f61766 Mon Sep 17 00:00:00 2001
+From: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Date: Fri, 28 Feb 2025 15:12:08 +0300
+Subject: [PATCH] Fixed export for Optical Flow PyrLK extention for FastCV
+
+Signed-off-by: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Upstream-Status: Backport [https://github.com/opencv/opencv_contrib/commit/c44f7ee48f40aff35046b6ff826f2b07937f61c6] 
+---
+ .../include/opencv2/fastcv/tracking.hpp       | 23 +++++++++----------
+ 1 file changed, 11 insertions(+), 12 deletions(-)
+
+diff --git a/modules/fastcv/include/opencv2/fastcv/tracking.hpp b/modules/fastcv/include/opencv2/fastcv/tracking.hpp
+index 9cca92c1..c8901705 100644
+--- a/modules/fastcv/include/opencv2/fastcv/tracking.hpp
++++ b/modules/fastcv/include/opencv2/fastcv/tracking.hpp
+@@ -29,13 +29,12 @@ namespace fastcv {
+  * @param winSize Size of window for optical flow searching. Width and height ust be odd numbers. Suggested values are 5, 7 or 9
+  * @param termCriteria Termination criteria containing max number of iterations, max epsilon and stop condition
+  */
+-void trackOpticalFlowLK(InputArray src, InputArray dst,
+-                        InputArrayOfArrays srcPyr, InputArrayOfArrays dstPyr,
+-                        InputArray ptsIn, OutputArray ptsOut, InputArray ptsEst,
+-                        OutputArray statusVec, cv::Size winSize = {7, 7},
+-                        cv::TermCriteria termCriteria = {cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS,
+-                                                         /* maxIterations */ 7,
+-                                                         /* maxEpsilon */ 0.03f * 0.03f});
++CV_EXPORTS_W void trackOpticalFlowLK(InputArray src, InputArray dst,
++                                     InputArrayOfArrays srcPyr, InputArrayOfArrays dstPyr,
++                                     InputArray ptsIn, OutputArray ptsOut, InputArray ptsEst,
++                                     OutputArray statusVec, cv::Size winSize = cv::Size(7, 7),
++                                     cv::TermCriteria termCriteria = cv::TermCriteria(cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS,
++                                                                                      /* maxIterations */ 7, /* maxEpsilon */ 0.03f * 0.03f));
+ 
+ /**
+  * @brief Overload for v1 of the LK tracking function
+@@ -52,11 +51,11 @@ void trackOpticalFlowLK(InputArray src, InputArray dst,
+  * @param winSize Size of window for optical flow searching. Width and height ust be odd numbers. Suggested values are 5, 7 or 9
+  * @param maxIterations Maximum number of iterations to try
+  */
+-void trackOpticalFlowLK(InputArray src, InputArray dst,
+-                        InputArrayOfArrays srcPyr, InputArrayOfArrays dstPyr,
+-                        InputArrayOfArrays srcDxPyr, InputArrayOfArrays srcDyPyr,
+-                        InputArray ptsIn, OutputArray ptsOut,
+-                        OutputArray statusVec, cv::Size winSize = {7, 7}, int maxIterations = 7);
++CV_EXPORTS_W void trackOpticalFlowLK(InputArray src, InputArray dst,
++                                     InputArrayOfArrays srcPyr, InputArrayOfArrays dstPyr,
++                                     InputArrayOfArrays srcDxPyr, InputArrayOfArrays srcDyPyr,
++                                     InputArray ptsIn, OutputArray ptsOut,
++                                     OutputArray statusVec, cv::Size winSize = cv::Size(7, 7), int maxIterations = 7);
+ 
+ //! @}
+ 
+-- 
+2.34.1
+

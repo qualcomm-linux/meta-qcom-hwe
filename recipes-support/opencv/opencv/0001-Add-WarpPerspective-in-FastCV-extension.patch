@@ -1,0 +1,513 @@
+From eebd8977e158d81a4aaf41653a038b82cf6507d4 Mon Sep 17 00:00:00 2001
+From: quic-xuezha <quic_xuezha@quicinc.com>
+Date: Wed, 7 May 2025 18:45:02 +0800
+Subject: Add WarpPerspective in FastCV extension
+
+Signed-off-by: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Upstream-Status: Backport [https://github.com/opencv/opencv_contrib/commit/eebd8977e158d81a4aaf41653a038b82cf6507d4]
+---
+ .../fastcv/include/opencv2/fastcv/warp.hpp    |  16 +-
+ modules/fastcv/perf/perf_warp.cpp             |  78 +++++---
+ modules/fastcv/src/warp.cpp                   | 175 ++++++++++++++----
+ modules/fastcv/test/test_warp.cpp             |  94 +++++++---
+ 4 files changed, 277 insertions(+), 86 deletions(-)
+
+diff --git a/modules/fastcv/include/opencv2/fastcv/warp.hpp b/modules/fastcv/include/opencv2/fastcv/warp.hpp
+index 8f58cd36..2c62b0cb 100644
+--- a/modules/fastcv/include/opencv2/fastcv/warp.hpp
++++ b/modules/fastcv/include/opencv2/fastcv/warp.hpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -17,6 +17,20 @@ namespace fastcv {
+ //! @addtogroup fastcv
+ //! @{
+ 
++/**
++ * @brief   Transform an image using perspective transformation, same as cv::warpPerspective but not bit-exact.
++ * @param _src          Input 8-bit image.
++ * @param _dst          Output 8-bit image.
++ * @param _M0           3x3 perspective transformation matrix.
++ * @param dsize         Size of the output image.
++ * @param interpolation Interpolation method. Only cv::INTER_NEAREST, cv::INTER_LINEAR and cv::INTER_AREA are supported.
++ * @param borderType    Pixel extrapolation method. Only cv::BORDER_CONSTANT, cv::BORDER_REPLICATE and cv::BORDER_TRANSPARENT
++ *                      are supported.
++ * @param borderValue   Value used in case of a constant border.
++ */
++CV_EXPORTS_W void warpPerspective(InputArray _src, OutputArray _dst, InputArray _M0, Size dsize, int interpolation, int borderType,
++    const Scalar&  borderValue);
++
+ /**
+  * @brief Perspective warp two images using the same transformation. Bi-linear interpolation is used where applicable.
+  *        For example, to warp a grayscale image and an alpha image at the same time, or warp two color channels.
+diff --git a/modules/fastcv/perf/perf_warp.cpp b/modules/fastcv/perf/perf_warp.cpp
+index 231056ae..a2ec2b65 100644
+--- a/modules/fastcv/perf/perf_warp.cpp
++++ b/modules/fastcv/perf/perf_warp.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -7,31 +7,19 @@
+ 
+ namespace opencv_test {
+ 
+-typedef perf::TestBaseWithParam<Size> WarpPerspective2PlanePerfTest;
+-
+-PERF_TEST_P(WarpPerspective2PlanePerfTest, run,
+-    ::testing::Values(perf::szVGA, perf::sz720p, perf::sz1080p))
++static void getInvertMatrix(Mat& src, Size dstSize, Mat& M)
+ {
+-    cv::Size dstSize = GetParam();
+-    cv::Mat img = imread(cvtest::findDataFile("cv/shared/baboon.png"));
+-    Mat src(img.rows, img.cols, CV_8UC1);
+-    cvtColor(img,src,cv::COLOR_BGR2GRAY);
+-    cv::Mat dst1, dst2, mat;
+-    mat.create(3,3,CV_32FC1);
+-    dst1.create(dstSize,CV_8UC1);
+-    dst2.create(dstSize,CV_8UC1);
+-
+     RNG& rng = cv::theRNG();
+     Point2f s[4], d[4];
+ 
+     s[0] = Point2f(0,0);
+     d[0] = Point2f(0,0);
+     s[1] = Point2f(src.cols-1.f,0);
+-    d[1] = Point2f(dst1.cols-1.f,0);
++    d[1] = Point2f(dstSize.width-1.f,0);
+     s[2] = Point2f(src.cols-1.f,src.rows-1.f);
+-    d[2] = Point2f(dst1.cols-1.f,dst1.rows-1.f);
++    d[2] = Point2f(dstSize.width-1.f,dstSize.height-1.f);
+     s[3] = Point2f(0,src.rows-1.f);
+-    d[3] = Point2f(0,dst1.rows-1.f);
++    d[3] = Point2f(0,dstSize.height-1.f);
+ 
+     float buffer[16];
+     Mat tmp( 1, 16, CV_32FC1, buffer );
+@@ -41,18 +29,64 @@ PERF_TEST_P(WarpPerspective2PlanePerfTest, run,
+     {
+         s[i].x += buffer[i*4]*src.cols/2;
+         s[i].y += buffer[i*4+1]*src.rows/2;
+-        d[i].x += buffer[i*4+2]*dst1.cols/2;
+-        d[i].y += buffer[i*4+3]*dst1.rows/2;
++        d[i].x += buffer[i*4+2]*dstSize.width/2;
++        d[i].y += buffer[i*4+3]*dstSize.height/2;
+     }
+ 
+-    cv::getPerspectiveTransform( s, d ).convertTo( mat, mat.depth() );
++    cv::getPerspectiveTransform( s, d ).convertTo( M, M.depth() );
++
+     // Invert the perspective matrix
+-    invert(mat,mat);
++    invert(M,M);
++}
++
++typedef perf::TestBaseWithParam<Size> WarpPerspective2PlanePerfTest;
++
++PERF_TEST_P(WarpPerspective2PlanePerfTest, run,
++    ::testing::Values(perf::szVGA, perf::sz720p, perf::sz1080p))
++{
++    cv::Size dstSize = GetParam();
++    cv::Mat img = imread(cvtest::findDataFile("cv/shared/baboon.png"));
++    Mat src(img.rows, img.cols, CV_8UC1);
++    cvtColor(img,src,cv::COLOR_BGR2GRAY);
++    cv::Mat dst1, dst2, matrix;
++    matrix.create(3,3,CV_32FC1);
++
++    getInvertMatrix(src, dstSize, matrix);
++
++    while (next())
++    {
++        startTimer();
++        cv::fastcv::warpPerspective2Plane(src, src, dst1, dst2, matrix, dstSize);
++        stopTimer();
++    }
++
++    SANITY_CHECK_NOTHING();
++}
++
++typedef perf::TestBaseWithParam<tuple<Size, int, int>> WarpPerspectivePerfTest;
++
++PERF_TEST_P(WarpPerspectivePerfTest, run,
++    ::testing::Combine( ::testing::Values(perf::szVGA, perf::sz720p, perf::sz1080p),
++                        ::testing::Values(INTER_NEAREST, INTER_LINEAR, INTER_AREA),
++                        ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE, BORDER_TRANSPARENT)))
++{
++    cv::Size dstSize = get<0>(GetParam());
++    int interplation = get<1>(GetParam());
++    int borderType   = get<2>(GetParam());
++    cv::Scalar borderValue = Scalar::all(100);
++
++    cv::Mat src = imread(cvtest::findDataFile("cv/shared/baboon.png"), cv::IMREAD_GRAYSCALE);
++    EXPECT_FALSE(src.empty());
++
++    cv::Mat dst, matrix, ref;
++    matrix.create(3, 3, CV_32FC1);
++
++    getInvertMatrix(src, dstSize, matrix);
+ 
+     while (next())
+     {
+         startTimer();
+-        cv::fastcv::warpPerspective2Plane(src, src, dst1, dst2, mat, dstSize);
++        cv::fastcv::warpPerspective(src, dst, matrix, dstSize, interplation, borderType, borderValue);
+         stopTimer();
+     }
+ 
+diff --git a/modules/fastcv/src/warp.cpp b/modules/fastcv/src/warp.cpp
+index 01f83bdf..ac806ffc 100644
+--- a/modules/fastcv/src/warp.cpp
++++ b/modules/fastcv/src/warp.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -12,49 +12,52 @@ class FcvWarpPerspectiveLoop_Invoker : public cv::ParallelLoopBody
+ {
+     public:
+ 
+-    FcvWarpPerspectiveLoop_Invoker(InputArray _src1, InputArray _src2, OutputArray _dst1, OutputArray _dst2, InputArray _M0,
+-        Size _dsize) : cv::ParallelLoopBody()
+-    {
+-        src1 = _src1.getMat();
+-        src2 = _src2.getMat();
+-        dsize = _dsize;
+-
+-        _dst1.create(dsize, src1.type());
+-        _dst2.create(dsize, src2.type());
+-        dst1 = _dst1.getMat();
+-        dst2 = _dst2.getMat();
+-
+-        M = _M0.getMat();
+-    }
++    FcvWarpPerspectiveLoop_Invoker(const Mat& _src1, const Mat& _src2, Mat& _dst1, Mat& _dst2,
++        const float * _M, fcvInterpolationType _interpolation = FASTCV_INTERPOLATION_TYPE_NEAREST_NEIGHBOR,
++        fcvBorderType _borderType = fcvBorderType::FASTCV_BORDER_UNDEFINED, const int _borderValue = 0)
++        : ParallelLoopBody(), src1(_src1), src2(_src2), dst1(_dst1), dst2(_dst2), M(_M), interpolation(_interpolation),
++        borderType(_borderType), borderValue(_borderValue)
++    {}
+ 
+     virtual void operator()(const cv::Range& range) const CV_OVERRIDE
+     {
+-        uchar* dst1_ptr = dst1.data + range.start*dst1.step;
+-        uchar* dst2_ptr = dst2.data + range.start*dst2.step;
++        uchar* dst1_ptr = dst1.data + range.start * dst1.step;
+         int rangeHeight = range.end - range.start;
+ 
+         float rangeMatrix[9];
+-        rangeMatrix[0] = M.at<float>(0,0);
+-        rangeMatrix[1] = M.at<float>(0,1);
+-        rangeMatrix[2] = M.at<float>(0,2)+range.start*M.at<float>(0,1);
+-        rangeMatrix[3] = M.at<float>(1,0);
+-        rangeMatrix[4] = M.at<float>(1,1);
+-        rangeMatrix[5] = M.at<float>(1,2)+range.start*M.at<float>(1,1);
+-        rangeMatrix[6] = M.at<float>(2,0);
+-        rangeMatrix[7] = M.at<float>(2,1);
+-        rangeMatrix[8] = M.at<float>(2,2)+range.start*M.at<float>(2,1);
+-
+-        fcv2PlaneWarpPerspectiveu8(src1.data, src2.data, src1.cols, src1.rows, src1.step, src2.step, dst1_ptr, dst2_ptr,
+-            dsize.width, rangeHeight, dst1.step, dst2.step, rangeMatrix);
++        rangeMatrix[0] = M[0];
++        rangeMatrix[1] = M[1];
++        rangeMatrix[2] = M[2]+range.start*M[1];
++        rangeMatrix[3] = M[3];
++        rangeMatrix[4] = M[4];
++        rangeMatrix[5] = M[5]+range.start*M[4];
++        rangeMatrix[6] = M[6];
++        rangeMatrix[7] = M[7];
++        rangeMatrix[8] = M[8]+range.start*M[7];
++
++        if ((src2.empty()) || (dst2.empty()))
++        {
++            fcvWarpPerspectiveu8_v5(src1.data, src1.cols, src1.rows, src1.step, src1.channels(), dst1_ptr, dst1.cols, rangeHeight,
++                dst1.step, rangeMatrix, interpolation, borderType, borderValue);
++        }
++        else
++        {
++            uchar* dst2_ptr = dst2.data + range.start * dst2.step;
++            fcv2PlaneWarpPerspectiveu8(src1.data, src2.data, src1.cols, src1.rows, src1.step, src2.step, dst1_ptr, dst2_ptr,
++                dst1.cols, rangeHeight, dst1.step, dst2.step, rangeMatrix);
++        }
+     }
+ 
+     private:
+-    Mat         src1;
+-    Mat         src2;
+-    Mat         dst1;
+-    Mat         dst2;
+-    Mat         M;
+-    Size        dsize;
++
++    const Mat&              src1;
++    const Mat&              src2;
++    Mat&                    dst1;
++    Mat&                    dst2;
++    const float*            M;
++    fcvInterpolationType    interpolation;
++    fcvBorderType           borderType;
++    int                     borderValue;
+ 
+     FcvWarpPerspectiveLoop_Invoker(const FcvWarpPerspectiveLoop_Invoker &);  // = delete;
+     const FcvWarpPerspectiveLoop_Invoker& operator= (const FcvWarpPerspectiveLoop_Invoker &);  // = delete;
+@@ -68,8 +71,108 @@ void warpPerspective2Plane(InputArray _src1, InputArray _src2, OutputArray _dst1
+     CV_Assert(!_src2.empty() && _src2.type() == CV_8UC1);
+     CV_Assert(!_M0.empty());
+ 
++    Mat src1 = _src1.getMat();
++    Mat src2 = _src2.getMat();
++
++    _dst1.create(dsize, src1.type());
++    _dst2.create(dsize, src2.type());
++    Mat dst1 = _dst1.getMat();
++    Mat dst2 = _dst2.getMat();
++
++    Mat M0 = _M0.getMat();
++    CV_Assert((M0.type() == CV_32F || M0.type() == CV_64F) && M0.rows == 3 && M0.cols == 3);
++    float matrix[9];
++    Mat M(3, 3, CV_32F, matrix);
++    M0.convertTo(M, M.type());
++
++    int nThreads = getNumThreads();
++    int nStripes = nThreads > 1 ? 2*nThreads : 1;
++
++    cv::parallel_for_(cv::Range(0, dsize.height),
++        FcvWarpPerspectiveLoop_Invoker(src1, src2, dst1, dst2, matrix), nStripes);
++}
++
++void warpPerspective(InputArray _src, OutputArray _dst, InputArray _M0, Size dsize, int interpolation, int borderType,
++    const Scalar&  borderValue)
++{
++    Mat src = _src.getMat();
++
++    _dst.create(dsize, src.type());
++    Mat dst = _dst.getMat();
++
++    Mat M0 = _M0.getMat();
++    CV_Assert((M0.type() == CV_32F || M0.type() == CV_64F) && M0.rows == 3 && M0.cols == 3);
++    float matrix[9];
++    Mat M(3, 3, CV_32F, matrix);
++    M0.convertTo(M, M.type());
++
++    // Do not support inplace case
++    CV_Assert(src.data != dst.data);
++    // Only support CV_8U
++    CV_Assert(src.depth() == CV_8U);
++
++    INITIALIZATION_CHECK;
++
++    fcvBorderType           fcvBorder;
++    uint8_t                 fcvBorderValue = 0;
++    fcvInterpolationType    fcvInterpolation;
++
++    switch (borderType)
++    {
++        case BORDER_CONSTANT:
++        {
++            // Border value should be same
++            CV_Assert((borderValue[0] == borderValue[1]) &&
++                      (borderValue[0] == borderValue[2]) &&
++                      (borderValue[0] == borderValue[3]));
++
++            fcvBorder       = fcvBorderType::FASTCV_BORDER_CONSTANT;
++            fcvBorderValue  = static_cast<uint8_t>(borderValue[0]);
++            break;
++        }
++        case BORDER_REPLICATE:
++        {
++            fcvBorder = fcvBorderType::FASTCV_BORDER_REPLICATE;
++            break;
++        }
++        case BORDER_TRANSPARENT:
++        {
++            fcvBorder = fcvBorderType::FASTCV_BORDER_UNDEFINED;
++            break;
++        }
++        default:
++            CV_Error(cv::Error::StsBadArg, cv::format("Border type:%d is not supported", borderType));
++    }
++
++    switch(interpolation)
++    {
++        case INTER_NEAREST:
++        {
++            fcvInterpolation = FASTCV_INTERPOLATION_TYPE_NEAREST_NEIGHBOR;
++            break;
++        }
++        case INTER_LINEAR:
++        {
++            fcvInterpolation = FASTCV_INTERPOLATION_TYPE_BILINEAR;
++            break;
++        }
++        case INTER_AREA:
++        {
++            fcvInterpolation = FASTCV_INTERPOLATION_TYPE_AREA;
++            break;
++        }
++        default:
++            CV_Error(cv::Error::StsBadArg, cv::format("Interpolation type:%d is not supported", interpolation));
++    }
++
++    int nThreads = cv::getNumThreads();
++    int nStripes = nThreads > 1 ? 2*nThreads : 1;
++
++    // placeholder
++    Mat tmp;
++
+     cv::parallel_for_(cv::Range(0, dsize.height),
+-        FcvWarpPerspectiveLoop_Invoker(_src1, _src2, _dst1, _dst2, _M0, dsize), 1);
++        FcvWarpPerspectiveLoop_Invoker(src, tmp, dst, tmp, matrix, fcvInterpolation, fcvBorder, fcvBorderValue), nStripes);
+ }
+ 
+ } // fastcv::
+diff --git a/modules/fastcv/test/test_warp.cpp b/modules/fastcv/test/test_warp.cpp
+index 240262f9..a87902ad 100644
+--- a/modules/fastcv/test/test_warp.cpp
++++ b/modules/fastcv/test/test_warp.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -7,30 +7,19 @@
+ 
+ namespace opencv_test { namespace {
+ 
+-typedef testing::TestWithParam<cv::Size> WarpPerspective2Plane;
+-
+-TEST_P(WarpPerspective2Plane, accuracy)
++static void getInvertMatrix(Mat& src, Size dstSize, Mat& M)
+ {
+-    cv::Size dstSize = GetParam();
+-    cv::Mat img = imread(cvtest::findDataFile("cv/shared/baboon.png"));
+-    Mat src(img.rows, img.cols, CV_8UC1);
+-    cvtColor(img,src,cv::COLOR_BGR2GRAY);
+-    cv::Mat dst1, dst2, mat, ref1, ref2;
+-    mat.create(3,3,CV_32FC1);
+-    dst1.create(dstSize,CV_8UC1);
+-    dst2.create(dstSize,CV_8UC1);
+-
+-    RNG rng = RNG((uint64)-1);
++    RNG& rng = cv::theRNG();
+     Point2f s[4], d[4];
+ 
+     s[0] = Point2f(0,0);
+     d[0] = Point2f(0,0);
+     s[1] = Point2f(src.cols-1.f,0);
+-    d[1] = Point2f(dst1.cols-1.f,0);
++    d[1] = Point2f(dstSize.width-1.f,0);
+     s[2] = Point2f(src.cols-1.f,src.rows-1.f);
+-    d[2] = Point2f(dst1.cols-1.f,dst1.rows-1.f);
++    d[2] = Point2f(dstSize.width-1.f,dstSize.height-1.f);
+     s[3] = Point2f(0,src.rows-1.f);
+-    d[3] = Point2f(0,dst1.rows-1.f);
++    d[3] = Point2f(0,dstSize.height-1.f);
+ 
+     float buffer[16];
+     Mat tmp( 1, 16, CV_32FC1, buffer );
+@@ -40,30 +29,81 @@ TEST_P(WarpPerspective2Plane, accuracy)
+     {
+         s[i].x += buffer[i*4]*src.cols/2;
+         s[i].y += buffer[i*4+1]*src.rows/2;
+-        d[i].x += buffer[i*4+2]*dst1.cols/2;
+-        d[i].y += buffer[i*4+3]*dst1.rows/2;
++        d[i].x += buffer[i*4+2]*dstSize.width/2;
++        d[i].y += buffer[i*4+3]*dstSize.height/2;
+     }
+ 
+-    cv::getPerspectiveTransform( s, d ).convertTo( mat, mat.depth() );
++    cv::getPerspectiveTransform( s, d ).convertTo( M, M.depth() );
++
+     // Invert the perspective matrix
+-    invert(mat,mat);
++    invert(M,M);
++}
++
++typedef testing::TestWithParam<cv::Size> WarpPerspective2Plane;
++
++TEST_P(WarpPerspective2Plane, accuracy)
++{
++    cv::Size dstSize = GetParam();
++    cv::Mat src = imread(cvtest::findDataFile("cv/shared/baboon.png"), cv::IMREAD_GRAYSCALE);
++    EXPECT_FALSE(src.empty());
++
++    cv::Mat dst1, dst2, matrix, ref1, ref2;
++    matrix.create(3, 3, CV_32FC1);
+ 
+-    cv::fastcv::warpPerspective2Plane(src, src, dst1, dst2, mat, dstSize);
+-    cv::warpPerspective(src,ref1,mat,dstSize,(cv::INTER_LINEAR | cv::WARP_INVERSE_MAP));
+-    cv::warpPerspective(src,ref2,mat,dstSize,(cv::INTER_LINEAR | cv::WARP_INVERSE_MAP));
++    getInvertMatrix(src, dstSize, matrix);
+ 
+-    cv::Mat difference1, difference2, mask1,mask2;
++    cv::fastcv::warpPerspective2Plane(src, src, dst1, dst2, matrix, dstSize);
++    cv::warpPerspective(src, ref1, matrix, dstSize, (cv::INTER_LINEAR | cv::WARP_INVERSE_MAP),cv::BORDER_CONSTANT,Scalar(0));
++    cv::warpPerspective(src, ref2, matrix, dstSize, (cv::INTER_LINEAR | cv::WARP_INVERSE_MAP),cv::BORDER_CONSTANT,Scalar(0));
++
++    cv::Mat difference1, difference2, mask1, mask2;
+     cv::absdiff(dst1, ref1, difference1);
+     cv::absdiff(dst2, ref2, difference2);
++
++    // There are 1 or 2 difference in pixel value because algorithm is different, ignore those difference
+     cv::threshold(difference1, mask1, 5, 255, cv::THRESH_BINARY);
+     cv::threshold(difference2, mask2, 5, 255, cv::THRESH_BINARY);
+     int num_diff_pixels_1 = cv::countNonZero(mask1);
+     int num_diff_pixels_2 = cv::countNonZero(mask2);
+ 
+-    EXPECT_LT(num_diff_pixels_1, src.size().area()*0.02);
+-    EXPECT_LT(num_diff_pixels_2, src.size().area()*0.02);
++    // The border is different
++    EXPECT_LT(num_diff_pixels_1, (dstSize.width+dstSize.height)*5);
++    EXPECT_LT(num_diff_pixels_2, (dstSize.width+dstSize.height)*5);
++}
++
++typedef testing::TestWithParam<tuple<Size, int, int>> WarpPerspective;
++
++TEST_P(WarpPerspective, accuracy)
++{
++    cv::Size dstSize = get<0>(GetParam());
++    int interplation = get<1>(GetParam());
++    int borderType   = get<2>(GetParam());
++    cv::Scalar borderValue = Scalar::all(100);
++
++    cv::Mat src = imread(cvtest::findDataFile("cv/shared/baboon.png"), cv::IMREAD_GRAYSCALE);
++    EXPECT_FALSE(src.empty());
++
++    cv::Mat dst, matrix, ref;
++    matrix.create(3, 3, CV_32FC1);
++
++    getInvertMatrix(src, dstSize, matrix);
++
++    cv::fastcv::warpPerspective(src, dst, matrix, dstSize, interplation, borderType, borderValue);
++    cv::warpPerspective(src, ref, matrix, dstSize, (interplation | cv::WARP_INVERSE_MAP), borderType, borderValue);
++
++    cv::Mat difference, mask;
++    cv::absdiff(dst, ref, difference);
++    cv::threshold(difference, mask, 10, 255, cv::THRESH_BINARY);
++    int num_diff_pixels = cv::countNonZero(mask);
++
++    EXPECT_LT(num_diff_pixels, src.size().area()*0.05);
+ }
+ 
++INSTANTIATE_TEST_CASE_P(FastCV_Extension, WarpPerspective,Combine(
++                   ::testing::Values(perf::szVGA, perf::sz720p, perf::sz1080p),
++                   ::testing::Values(INTER_NEAREST, INTER_LINEAR, INTER_AREA),
++                   ::testing::Values(BORDER_CONSTANT, BORDER_REPLICATE, BORDER_TRANSPARENT)
++));
+ INSTANTIATE_TEST_CASE_P(FastCV_Extension, WarpPerspective2Plane, Values(perf::szVGA, perf::sz720p, perf::sz1080p));
+ 
+ }
+-- 
+2.34.1
+
