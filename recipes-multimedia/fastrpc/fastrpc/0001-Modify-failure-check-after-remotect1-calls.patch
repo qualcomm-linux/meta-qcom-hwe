@@ -1,0 +1,62 @@
+From 2bc67c5f8db8e1dbb3670ad3c449aedb60e05ced Mon Sep 17 00:00:00 2001
+From: Ling Xu <quic_lxu5@quicinc.com>
+Date: Mon, 19 May 2025 14:41:21 +0530
+Subject: [PATCH] Modify failure check after remotect1 calls
+
+There is no remotectl1 support on some targets which will return 0x4e.
+Modify failure check after remotect1 calls.
+
+Link: https://github.com/quic/fastrpc/commit/1f4f7ca467afc4b8a11a53c5a9887d0d393be271
+Signed-off-by: Ling Xu <quic_lxu5@quicinc.com>
+Upstream-Status: Submitted[https://github.com/quic/fastrpc/commit/1f4f7ca467afc4b8a11a53c5a9887d0d393be271]
+---
+ src/fastrpc_apps_user.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/src/fastrpc_apps_user.c b/src/fastrpc_apps_user.c
+index 358a8b35495a..7b7824ed91fb 100644
+--- a/src/fastrpc_apps_user.c
++++ b/src/fastrpc_apps_user.c
+@@ -639,8 +639,7 @@ int fastrpc_set_remote_uthread_params(int domain) {
+   if ((handle = get_remotectl1_handle(domain)) != INVALID_HANDLE) {
+     nErr = remotectl1_set_param(handle, th_params->reqID, (uint32_t *)th_params,
+                                 paramsLen);
+-    if ((nErr == DSP_AEE_EOFFSET + AEE_ERPC) ||
+-          nErr == DSP_AEE_EOFFSET + AEE_ENOSUCHMOD) {
++    if (nErr) {
+       FARF(ALWAYS,
+            "Warning 0x%x: %s: remotectl1 domains not supported for domain %d\n",
+            nErr, __func__, domain);
+@@ -1705,8 +1704,7 @@ int remote_handle_open_domain(int domain, const char *name, remote_handle *ph,
+       if ((handle = get_remotectl1_handle(domain)) != INVALID_HANDLE) {
+         nErr = remotectl1_open1(handle, name, (int *)ph, dlerrstr,
+                                 sizeof(dlerrstr), &dlerr);
+-        if ((nErr == DSP_AEE_EOFFSET + AEE_ERPC) ||
+-            nErr == DSP_AEE_EOFFSET + AEE_ENOSUCHMOD) {
++        if (nErr) {
+           FARF(ALWAYS,
+                "Warning 0x%x: %s: remotectl1 domains not supported for domain "
+                "%d\n",
+@@ -1858,8 +1856,7 @@ int remote_handle_close_domain(int domain, remote_handle h) {
+       &t_close,
+       if ((handle = get_remotectl1_handle(domain)) != INVALID_HANDLE) {
+         nErr = remotectl1_close1(handle, h, dlerrstr, err_str_len, &dlerr);
+-        if ((nErr == DSP_AEE_EOFFSET + AEE_ERPC) ||
+-            nErr == DSP_AEE_EOFFSET + AEE_ENOSUCHMOD) {
++        if (nErr) {
+           FARF(ALWAYS,
+                "Warning 0x%x: %s: remotectl1 domains not supported for domain "
+                "%d\n",
+@@ -2001,8 +1998,7 @@ static int manage_adaptive_qos(int domain, uint32_t enable) {
+      */
+     if ((handle = get_remotectl1_handle(domain)) != INVALID_HANDLE) {
+       nErr = remotectl1_set_param(handle, RPC_ADAPTIVE_QOS, &enable, 1);
+-      if ((nErr == DSP_AEE_EOFFSET + AEE_ERPC) ||
+-          nErr == DSP_AEE_EOFFSET + AEE_ENOSUCHMOD) {
++      if (nErr) {
+         FARF(ALWAYS,
+              "Warning 0x%x: %s: remotectl1 domains not supported for domain "
+              "%d\n",
+-- 
+2.34.1
+

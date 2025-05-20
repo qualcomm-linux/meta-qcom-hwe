@@ -15,6 +15,7 @@ MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += " \
     networkmanager-wifi \
     pd-mapper \
     qrtr \
+    fastrpc \
 "
 
 MACHINE_EXTRA_RDEPENDS += " \
