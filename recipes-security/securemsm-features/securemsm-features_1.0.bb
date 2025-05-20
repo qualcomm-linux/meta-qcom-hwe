@@ -23,6 +23,7 @@ FILES:${PN} += "${bindir}/*"
 FILES:${PN} += "${libdir} ${includedir}"
 FILES:${PN}-dev = "${libdir}/*.la"
 
+PROVIDES:append = " virtual/wvoec"
 
 INSANE_SKIP:${PN} = "dev-so"
 INSANE_SKIP:${PN} += "dev-deps"
