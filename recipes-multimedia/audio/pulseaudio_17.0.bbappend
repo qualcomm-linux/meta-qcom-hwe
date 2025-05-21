@@ -1,6 +1,7 @@
 inherit useradd
 FILESEXTRAPATHS:prepend := "${THISDIR}:"
-SRC_URI += "file://pulseaudio/system.pa \
+SRC_URI += "file://pulseaudio/system_custom.pa \
+            file://pulseaudio/system_base.pa \
             file://pulseaudio/pulseaudio.service \
             file://pulseaudio/0001-Support-for-compress-offload-playback-usecase.patch \
             file://pulseaudio/0002-Propagate-port-change-events-to-all-devices.patch \
@@ -13,7 +14,7 @@ do_compile:prepend() {
     cp ${STAGING_LIBDIR}/libltdl* ${S}/libltdl
 }
 
-do_install:append:qcom() {
+do_install:append:qcom-custom-bsp () {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/pulseaudio/pulseaudio.service ${D}${systemd_system_unitdir}
     install -d ${D}${systemd_system_unitdir}/multi-user.target.wants/
@@ -21,7 +22,26 @@ do_install:append:qcom() {
     ln -sf ${systemd_system_unitdir}/pulseaudio.service \
            ${D}${systemd_system_unitdir}/multi-user.target.wants/pulseaudio.service
     install -d ${D}${sysconfdir}/pulse/
-    install -m 0644 ${WORKDIR}/pulseaudio/system.pa ${D}${sysconfdir}/pulse/system.pa
+    install -m 0644 ${WORKDIR}/pulseaudio/system_custom.pa ${D}${sysconfdir}/pulse/system.pa
+    install -m 0775 -g pulse -d ${D}${sysconfdir}/acdbdata/delta
+
+    for i in $(find ${S}/src/pulsecore/ -type d -printf "pulsecore/%P\n"); do
+        [ -n "$(ls ${S}/src/${i}/*.h 2>/dev/null)" ] || continue
+        install -d ${D}${includedir}/${i}
+        install -m 0644 ${S}/src/${i}/*.h ${D}${includedir}/${i}/
+    done
+}
+
+do_install:append:qcom-base-bsp () {
+    install -d ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/pulseaudio/pulseaudio.service ${D}${systemd_system_unitdir}
+    install -d ${D}${systemd_system_unitdir}/multi-user.target.wants/
+    # enable the service for multi-user.target
+    ln -sf ${systemd_system_unitdir}/pulseaudio.service \
+           ${D}${systemd_system_unitdir}/multi-user.target.wants/pulseaudio.service
+    install -d ${D}${sysconfdir}/pulse/
+    install -m 0644 ${WORKDIR}/pulseaudio/system_base.pa ${D}${sysconfdir}/pulse/system.pa
+    install -m 0775 -g pulse -d ${D}${sysconfdir}/acdbdata/delta
 
     for i in $(find ${S}/src/pulsecore/ -type d -printf "pulsecore/%P\n"); do
         [ -n "$(ls ${S}/src/${i}/*.h 2>/dev/null)" ] || continue
