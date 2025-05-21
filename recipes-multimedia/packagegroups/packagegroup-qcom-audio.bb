@@ -33,6 +33,7 @@ RDEPENDS:${PN}:append:qcom-base-bsp = ' \
     alsa-utils-aplay \
     alsa-utils-alsatplg \
     qcom-audio-firmware \
+    ${PULSEAUDIO_PKGS}  \
 '
 
 RDEPENDS:${PN}:append:qcom-custom-bsp = ' \
