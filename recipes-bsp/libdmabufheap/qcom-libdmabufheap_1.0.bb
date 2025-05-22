@@ -13,6 +13,7 @@ SRCREV     = "ceef234ec13d00d801a9917e1ada8495c1ebe147"
 SRC_URI   = " \
              ${SRCPROJECT};branch=${SRCBRANCH};destsuffix=system/memory/libdmabufheap \
              file://kmem.rules \
+             file://0001-libdmabufheap-Update-generated-libs-version.patch \
              "
 
 S = "${WORKDIR}/system/memory/libdmabufheap"
