@@ -1,0 +1,39 @@
+From 28956acdc556471270b3b6f38591eab55a8868a7 Mon Sep 17 00:00:00 2001
+From: Abhinaba Rakshit <quic_arakshit@quicinc.com>
+Date: Thu, 29 May 2025 17:33:41 +0530
+Subject: [PATCH] PENDING: soc: qcom: ice: Fix bkey size check
+
+Upstream patch consists of a bug which does a wrong comparision
+for the block key size. Until upstream patch is fixed, this is
+a temporary patch to fix the immediate issue.
+
+Signed-off-by: Abhinaba Rakshit <quic_arakshit@quicinc.com>
+Upstream-Status: Pending
+---
+ drivers/soc/qcom/ice.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+index d304a482039e..1f8c71940071 100644
+--- a/drivers/soc/qcom/ice.c
++++ b/drivers/soc/qcom/ice.c
+@@ -404,11 +404,12 @@ int qcom_ice_program_key(struct qcom_ice *ice,
+ 		err = qcom_ice_program_wrapped_key(ice, bkey, data_unit_size,
+ 						   slot);
+ 	} else {
+-		if (bkey->size != QCOM_ICE_CRYPTO_KEY_SIZE_256)
++		if (key_size != QCOM_ICE_CRYPTO_KEY_SIZE_256) {
+ 			dev_err_ratelimited(dev,
+-					    "Incorrect key size; bkey->size=%d\n",
+-					    algorithm_id);
+-		return -EINVAL;
++					    "Incorrect key size; key_size=%d\n",
++					    key_size);
++			return -EINVAL;
++		}
+ 		memcpy(key.bytes, bkey->raw, AES_256_XTS_KEY_SIZE);
+ 
+ 		/* The SCM call requires that the key words are encoded in big endian */
+-- 
+2.34.1
+
