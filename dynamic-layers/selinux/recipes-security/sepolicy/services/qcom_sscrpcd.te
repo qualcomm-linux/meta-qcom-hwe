@@ -14,6 +14,7 @@ init_daemon_domain(qcom_sscrpcd_t, qcom_sscrpcd_exec_t)
 
 allow qcom_sscrpcd_t self:unix_dgram_socket { create connect write sendto };
 qcom_adsp_secure_read_device(qcom_sscrpcd_t)
+qcom_allow_adsp_device_rw(qcom_sscrpcd_t)
 dev_read_system_dmabuf(qcom_sscrpcd_t)
 qcom_allow_ops_qcom_var_cache_sensors(qcom_sscrpcd_t)
 qcom_allow_ops_qcom_etc_sensors(qcom_sscrpcd_t)
