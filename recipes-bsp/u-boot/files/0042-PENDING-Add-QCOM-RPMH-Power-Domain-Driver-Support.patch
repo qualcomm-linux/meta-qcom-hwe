@@ -1,4 +1,4 @@
-From 4e3c10ce0befd55a360bf655272c4cadaccca4cc Mon Sep 17 00:00:00 2001
+From e742960816a770f2c68594bfd1eec7e92dc0058a Mon Sep 17 00:00:00 2001
 From: Balaji Selvanathan <quic_bselvana@quicinc.com>
 Date: Wed, 26 Mar 2025 21:08:25 +0530
 Subject: [PATCH] PENDING: Add QCOM RPMH Power Domain Driver Support
@@ -13,20 +13,22 @@ on and off MMCX power domain; Support for other power domains
 can be added in this driver.
 
 Signed-off-by: Balaji Selvanathan <quic_bselvana@quicinc.com>
+Signed-off-by: Aswin Murugan <quic_aswinm@quicinc.com>
 Upstream-Status: Pending
 ---
- arch/arm/mach-snapdragon/of_fixup.c |   5 +-
- configs/qcom_defconfig              |   2 +
+ arch/arm/mach-snapdragon/of_fixup.c |   6 +
+ configs/qcom_defconfig              |   4 +-
+ configs/qcs9100_defconfig           |   2 +-
  drivers/power/domain/Kconfig        |   8 +
  drivers/power/domain/Makefile       |   1 +
  drivers/power/domain/qcom-rpmhpd.c  | 271 ++++++++++++++++++++++++++++
  drivers/soc/qcom/cmd-db.c           |  38 ++++
  include/soc/qcom/cmd-db.h           |   2 +
- 7 files changed, 326 insertions(+), 1 deletion(-)
+ 8 files changed, 330 insertions(+), 2 deletions(-)
  create mode 100644 drivers/power/domain/qcom-rpmhpd.c
 
 diff --git a/arch/arm/mach-snapdragon/of_fixup.c b/arch/arm/mach-snapdragon/of_fixup.c
-index 565fc1a549f..e248e1aeb9c 100644
+index 565fc1a549f..6c7745c9f45 100644
 --- a/arch/arm/mach-snapdragon/of_fixup.c
 +++ b/arch/arm/mach-snapdragon/of_fixup.c
 @@ -20,6 +20,7 @@
@@ -37,27 +39,50 @@ index 565fc1a549f..e248e1aeb9c 100644
  #include <dm/of_access.h>
  #include <dm/of.h>
  #include <fdt_support.h>
-@@ -140,7 +141,9 @@ static void fixup_power_domains(void)
+@@ -140,6 +141,11 @@ static void fixup_power_domains(void)
  
  		val = prop->value;
  		if (val[0] == cpu_to_fdt32(pd->phandle))
--			of_remove_property(np, prop);
++#if IS_ENABLED(CONFIG_OF_LIVE_SA8775P)
 +			/* Check if the rpmh power domain is SA8775P_CX and remove it */
-+			if (val[1] == cpu_to_fdt32(SA8775P_CX))
-+				of_remove_property(np, prop);
++			if (val[1] != cpu_to_fdt32(SA8775P_CX))
++				continue;
++#endif
+ 			of_remove_property(np, prop);
  	}
  }
- 
 diff --git a/configs/qcom_defconfig b/configs/qcom_defconfig
-index 856824ac081..de244cb5a01 100644
+index 856824ac081..aa24133072d 100644
 --- a/configs/qcom_defconfig
 +++ b/configs/qcom_defconfig
+@@ -40,7 +40,7 @@ CONFIG_CMD_EFIDEBUG=y
+ CONFIG_CMD_REGULATOR=y
+ CONFIG_CMD_LOG=y
+ CONFIG_OF_LIVE=y
+-CONFIG_OF_LIVE_SA8775P=y
++
+ CONFIG_USE_DEFAULT_ENV_FILE=y
+ CONFIG_DEFAULT_ENV_FILE="board/qualcomm/default.env"
+ CONFIG_BUTTON_QCOM_PMIC=y
 @@ -170,3 +170,5 @@ CONFIG_RSA_VERIFY_WITH_PKEY=y
  CONFIG_ASYMMETRIC_KEY_TYPE=y
  CONFIG_SHA512=y
  CONFIG_SHA384=y
 +
 +CONFIG_QCOM_POWER_DOMAIN=y
+diff --git a/configs/qcs9100_defconfig b/configs/qcs9100_defconfig
+index 1201753dd08..62fa99c35ae 100644
+--- a/configs/qcs9100_defconfig
++++ b/configs/qcs9100_defconfig
+@@ -13,7 +13,7 @@ CONFIG_DEBUG_UART_ANNOUNCE=y
+ CONFIG_DEBUG_UART_BASE=0xA8C000
+ CONFIG_DEBUG_UART_MSM_GENI=y
+ CONFIG_DEBUG_UART_CLOCK=14745600
+-
++CONFIG_OF_LIVE_SA8775P=y
+ # Address where U-Boot will be loaded
+ CONFIG_TEXT_BASE=0xaf000000
+ CONFIG_REMAKE_ELF=y
 diff --git a/drivers/power/domain/Kconfig b/drivers/power/domain/Kconfig
 index bd82d2f7044..ed8b9376e7b 100644
 --- a/drivers/power/domain/Kconfig
