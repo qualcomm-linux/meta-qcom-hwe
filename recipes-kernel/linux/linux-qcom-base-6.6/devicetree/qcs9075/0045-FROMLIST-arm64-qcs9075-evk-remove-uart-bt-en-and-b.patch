@@ -1,0 +1,69 @@
+From 675d2cf89db6c06321a942a96b60da1e626ded3d Mon Sep 17 00:00:00 2001
+From: Cheng Jiang <quic_chejiang@quicinc.com>
+Date: Fri, 23 May 2025 18:56:17 +0800
+Subject: [PATCH v1] FROMLIST: arm64: dts: qcom: qcs9075-evk: remove uart bt en and
+ bootstrap pin in DTS
+
+As hardware has already enabled bt_en and bootstrap pins,
+configuration of the pins has been removed from DTS.
+
+Signed-off-by: Cheng Jiang <quic_chejiang@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250526054228.221095-1-quic_chejiang@quicinc.com/].
+---
+ .../boot/dts/qcom/qcs9075-iq-9075-evk.dts     | 19 +------------------
+ 1 file changed, 1 insertion(+), 18 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index 97011c1d9719..fede0ad44848 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -733,13 +733,6 @@ &pmm8654au_1_gpios {
+ 			 "USB2_PWR_EN",
+ 			 "USB2_FAULT";
+ 
+-	bt_en_state: bt-en-state {
+-		pins = "gpio8";
+-		function = "normal";
+-		output-low;
+-		bias-pull-down;
+-	};
+-
+ 	wlan_en_state: wlan-en-state {
+ 		pins = "gpio7";
+ 		function = "normal";
+@@ -935,14 +928,6 @@ ethernet0_mdio: ethernet0-mdio-pins {
+ 		};
+ 	};
+ 
+-	bt_bootstrap_default: bt_bootstrap_default {
+-		pins = "gpio147";
+-		function = "gpio";
+-		input-enable;
+-		bias-pull-up;
+-		drive-strength = <2>;
+-	};
+-
+ 	hs0_mi2s_data0_sleep: hs0-mi2s-data0-sleep-state {
+ 		pins = "gpio116";
+ 		function = "gpio";
+@@ -1451,7 +1436,7 @@ &uart16 {
+ };
+ 
+ &uart17 {
+-	pinctrl-0 = <&qup_uart17_default>, <&bt_bootstrap_default>;
++	pinctrl-0 = <&qup_uart17_default>;
+ 	pinctrl-names = "default";
+ 	qcom,load-firmware;
+ 	qcom,xfer-mode = <1>;
+@@ -1461,8 +1446,6 @@ &uart17 {
+ 	bluetooth: bluetooth {
+ 		compatible = "qcom,wcn6855-bt";
+ 		pinctrl-names = "default";
+-		pinctrl-0 = <&bt_en_state>;
+-		enable-gpios = <&pmm8654au_1_gpios 8 GPIO_ACTIVE_HIGH>; /* BT_EN */
+ 		max-speed = <3200000>;
+ 	};
+ };
+-- 
+2.34.1
+
