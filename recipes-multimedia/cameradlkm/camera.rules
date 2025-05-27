@@ -7,6 +7,9 @@ ACTION=="add", ATTR{soc_id}=="534|667|676", \
 # For Monaco
 ACTION=="add", ATTR{soc_id}=="606|675|674", \
                RUN+="/bin/sh -c '/sbin/modprobe camera_qcs8300'"
+# For Talos
+ACTION=="add", ATTR{soc_id}=="377|680", \
+               RUN+="/bin/sh -c '/sbin/modprobe camera_qcs615'"
 
 
 
