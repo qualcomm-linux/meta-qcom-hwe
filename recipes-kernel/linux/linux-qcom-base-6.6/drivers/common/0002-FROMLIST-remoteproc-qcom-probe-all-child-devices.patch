@@ -1,0 +1,92 @@
+From f815d49a6f0c9e9138261de9c5b259c3d935f455 Mon Sep 17 00:00:00 2001
+From: Caleb Connolly <caleb.connolly@linaro.org>
+Date: Fri, 29 Sep 2023 17:16:17 +0100
+Subject: [PATCH 2/3] FROMLIST: remoteproc: qcom: probe all child devices
+
+Generalise the qcom,bam-dmux child node support by probing all
+remoteproc children with of_platform_populate(). This will be used to
+enable support for devices which are best represented as subnodes of the
+remoteproc, such as those representing QMI clients.
+
+Signed-off-by: Caleb Connolly <caleb.connolly@linaro.org>
+Change-Id: I091a1a2baa0513d400fbf24dbbac394825d1428d
+Signed-off-by: Manaf Meethalavalappu Pallikunhi <quic_manafm@quicinc.com>
+Signed-off-by: Gaurav Kohli <quic_gkohli@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20230905-caleb-qmi_cooling-v1-1-5aa39d4164a7@linaro.org/]
+---
+ drivers/remoteproc/qcom_q6v5.c     | 4 ++++
+ drivers/remoteproc/qcom_q6v5_mss.c | 8 --------
+ 2 files changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/remoteproc/qcom_q6v5.c b/drivers/remoteproc/qcom_q6v5.c
+index 4ee5e67a9f03..8aa5c7b05429 100644
+--- a/drivers/remoteproc/qcom_q6v5.c
++++ b/drivers/remoteproc/qcom_q6v5.c
+@@ -6,6 +6,7 @@
+  * Copyright (C) 2014 Sony Mobile Communications AB
+  * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+  */
++#include <linux/of_platform.h>
+ #include <linux/kernel.h>
+ #include <linux/platform_device.h>
+ #include <linux/interconnect.h>
+@@ -349,6 +350,8 @@ int qcom_q6v5_init(struct qcom_q6v5 *q6v5, struct platform_device *pdev,
+ 		return dev_err_probe(&pdev->dev, PTR_ERR(q6v5->path),
+ 				     "failed to acquire interconnect path\n");
+ 
++	of_platform_populate(q6v5->dev->of_node, NULL, NULL, q6v5->dev);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(qcom_q6v5_init);
+@@ -359,6 +362,7 @@ EXPORT_SYMBOL_GPL(qcom_q6v5_init);
+  */
+ void qcom_q6v5_deinit(struct qcom_q6v5 *q6v5)
+ {
++	of_platform_depopulate(q6v5->dev);
+ 	qmp_put(q6v5->qmp);
+ }
+ EXPORT_SYMBOL_GPL(qcom_q6v5_deinit);
+diff --git a/drivers/remoteproc/qcom_q6v5_mss.c b/drivers/remoteproc/qcom_q6v5_mss.c
+index 8f93489aa0d4..06e24260cb36 100644
+--- a/drivers/remoteproc/qcom_q6v5_mss.c
++++ b/drivers/remoteproc/qcom_q6v5_mss.c
+@@ -230,7 +230,6 @@ struct q6v5 {
+ 	struct qcom_rproc_subdev smd_subdev;
+ 	struct qcom_rproc_ssr ssr_subdev;
+ 	struct qcom_sysmon *sysmon;
+-	struct platform_device *bam_dmux;
+ 	bool need_mem_protection;
+ 	bool has_alt_reset;
+ 	bool has_mba_logs;
+@@ -1983,7 +1982,6 @@ static int q6v5_alloc_memory_region(struct q6v5 *qproc)
+ static int q6v5_probe(struct platform_device *pdev)
+ {
+ 	const struct rproc_hexagon_res *desc;
+-	struct device_node *node;
+ 	struct q6v5 *qproc;
+ 	struct rproc *rproc;
+ 	const char *mba_image;
+@@ -2127,10 +2125,6 @@ static int q6v5_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto remove_sysmon_subdev;
+ 
+-	node = of_get_compatible_child(pdev->dev.of_node, "qcom,bam-dmux");
+-	qproc->bam_dmux = of_platform_device_create(node, NULL, &pdev->dev);
+-	of_node_put(node);
+-
+ 	return 0;
+ 
+ remove_sysmon_subdev:
+@@ -2152,8 +2146,6 @@ static void q6v5_remove(struct platform_device *pdev)
+ 	struct q6v5 *qproc = platform_get_drvdata(pdev);
+ 	struct rproc *rproc = qproc->rproc;
+ 
+-	if (qproc->bam_dmux)
+-		of_platform_device_destroy(&qproc->bam_dmux->dev, NULL);
+ 	rproc_del(rproc);
+ 
+ 	qcom_q6v5_deinit(&qproc->q6v5);
+-- 
+2.34.1
+
