@@ -1,7 +1,7 @@
 inherit useradd
 FILESEXTRAPATHS:prepend := "${THISDIR}:"
 SRC_URI += "file://pulseaudio/system_custom.pa \
-            file://pulseaudio/system_base.pa \
+            file://pulseaudio/system.pa \
             file://pulseaudio/pulseaudio.service \
             file://pulseaudio/0001-Support-for-compress-offload-playback-usecase.patch \
             file://pulseaudio/0002-Propagate-port-change-events-to-all-devices.patch \
@@ -40,7 +40,7 @@ do_install:append:qcom-base-bsp () {
     ln -sf ${systemd_system_unitdir}/pulseaudio.service \
            ${D}${systemd_system_unitdir}/multi-user.target.wants/pulseaudio.service
     install -d ${D}${sysconfdir}/pulse/
-    install -m 0644 ${WORKDIR}/pulseaudio/system_base.pa ${D}${sysconfdir}/pulse/system.pa
+    install -m 0644 ${WORKDIR}/pulseaudio/system.pa ${D}${sysconfdir}/pulse/system.pa
     install -m 0775 -g pulse -d ${D}${sysconfdir}/acdbdata/delta
 
     for i in $(find ${S}/src/pulsecore/ -type d -printf "pulsecore/%P\n"); do
