@@ -8,26 +8,43 @@ Signed-off-by: Mohammed Sameer Mulla <quic_mohamull@quicinc.com>
 Upstream-Status: Pending
 
 ---
- policy/modules/services/bluetooth.te | 7 +++++++
- 1 file changed, 7 insertions(+)
+ policy/modules/services/bluetooth.fc | 2 ++
+ policy/modules/services/bluetooth.te | 9 +++++++++
+ 2 files changed, 11 insertions(+)
 
+diff --git a/policy/modules/services/bluetooth.fc b/policy/modules/services/bluetooth.fc
+index 6067df4b8..85c5d8991 100644
+--- a/policy/modules/services/bluetooth.fc
++++ b/policy/modules/services/bluetooth.fc
+@@ -8,6 +8,8 @@
+ /usr/bin/blue.*pin	--	gen_context(system_u:object_r:bluetooth_helper_exec_t,s0)
+ /usr/bin/bluetoothd	--	gen_context(system_u:object_r:bluetooth_exec_t,s0)
+ /usr/bin/bluetoothctl	--	gen_context(system_u:object_r:bluetooth_helper_exec_t,s0)
++/usr/bin/hciconfig  --  gen_context(system_u:object_r:bluetooth_helper_exec_t,s0)
++/usr/bin/hcidump  --  gen_context(system_u:object_r:bluetooth_helper_exec_t,s0)
+ /usr/bin/dund	--	gen_context(system_u:object_r:bluetooth_exec_t,s0)
+ /usr/bin/hciattach	--	gen_context(system_u:object_r:bluetooth_exec_t,s0)
+ /usr/bin/hcid	--	gen_context(system_u:object_r:bluetooth_exec_t,s0)
 diff --git a/policy/modules/services/bluetooth.te b/policy/modules/services/bluetooth.te
-index 534f1b36d..1712ffd36 100644
+index 7b8953719..b50fccd69 100644
 --- a/policy/modules/services/bluetooth.te
 +++ b/policy/modules/services/bluetooth.te
-@@ -180,6 +180,13 @@ allow bluetooth_helper_t bluetooth_t:socket { read write };
+@@ -184,6 +184,15 @@ allow bluetooth_helper_t bluetooth_t:socket { read write };
  allow bluetooth_helper_t bluetooth_t:fd use;
  allow bluetooth_helper_t bluetooth_t:unix_stream_socket rw_socket_perms;
-
+ 
 +allow bluetooth_helper_t self:capability { net_admin };
 +allow bluetooth_helper_t self:bluetooth_socket { getattr getopt bind create setopt read };
 +getty_use_fds(bluetooth_helper_t)
 +ssh_use_sshd_pidfds(bluetooth_helper_t)
 +userdom_use_user_ptys(bluetooth_helper_t)
 +userdom_use_user_ttys(bluetooth_helper_t)
++allow bluetooth_helper_t self:bluetooth_socket ioctl;
++allow bluetooth_helper_t self:capability net_raw;
 +
  manage_dirs_pattern(bluetooth_helper_t, bluetooth_helper_tmp_t, bluetooth_helper_tmp_t)
  manage_files_pattern(bluetooth_helper_t, bluetooth_helper_tmp_t, bluetooth_helper_tmp_t)
  manage_sock_files_pattern(bluetooth_helper_t, bluetooth_helper_tmp_t, bluetooth_helper_tmp_t)
---
+-- 
 2.34.1
+
