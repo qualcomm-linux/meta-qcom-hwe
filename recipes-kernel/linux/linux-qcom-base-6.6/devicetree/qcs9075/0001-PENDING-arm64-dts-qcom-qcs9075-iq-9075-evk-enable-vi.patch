@@ -1,0 +1,34 @@
+From 3e6283bcb4d0355620f7926ca2f220bd51f5176c Mon Sep 17 00:00:00 2001
+From: Wangao Wang <quic_wangaow@quicinc.com>
+Date: Wed, 28 May 2025 19:11:34 +0800
+Subject: [PATCH] PENDING: arm64: dts: qcom: qcs9075-iq-9075-evk: enable video
+
+Enable video nodes on the qcs9075-iq-9075-evk board and point
+to the appropriate firmware files.
+
+Signed-off-by: Wangao Wang <quic_wangaow@quicinc.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index e7e506965f2c..401caed62035 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -647,6 +647,12 @@ &i2c19 {
+ 	qcom,xfer-mode = <1>;
+ };
+ 
++&iris {
++	firmware-name = "qcom/vpu/vpu30_p4_s6.mbn";
++
++	status = "okay";
++};
++
+ &llcc {
+ 	status = "okay";
+ };
+-- 
+2.34.1
+
