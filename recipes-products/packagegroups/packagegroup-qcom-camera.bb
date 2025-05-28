@@ -18,6 +18,9 @@ RDEPENDS:${PN}:append:qcm6490:qcom-custom-bsp = " qcom-camera-server"
 #qcs615 is a common SOC_FAMILY name for all Talos board
 RDEPENDS:${PN}:qcom-base-bsp:qcs615 = "libcamera v4l-utils"
 
+#qcs615 is a common SOC_FAMILY name for all Talos board
+RDEPENDS:${PN}:qcom-custom-bsp:qcs615= "cameradlkm"
+
 #qcs9100 is a common SOC_FAMILY name for all Lemans board
 RDEPENDS:${PN}:qcom-custom-bsp:qcs9100 = "camxcommon camxlib camx chicdk cameradlkm"
 
