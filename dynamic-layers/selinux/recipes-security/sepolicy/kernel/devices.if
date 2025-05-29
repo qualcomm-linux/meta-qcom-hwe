@@ -60,6 +60,25 @@ interface(`qcom_allow_ufs_bsg_rw',`
        allow $1 qcom_ufs_bsg_dev_t:chr_file rw_chr_file_perms;
 ')
 
+#####################
+## <summary>
+## Allow open/read/write from mmc rpmb device
+## </summary>
+## <param name="domain">
+##  <summary>
+##  Domain allowed rw to mmc rpmb device
+##  </summary>
+## </param>
+#
+
+interface(`qcom_allow_mmc_rpmb_rw',`
+       gen_require(`
+               type qcom_mmc_rpmb_dev_t;
+       ')
+
+       allow $1 qcom_mmc_rpmb_dev_t:chr_file rw_chr_file_perms;
+')
+
 ########################################
 ## <summary>
 ##      Read Write the audio devices.

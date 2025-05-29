@@ -10,6 +10,7 @@
 /dev/dma_heap/qcom,qseecom-ta -c gen_context(system_u:object_r:qcom_qseecom_heap_dev_t,s0)
 /dev/bsg/ufs-bsg0             -c gen_context(system_u:object_r:qcom_ufs_bsg_dev_t,s0)
 /dev/bsg/0:0:0:49476          -c gen_context(system_u:object_r:qcom_ufs_bsg_dev_t,s0)
+/dev/mmcblk0rpmb          -c gen_context(system_u:object_r:qcom_mmc_rpmb_dev_t,s0)
 
 #qcom_smcinvoke will have:
 #label: system_u:object_r:qcom_smcinvoke_dev_t:s0
