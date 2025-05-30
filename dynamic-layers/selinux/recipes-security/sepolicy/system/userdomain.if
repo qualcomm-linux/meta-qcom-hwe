@@ -19,3 +19,21 @@ interface(`qcom_allow_rw_file_runtime',`
         allow $1 user_runtime_root_t:file { rw_file_perms create unlink };
         allow $1 user_runtime_root_t:sock_file { create_sock_file_perms unlink };
 ')
+
+########################################
+## <summary>
+##      Add mounton user_tmpfs
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+interface(`files_mounton_user_tmpfs',`
+        gen_require(`
+                type user_tmpfs_t;
+        ')
+        allow $1 user_tmpfs_t:file mounton;
+        allow $1 user_tmpfs_t:dir mounton;
+')
