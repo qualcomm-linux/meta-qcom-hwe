@@ -402,10 +402,6 @@ SRC_URI:append = " \
     file://common/0002-FROMLIST-wifi-ath11k-fix-HTC-rx-insufficient-length.patch \
     file://common/0002-BACKPORT-clk-qcom-gdsc-Update-the-status-poll-timeou.patch \
     file://common/0001-FROMLIST-wifi-ath11k-fix-node-corruption-in-ar-arvif.patch \
-    file://common/0141-QCLINUX-firmware-qcom_scm-provisioning-addon-scm-cal.patch \
-    file://common/0142-QCLINUX-firmware-qcom_scm_addon-Add-function-qcom_sc.patch \
-    file://common/0143-QCLINUX-firmware-qcom_scm_addon-Remove-implementatio.patch \
-    file://common/0144-QCLINUX-firmware-qcom_scm-allow-scm-addon-to-be-comp.patch \
     file://common/0141-BACKPORT-driver-bluetooth-hci_qca-fix-SSR-unable-.patch \
     file://common/0001-PENDING-ASoC-dt-bindings-q6dsp-Add-High-Speed-Audio-.patch \
     file://common/0002-PENDING-ASoC-qcom-q6dsp-Add-SDR-High-speed-DAI-suppo.patch \
@@ -475,5 +471,4 @@ SRC_URI:append = " \
     file://common/0025-FROMLIST-media-iris-Add-internal-buffer-calculation-.patch \
     file://common/0026-FROMLIST-media-iris-Add-codec-specific-check-for-VP9.patch \
     file://common/0001-QCLINUX-media-iris-add-support-for-GDSC-switch-and-P.patch \
-    file://common/0145-QCLINUX-firmware-qcom_scm-Add-scm-addon-module-macro.patch \
     "
