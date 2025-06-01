@@ -20,6 +20,7 @@ PACKAGECONFIG[gbm] = " , ,gbm,gbm"
 INSANE_SKIP:${PN} = "dev-so"
 FILES:${PN} += "${bindir}"
 FILES:${PN} += "${libdir}"
+FILES:${PN} += "${libdir}/pkgconfig"
 
 SOLIBS = ".so*"
 FILES_SOLIBSDEV = ""
