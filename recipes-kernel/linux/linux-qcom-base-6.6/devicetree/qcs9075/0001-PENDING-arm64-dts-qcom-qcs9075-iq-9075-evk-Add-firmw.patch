@@ -1,0 +1,41 @@
+From 16cacf7b587d2b10321771011b0462896ad459e9 Mon Sep 17 00:00:00 2001
+From: Viken Dadhaniya <quic_vdadhani@quicinc.com>
+Date: Fri, 23 May 2025 22:46:31 +0530
+Subject: [PATCH 1/1] PENDING: arm64: dts: qcom: qcs9075-iq-9075-evk: Add
+ firmware-name for QUPv3
+
+Add the 'firmware-name' property to QUPv3 nodes (qupv3_id_0, qupv3_id_1,
+and qupv3_id_2) to specify the firmware binary 'qcom/sa8775p/qupv3fw.elf'.
+
+Change-Id: I822501203685a4ded40bd614c3e3bc62bd96c9e9
+Signed-off-by: Viken Dadhaniya <quic_vdadhani@quicinc.com>
+Upstream-Status: pending
+---
+ arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index fede0ad44848..f193999a849b 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -749,14 +749,17 @@ reset-types {
+ };
+ 
+ &qupv3_id_0 {
++	firmware-name = "qcom/sa8775p/qupv3fw.elf";
+ 	status = "okay";
+ };
+ 
+ &qupv3_id_1 {
++	firmware-name = "qcom/sa8775p/qupv3fw.elf";
+ 	status = "okay";
+ };
+ 
+ &qupv3_id_2 {
++	firmware-name = "qcom/sa8775p/qupv3fw.elf";
+ 	status = "okay";
+ };
+ 
+-- 
+2.34.1
+
