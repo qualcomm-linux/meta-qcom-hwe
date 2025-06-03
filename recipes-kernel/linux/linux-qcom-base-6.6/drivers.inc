@@ -471,6 +471,7 @@ SRC_URI:append = " \
     file://common/0025-FROMLIST-media-iris-Add-internal-buffer-calculation-.patch \
     file://common/0026-FROMLIST-media-iris-Add-codec-specific-check-for-VP9.patch \
     file://common/0001-QCLINUX-media-iris-add-support-for-GDSC-switch-and-P.patch \
+    file://common/0001-FROMLIST-misc-fastrpc-Fix-channel-resource-access-in.patch \
     file://common/0001-FROMLIST-dt-bindings-thermal-Add-qcom-qmi-cooling-ya.patch \
     file://common/0002-FROMLIST-remoteproc-qcom-probe-all-child-devices.patch \
     file://common/0003-FROMLIST-thermal-qcom-add-qmi-cooling-driver.patch \

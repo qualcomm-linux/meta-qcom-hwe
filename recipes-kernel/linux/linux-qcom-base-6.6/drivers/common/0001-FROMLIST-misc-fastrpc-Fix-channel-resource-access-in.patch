@@ -1,0 +1,57 @@
+From a81671de5e84c0cb31ebd91062cfd23750473b68 Mon Sep 17 00:00:00 2001
+From: Ekansh Gupta <ekansh.gupta@oss.qualcomm.com>
+Date: Tue, 3 Jun 2025 10:24:56 +0530
+Subject: [PATCH 1/1] FROMLIST: misc: fastrpc: Fix channel resource access in device_open
+
+During rpmsg_probe, fastrpc device nodes are created first, then
+channel specific resources are initialized, followed by
+of_platform_populate, which triggers context bank probing. This
+sequence can cause issues as applications might open the device
+node before channel resources are initialized or the session is
+available, leading to problems. For example, spin_lock is initialized
+after the device node creation, but it is used in device_open,
+potentially before initialization. Add a check in device_open for
+rpdev and update rpdev at the end of rpmsg_probe to resources are
+available before applications allocate sessions.
+
+Fixes: f6f9279f2bf0 ("misc: fastrpc: Add Qualcomm fastrpc basic driver model")
+Change-Id: Ib6388eeb3a3cb7bdc5b5e80d89573125ff9c0fd1
+Cc: stable@kernel.org
+Signed-off-by: Ekansh Gupta <ekansh.gupta@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250517072432.1331803-1-ekansh.gupta@oss.qualcomm.com/]
+---
+ drivers/misc/fastrpc.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/misc/fastrpc.c b/drivers/misc/fastrpc.c
+index ba1d71331c5c..5282e9ec2a12 100644
+--- a/drivers/misc/fastrpc.c
++++ b/drivers/misc/fastrpc.c
+@@ -1570,6 +1570,9 @@ static int fastrpc_device_open(struct inode *inode, struct file *filp)
+ 	fdevice = miscdev_to_fdevice(filp->private_data);
+ 	cctx = fdevice->cctx;
+ 
++	if (!cctx->rpdev)
++		return -ENODEV;
++
+ 	fl = kzalloc(sizeof(*fl), GFP_KERNEL);
+ 	if (!fl)
+ 		return -ENOMEM;
+@@ -2348,12 +2351,13 @@ static int fastrpc_rpmsg_probe(struct rpmsg_device *rpdev)
+ 	spin_lock_init(&data->lock);
+ 	idr_init(&data->ctx_idr);
+ 	data->domain_id = domain_id;
+-	data->rpdev = rpdev;
+ 
+ 	err = of_platform_populate(rdev->of_node, NULL, NULL, rdev);
+ 	if (err)
+ 		goto populate_error;
+ 
++	data->rpdev = rpdev;
++
+ 	return 0;
+ 
+ populate_error:
+-- 
+2.34.1
+
