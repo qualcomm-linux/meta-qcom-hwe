@@ -25,3 +25,6 @@ qcom_ssgtzd_socket_connect(sysadm_t)
 qcom_unlink_bt_src_socket_file(sysadm_t)
 qcom_read_loc_sock_dir(sysadm_t)
 corecmd_exec_all_executables(sysadm_t)
+allow sysadm_t self:bluetooth_socket { create bind read write };
+allow sysadm_t self:capability2 wake_alarm;
+corenet_tcp_bind_all_unreserved_ports(sysadm_t)
