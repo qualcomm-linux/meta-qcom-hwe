@@ -1,6 +1,7 @@
 [Unit]
 Description=PulseAudio Sound Service
-After=adbd.service
+After= diag-router.service
+Requires= diag-router.service
 
 [Service]
 # Note that notify will only work if --daemonize=no
