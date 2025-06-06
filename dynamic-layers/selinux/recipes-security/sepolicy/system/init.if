@@ -158,3 +158,21 @@ interface(`init_search_tmp_dir',`
 
     allow $1 initrc_tmp_t:dir search;
 ')
+
+########################################
+## <summary>
+##      Manage tmp directory
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+interface(`init_manage_tmp_dir',`
+    gen_require(`
+        type initrc_tmp_t;
+    ')
+
+    manage_dirs_pattern($1, initrc_tmp_t, initrc_tmp_t)
+')

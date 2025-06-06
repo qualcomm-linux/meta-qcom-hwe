@@ -43,8 +43,8 @@ allow qcom_imsd_t self:process { signal sigkill };
 allow qcom_imsd_t self:unix_dgram_socket { create connect write sendto };
 init_search_runtime(qcom_imsd_t)
 miscfiles_read_localization(qcom_imsd_t)
-allow qcom_imsd_t tmp_t:dir { search write add_name remove_name };
-allow qcom_imsd_t tmp_t:sock_file { create unlink };
+# allow qcom_imsd_t tmp_t:dir { search write add_name remove_name };
+# allow qcom_imsd_t tmp_t:sock_file { create unlink };
 kernel_read_system_state(qcom_imsd_t)
 qcom_coredump_read_write(qcom_imsd_t)
 

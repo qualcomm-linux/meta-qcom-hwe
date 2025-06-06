@@ -58,7 +58,7 @@ interface(`qcom_allow_ssgtzd_sock_write',`
 
 interface(`qcom_ssgtzd_socket_connect',`
        gen_require(`
-               type qcom_ssgtzd_sock_t;
+               type qcom_ssgtzd_t;
        ')
        allow $1 qcom_ssgtzd_t:unix_stream_socket connectto;
 ')

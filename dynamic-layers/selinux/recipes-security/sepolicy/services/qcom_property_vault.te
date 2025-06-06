@@ -8,12 +8,7 @@ type qcom_property_vault_exec_t;
 
 init_daemon_domain(qcom_property_vault_t, qcom_property_vault_exec_t)
 
-allow systemd_tmpfiles_t qcom_property_vault_var_t:file { create write open getattr setattr relabelfrom relabelto};
-allow qcom_property_vault_t syslogd_runtime_t:dir { search };
-allow qcom_property_vault_t devlog_t:sock_file { write };
-allow qcom_property_vault_t syslogd_t:unix_dgram_socket { sendto };
-allow qcom_property_vault_t self:unix_dgram_socket { create connect write };
-allow qcom_property_vault_t self:unix_stream_socket { accept listen };
+logging_send_syslog_msg(qcom_property_vault_t)
 allow qcom_property_vault_t self:process { signal getsched };
 qcom_allow_property_vault_sock_manage(qcom_property_vault_t)
 
