@@ -1,0 +1,44 @@
+From 78ad9a07b566b77bef1f3425d86e428b54f460e1 Mon Sep 17 00:00:00 2001
+From: Shuai Zhang <quic_shuaz@quicinc.com>
+Date: Mon, 9 Jun 2025 19:24:53 +0800
+Subject: [PATCH v1]  FORMLIST: driver: bluetooth: fix unable to load the BT driver
+
+Some modules have BT_EN enabled via a hardware pull-up,
+meaning it is not defined in the DTS and is not controlled
+through the power sequence. In such cases, fall through
+to follow the legacy flow.
+
+Signed-off-by: Shuai Zhang <quic_shuaz@quicinc.com>
+
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250609105500.4083963-1-quic_shuaz@quicinc.com/]
+---
+ drivers/bluetooth/hci_qca.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
+index 3e1d422f464a..1ce07fb37986 100644
+--- a/drivers/bluetooth/hci_qca.c
++++ b/drivers/bluetooth/hci_qca.c
+@@ -2359,10 +2359,16 @@ static int qca_serdev_probe(struct serdev_device *serdev)
+ 			 */
+ 			qcadev->bt_power->pwrseq = devm_pwrseq_get(&serdev->dev,
+ 								   "bluetooth");
++			/*
++			 * Some modules have BT_EN enabled via a hardware pull-up,
++			 * meaning it is not defined in the DTS and is not controlled
++			 * through the power sequence. In such cases, fall through
++			 * to follow the legacy flow.
++			 */
+ 			if (IS_ERR(qcadev->bt_power->pwrseq))
+-				return PTR_ERR(qcadev->bt_power->pwrseq);
+-
+-			break;
++				qcadev->bt_power->pwrseq = NULL;
++			else
++				break;
+ 		}
+ 		fallthrough;
+ 	case QCA_WCN3988:
+-- 
+2.34.1
+

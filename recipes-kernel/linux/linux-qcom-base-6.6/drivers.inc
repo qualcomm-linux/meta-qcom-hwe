@@ -478,4 +478,5 @@ SRC_URI:append = " \
     file://common/0003-FROMLIST-thermal-qcom-add-qmi-cooling-driver.patch \
     file://common/0001-PENDING-soc-qcom-ice-Fix-bkey-size-check.patch \
     file://common/0143-FROMLIST-driver-bluetooth-hci_qca-fix-ssr-fail-wh.patch \
+    file://common/0144-FORMLIST-driver-bluetooth_hci_qca-fix-unable.patch \
     "
