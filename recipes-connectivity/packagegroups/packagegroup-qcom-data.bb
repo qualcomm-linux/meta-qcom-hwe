@@ -27,4 +27,6 @@ RDEPENDS:${PN}:append:qcm6490 = " \
 
 RDEPENDS:${PN}:append:qcs9100 = " \
              dpdk\
+             kernel-module-qps615 \
+             qps615-firmware \
 "
