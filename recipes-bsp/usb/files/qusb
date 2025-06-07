@@ -562,7 +562,7 @@ init_uvc_configuration() {
 
 bind_xhci_hcd() {
 	if [ -d /sys/bus/pci/drivers/xhci_hcd ]; then
-		bdf=$(lspci | grep "USB controller" | awk '{print $1}')
+		bdf="$(lspci | grep "USB controller" | awk '{print $1}')"
 		echo $bdf > /sys/bus/pci/drivers/xhci_hcd/bind
 	fi
 }
