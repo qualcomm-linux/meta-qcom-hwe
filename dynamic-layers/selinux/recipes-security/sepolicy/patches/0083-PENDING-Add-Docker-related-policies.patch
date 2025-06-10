@@ -42,7 +42,7 @@ diff --git a/policy/modules/services/docker.te b/policy/modules/services/docker.
 index a23c21c8f..ebcc22108 100644
 --- a/policy/modules/services/docker.te
 +++ b/policy/modules/services/docker.te
-@@ -174,3 +174,12 @@ userdom_search_user_runtime(dockerc_user_t)
+@@ -174,3 +174,14 @@ userdom_search_user_runtime(dockerc_user_t)
  xdg_search_data_dirs(dockerc_user_t)
  
  container_stream_connect_user_containers(dockerc_user_t)
@@ -55,6 +55,8 @@ index a23c21c8f..ebcc22108 100644
 +
 +qcom_weston_mounton_dev_dir(dockerd_t)
 +dbus_connect_to_stream_socket(dockerd_t)
++
++qcom_connect_cmdline_to_property_vault(dockerd_t);
 diff --git a/policy/modules/services/container.fc b/policy/modules/services/container.fc
 index f98e68ba0..b46e264ae 100644
 --- a/policy/modules/services/container.fc
