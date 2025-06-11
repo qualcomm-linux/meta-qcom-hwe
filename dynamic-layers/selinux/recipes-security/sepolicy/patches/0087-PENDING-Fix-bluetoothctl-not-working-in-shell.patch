@@ -1,28 +1,33 @@
-From 1183af341ef3953e37accb3d4bfba2b6abbaa46d Mon Sep 17 00:00:00 2001
+From 8e04f38efa705cd80970b0e78fc5442e5063a809 Mon Sep 17 00:00:00 2001
 From: Mohammed Sameer Mulla <quic_mohamull@quicinc.com>
-Date: Tue, 1 Oct 2024 16:19:18 +0530
+Date: Tue, 6 May 2025 13:39:33 +0530
 Subject: [PATCH] PENDING: Fix bluetoothctl not working in shell
 
 Signed-off-by: Mohammed Sameer Mulla <quic_mohamull@quicinc.com>
 
 Upstream-Status: Pending
 
-Change-Id: I8f92e0142f0cad72e9f973ae6448b9cfe82384d4
 ---
- policy/modules/services/bluetooth.te | 1 +
- 1 file changed, 1 insertion(+)
+ policy/modules/services/bluetooth.te | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/policy/modules/services/bluetooth.te b/policy/modules/services/bluetooth.te
-index 164bace9f..7a45f79b9 100644
+index 534f1b36d..1712ffd36 100644
 --- a/policy/modules/services/bluetooth.te
 +++ b/policy/modules/services/bluetooth.te
-@@ -135,6 +135,7 @@ optional_policy(`
- 	dbus_system_bus_client(bluetooth_t)
- 	dbus_connect_system_bus(bluetooth_t)
- 	init_dbus_send_script(bluetooth_t)
-+        unconfined_dbus_send(bluetooth_t)
- 
- 	optional_policy(`
- 		cups_dbus_chat(bluetooth_t)
--- 
+@@ -180,6 +180,13 @@ allow bluetooth_helper_t bluetooth_t:socket { read write };
+ allow bluetooth_helper_t bluetooth_t:fd use;
+ allow bluetooth_helper_t bluetooth_t:unix_stream_socket rw_socket_perms;
 
++allow bluetooth_helper_t self:capability { net_admin };
++allow bluetooth_helper_t self:bluetooth_socket { getattr getopt bind create setopt read };
++getty_use_fds(bluetooth_helper_t)
++ssh_use_sshd_pidfds(bluetooth_helper_t)
++userdom_use_user_ptys(bluetooth_helper_t)
++userdom_use_user_ttys(bluetooth_helper_t)
++
+ manage_dirs_pattern(bluetooth_helper_t, bluetooth_helper_tmp_t, bluetooth_helper_tmp_t)
+ manage_files_pattern(bluetooth_helper_t, bluetooth_helper_tmp_t, bluetooth_helper_tmp_t)
+ manage_sock_files_pattern(bluetooth_helper_t, bluetooth_helper_tmp_t, bluetooth_helper_tmp_t)
+--
+2.34.1
