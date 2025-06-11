@@ -43,6 +43,26 @@ interface(`qcom_allow_smcinvoke_rw',`
 
 #####################
 ## <summary>
+## Allow open/read from adsp device nodes
+## </summary>
+## <param name="domain">
+##  <summary>
+##  Domain allowed rw to adsp device
+##  to communicate with sscrpcd
+##  </summary>
+## </param>
+#
+
+interface(`qcom_allow_adsp_device_rw',`
+        gen_require(`
+                type qcom_adsp_device_t;
+        ')
+
+        allow $1 qcom_adsp_device_t:chr_file rw_chr_file_perms;
+')
+
+#####################
+## <summary>
 ## Allow open/read/write from ufs-bsg device
 ## </summary>
 ## <param name="domain">
