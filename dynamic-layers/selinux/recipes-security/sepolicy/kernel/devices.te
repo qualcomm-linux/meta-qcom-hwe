@@ -20,6 +20,9 @@ dev_node(qcom_smcinvoke_dev_t)
 type qcom_ufs_bsg_dev_t;
 dev_node(qcom_ufs_bsg_dev_t)
 
+type qcom_mmc_rpmb_dev_t;
+dev_node(qcom_mmc_rpmb_dev_t)
+
 type qcom_adsp_secure_device_t;
 dev_node(qcom_adsp_secure_device_t)
 
