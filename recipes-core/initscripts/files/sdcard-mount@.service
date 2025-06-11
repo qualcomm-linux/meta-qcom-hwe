@@ -1,14 +1,14 @@
 [Unit]
 Description=Mount SD card
 After=local-fs.target
- 
+
 [Service]
 Type=oneshot
 
 ExecStartPre=/bin/mkdir -p /media/sdcard
-ExecStart=/bin/sh /bin/automountsdcard.sh add mmcblk1p1
-ExecStop=/bin/sh /bin/automountsdcard.sh remove mmcblk1p1
+ExecStart=/bin/sh /bin/automountsdcard.sh add %i
+ExecStop=/bin/sh /bin/automountsdcard.sh remove %i
 RemainAfterExit=true
- 
+
 [Install]
 WantedBy=multi-user.target
