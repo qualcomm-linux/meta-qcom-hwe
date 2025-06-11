@@ -25,6 +25,7 @@ BOOTBINARIES:qcs615  = "QCS615_bootbinaries"
 
 BOOTBINARIES_PATH = "${WORKDIR}/git/${BUILD_ID}/${BIN_PATH}"
 
+# Default parition xml
 PARTITION_XML ?= "partition_ufs.xml"
 PARTITION_XML:emmc-storage ?= "partition_emmc.xml"
 
@@ -57,10 +58,23 @@ python do_install() {
 inherit deploy
 
 do_deploy() {
+    # Deploy default xml as partition.xml at root of deploydir
     if [ -f "${D}/${PARTITION_XML}" ]; then
         install -m 0644 ${D}/${PARTITION_XML} ${DEPLOYDIR}/partition.xml
     else
         install -m 0644 ${D}/partition.xml ${DEPLOYDIR}/partition.xml
+    fi
+
+    # Deploy ufs xml inside ufs specific dir.
+    if [ -f "${D}/partition_ufs.xml" ]; then
+        install -d ${DEPLOYDIR}/partition_ufs
+        install -m 0644 ${D}/partition_ufs.xml ${DEPLOYDIR}/partition_ufs/partition.xml
+    fi
+
+    # Deploy emmc xml inside emmc specific dir.
+    if [ -f "${D}/partition_emmc.xml" ]; then
+        install -d ${DEPLOYDIR}/partition_emmc
+        install -m 0644 ${D}/partition_emmc.xml ${DEPLOYDIR}/partition_emmc/partition.xml
     fi
 }
 addtask deploy before do_build after do_install
