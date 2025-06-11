@@ -148,6 +148,7 @@ SRC_URI:append = " \
     file://qcs615/0001-QCLINUX-Revert-FROMLIST-arm64-dts-qcom-qcs615-add-SD.patch \
     file://qcs615/0001-UPSTREAM-arm64-dts-qcom-qcs615-add-SDHC1-and-SDHC2.patch \
     file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-disable-the-CTI-devic.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-Add-ADSP-and-CDSP-fas.patch \
     "
 
 # qcs615 board dts patches
