@@ -475,4 +475,5 @@ SRC_URI:append = " \
     file://common/0025-FROMLIST-media-iris-Add-internal-buffer-calculation-.patch \
     file://common/0026-FROMLIST-media-iris-Add-codec-specific-check-for-VP9.patch \
     file://common/0001-QCLINUX-media-iris-add-support-for-GDSC-switch-and-P.patch \
+    file://common/0145-QCLINUX-firmware-qcom_scm-Add-scm-addon-module-macro.patch \
     "

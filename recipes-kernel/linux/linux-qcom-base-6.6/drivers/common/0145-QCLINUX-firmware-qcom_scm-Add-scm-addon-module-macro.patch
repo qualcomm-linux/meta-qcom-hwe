@@ -1,0 +1,54 @@
+From 16df8985d7bc9579988d3d4f807f89e16ce9fce0 Mon Sep 17 00:00:00 2001
+From: Yuanjie Yang <quic_yuanjiey@quicinc.com>
+Date: Wed, 21 May 2025 15:27:27 +0800
+Subject: [PATCH] QCLINUX: firmware: qcom_scm: Add scm addon module macro
+ judgement
+
+Add scm addon module macro judgement in qcom_scm_addon.h,
+provide support for graphic and video.
+
+Signed-off-by: Yuanjie Yang <quic_yuanjiey@quicinc.com>
+Upstream-Status: Pending
+---
+ drivers/firmware/qcom_scm_addon.c            | 1 +
+ include/linux/firmware/qcom/qcom_scm_addon.h | 6 ++++--
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/firmware/qcom_scm_addon.c b/drivers/firmware/qcom_scm_addon.c
+index 675224bec966..37eb6ed2ab0c 100644
+--- a/drivers/firmware/qcom_scm_addon.c
++++ b/drivers/firmware/qcom_scm_addon.c
+@@ -15,6 +15,7 @@
+ #include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/firmware/qcom/qcom_scm.h>
++#include <linux/firmware/qcom/qcom_scm_addon.h>
+ #include <linux/firmware/qcom/qcom_tzmem.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+diff --git a/include/linux/firmware/qcom/qcom_scm_addon.h b/include/linux/firmware/qcom/qcom_scm_addon.h
+index 5bfbb91e6cc5..e1b6fee98328 100644
+--- a/include/linux/firmware/qcom/qcom_scm_addon.h
++++ b/include/linux/firmware/qcom/qcom_scm_addon.h
+@@ -1,14 +1,16 @@
+ /* SPDX-License-Identifier: GPL-2.0-only */
+ /*
+- * Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #ifndef __QCOM_SCM_ADDON_H
+ #define __QCOM_SCM_ADDON_H
+ 
+ #include <asm-generic/errno-base.h>
++#include <linux/kconfig.h>
++
++#if IS_ENABLED(CONFIG_QCOM_SCM_ADDON)
+ 
+-#ifdef CONFIG_QCOM_SCM_ADDON
+ extern bool qcom_scm_dcvs_ca_available(void);
+ extern bool qcom_scm_dcvs_core_available(void);
+ extern int qcom_scm_dcvs_reset(void);
+-- 
+2.34.1
+
