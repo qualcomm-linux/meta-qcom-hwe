@@ -143,6 +143,7 @@ SRC_URI:append = " \
     file://qcs615/0003-FROMLIST-arm64-dts-qcom-qcs615-Add-mproc-node-for-SE.patch \
     file://qcs615/0004-FROMLIST-arm64-dts-qcom-qcs615-Add-IMEM-and-PIL-info.patch \
     file://qcs615/0005-FROMLIST-arm64-dts-qcom-qcs615-add-ADSP-and-CDSP-nod.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-fix-a-crash-issue-caused-by-.patch \
     file://qcs615/0001-PENDING-arm64-dts-qcom-Enable-cpu-and-gpu-mitigation.patch \
     file://qcs615/0001-QCLINUX-Revert-FROMLIST-arm64-dts-qcom-qcs615-add-SD.patch \
     file://qcs615/0001-UPSTREAM-arm64-dts-qcom-qcs615-add-SDHC1-and-SDHC2.patch \
