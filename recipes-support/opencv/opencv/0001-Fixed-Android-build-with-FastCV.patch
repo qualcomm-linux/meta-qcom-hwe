@@ -1,0 +1,55 @@
+From 250ea3d7c6fc0b83e485c771f745f748d99d65f0 Mon Sep 17 00:00:00 2001
+From: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Date: Thu, 10 Apr 2025 18:21:25 +0300
+Subject: [PATCH] Fixed Android build with FastCV
+
+Signed-off-by: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Upstream-Status: Backport [https://github.com/opencv/opencv/commit/5170f56a1ed53e789e1e70fedb4b475bf904fafd]
+---
+ 3rdparty/fastcv/CMakeLists.txt |  2 +-
+ cmake/OpenCVFindLibsPerf.cmake | 15 +++++++++------
+ 2 files changed, 10 insertions(+), 7 deletions(-)
+
+diff --git a/3rdparty/fastcv/CMakeLists.txt b/3rdparty/fastcv/CMakeLists.txt
+index ab17375902..5556e1d436 100644
+--- a/3rdparty/fastcv/CMakeLists.txt
++++ b/3rdparty/fastcv/CMakeLists.txt
+@@ -9,7 +9,7 @@ if(HAVE_FASTCV)
+ 
+   file(GLOB FASTCV_HAL_FILES    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+ 
+-  add_library(fastcv_hal STATIC ${FASTCV_HAL_FILES})
++  add_library(fastcv_hal STATIC ${OPENCV_3RDPARTY_EXCLUDE_FROM_ALL} ${FASTCV_HAL_FILES})
+ 
+   target_include_directories(fastcv_hal PRIVATE
+     ${CMAKE_SOURCE_DIR}/modules/core/include
+diff --git a/cmake/OpenCVFindLibsPerf.cmake b/cmake/OpenCVFindLibsPerf.cmake
+index c5fb628c44..012b80a182 100644
+--- a/cmake/OpenCVFindLibsPerf.cmake
++++ b/cmake/OpenCVFindLibsPerf.cmake
+@@ -197,13 +197,16 @@ if(WITH_FASTCV)
+       set(FastCV_INCLUDE_PATH "${FCV_ROOT_DIR}/inc" CACHE PATH "FastCV includes directory")
+       set(FastCV_LIB_PATH "${FCV_ROOT_DIR}/libs" CACHE PATH "FastCV library directory")
+       ocv_install_3rdparty_licenses(FastCV "${OpenCV_BINARY_DIR}/3rdparty/fastcv/LICENSE")
+-      if(ANDROID)
+-        set(FASTCV_LIBRARY "${FastCV_LIB_PATH}/libfastcvopt.so" CACHE PATH "FastCV library")
+-        install(FILES "${FASTCV_LIBRARY}" DESTINATION "${OPENCV_LIB_INSTALL_PATH}" COMPONENT "bin")
+-      else()
+-        set(FASTCV_LIBRARY "${FastCV_LIB_PATH}/libfastcv.a" CACHE PATH "FastCV library")
+-        install(FILES "${FASTCV_LIBRARY}" DESTINATION "${OPENCV_LIB_INSTALL_PATH}" COMPONENT "dev")
++      add_library(fastcv STATIC IMPORTED)
++      set_target_properties(fastcv PROPERTIES
++          IMPORTED_LINK_INTERFACE_LIBRARIES ""
++          IMPORTED_LOCATION "${FastCV_LIB_PATH}/libfastcv.a"
++      )
++      if (NOT BUILD_SHARED_LIBS)
++        install(FILES "${FastCV_LIB_PATH}/libfastcv.a" DESTINATION "${OPENCV_3P_LIB_INSTALL_PATH}" COMPONENT "dev")
+       endif()
++      set(FASTCV_LIBRARY "fastcv" CACHE PATH "FastCV library")
++      list(APPEND OPENCV_LINKER_LIBS ${FASTCV_LIBRARY})
+     else()
+       set(HAVE_FASTCV FALSE CACHE BOOL "FastCV status")
+     endif()
+-- 
+2.34.1
+

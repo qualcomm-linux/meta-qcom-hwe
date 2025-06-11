@@ -1,0 +1,725 @@
+From 385bd6f35cb0c2e15d02028230a88d361dfbfc30 Mon Sep 17 00:00:00 2001
+From: adsha-quic <quic_adsha@quicinc.com>
+Date: Wed, 19 Mar 2025 13:41:29 +0530
+Subject: [PATCH] Adding FastCV extensions for merge, split, gemm and arithm APIs add, subtract
+
+Signed-off-by: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Upstream-Status: Backport [https://github.com/opencv/opencv_contrib/commit/385bd6f35cb0c2e15d02028230a88d361dfbfc30]
+---
+ modules/fastcv/include/opencv2/fastcv.hpp     |   3 +-
+ .../fastcv/include/opencv2/fastcv/arithm.hpp  |  41 ++++-
+ .../fastcv/include/opencv2/fastcv/channel.hpp |  45 ++++++
+ .../fastcv/include/opencv2/fastcv/pyramid.hpp |   4 +-
+ modules/fastcv/perf/perf_matmul.cpp           |  35 +++-
+ modules/fastcv/src/arithm.cpp                 | 150 +++++++++++++++++-
+ modules/fastcv/src/channel.cpp                | 143 +++++++++++++++++
+ modules/fastcv/test/test_arithm.cpp           |  38 ++++-
+ modules/fastcv/test/test_channel.cpp          |  72 +++++++++
+ modules/fastcv/test/test_pyramid.cpp          |  11 +-
+ 10 files changed, 530 insertions(+), 12 deletions(-)
+ create mode 100644 modules/fastcv/include/opencv2/fastcv/channel.hpp
+ create mode 100644 modules/fastcv/src/channel.cpp
+ create mode 100644 modules/fastcv/test/test_channel.cpp
+
+diff --git a/modules/fastcv/include/opencv2/fastcv.hpp b/modules/fastcv/include/opencv2/fastcv.hpp
+index af188dfc..292e83a2 100644
+--- a/modules/fastcv/include/opencv2/fastcv.hpp
++++ b/modules/fastcv/include/opencv2/fastcv.hpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -11,6 +11,7 @@
+ #include "opencv2/fastcv/arithm.hpp"
+ #include "opencv2/fastcv/bilateralFilter.hpp"
+ #include "opencv2/fastcv/blur.hpp"
++#include "opencv2/fastcv/channel.hpp"
+ #include "opencv2/fastcv/cluster.hpp"
+ #include "opencv2/fastcv/draw.hpp"
+ #include "opencv2/fastcv/edges.hpp"
+diff --git a/modules/fastcv/include/opencv2/fastcv/arithm.hpp b/modules/fastcv/include/opencv2/fastcv/arithm.hpp
+index 5a0c43b2..098d63df 100644
+--- a/modules/fastcv/include/opencv2/fastcv/arithm.hpp
++++ b/modules/fastcv/include/opencv2/fastcv/arithm.hpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -8,6 +8,10 @@
+ 
+ #include <opencv2/core.hpp>
+ 
++#define FCV_CMP_EQ(val1,val2) (fabs(val1 - val2) < FLT_EPSILON)
++
++#define FCV_OPTYPE(depth,op) ((depth<<3) + op)
++
+ namespace cv {
+ namespace fastcv {
+ 
+@@ -26,6 +30,41 @@ CV_EXPORTS_W void matmuls8s32(InputArray src1, InputArray src2, OutputArray dst)
+ 
+ //! @}
+ 
++//! @addtogroup fastcv
++//! @{
++
++/**
++ * @brief Arithmetic add and subtract operations for two matrices
++ *        It is optimized for Qualcomm's processors
++ * @param src1 First source matrix, can be of type CV_8U, CV_16S, CV_32F.
++ *             Note: CV_32F not supported for subtract
++ * @param src2 Second source matrix of same type and size as src1
++ * @param dst Resulting matrix of type as src mats
++ * @param op  type of operation - 0 for add and 1 for subtract
++ */
++CV_EXPORTS_W void arithmetic_op(InputArray src1, InputArray src2, OutputArray dst, int op);
++
++//! @}
++
++//! @addtogroup fastcv
++//! @{
++
++/**
++ * @brief Matrix multiplication of two float type matrices
++ *        R = a*A*B + b*C where A,B,C,R are matrices and a,b are constants
++ *        It is optimized for Qualcomm's processors
++ * @param src1 First source matrix of type CV_32F
++ * @param src2 Second source matrix of type CV_32F with same rows as src1 cols
++ * @param dst Resulting matrix of type CV_32F
++ * @param alpha multiplying factor for src1 and src2
++ * @param src3 Optional third matrix of type CV_32F to be added to matrix product
++ * @param beta multiplying factor for src3
++ */
++CV_EXPORTS_W void gemm(InputArray src1, InputArray src2, OutputArray dst, float alpha = 1.0,
++                           InputArray src3 = noArray(), float beta = 0.0);
++
++//! @}
++
+ } // fastcv::
+ } // cv::
+ 
+diff --git a/modules/fastcv/include/opencv2/fastcv/channel.hpp b/modules/fastcv/include/opencv2/fastcv/channel.hpp
+new file mode 100644
+index 00000000..7b911a15
+--- /dev/null
++++ b/modules/fastcv/include/opencv2/fastcv/channel.hpp
+@@ -0,0 +1,45 @@
++/*
++ * Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++ * SPDX-License-Identifier: Apache-2.0
++*/
++
++#ifndef OPENCV_FASTCV_CHANNEL_HPP
++#define OPENCV_FASTCV_CHANNEL_HPP
++
++#include <opencv2/core.hpp>
++
++namespace cv {
++namespace fastcv {
++
++//! @addtogroup fastcv
++//! @{
++
++/**
++ * @brief Creates one multi-channel mat out of several single-channel CV_8U mats.
++ *        Optimized for Qualcomm's processors
++ * @param mv input vector of matrices to be merged; all the matrices in mv must be of CV_8UC1 and have the same size
++ *           Note: numbers of mats can be 2,3 or 4.
++ * @param dst output array of depth CV_8U and same size as mv[0]; The number of channels
++ *            will be the total number of matrices in the matrix array
++ */
++CV_EXPORTS_W void merge(InputArrayOfArrays mv, OutputArray dst);
++
++//! @}
++
++//! @addtogroup fastcv
++//! @{
++
++/**
++ * @brief Splits an CV_8U multi-channel mat into several CV_8UC1 mats
++ *        Optimized for Qualcomm's processors
++ * @param src input 2,3 or 4 channel mat of depth CV_8U
++ * @param mv  output vector of size src.channels() of CV_8UC1 mats
++ */
++CV_EXPORTS_W void split(InputArray src, OutputArrayOfArrays mv);
++
++//! @}
++
++} // fastcv::
++} // cv::
++
++#endif // OPENCV_FASTCV_CHANNEL_HPP
+diff --git a/modules/fastcv/include/opencv2/fastcv/pyramid.hpp b/modules/fastcv/include/opencv2/fastcv/pyramid.hpp
+index 6c20a21a..962730f4 100644
+--- a/modules/fastcv/include/opencv2/fastcv/pyramid.hpp
++++ b/modules/fastcv/include/opencv2/fastcv/pyramid.hpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -16,7 +16,7 @@ namespace fastcv {
+ 
+ /**
+  * @brief Creates a gradient pyramid from an image pyramid
+- *
++ *        Note: The borders are ignored during gradient calculation.
+  * @param pyr Input pyramid of 1-channel 8-bit images. Only continuous images are supported.
+  * @param dx Horizontal Sobel gradient pyramid of the same size as pyr
+  * @param dy Verical Sobel gradient pyramid of the same size as pyr
+diff --git a/modules/fastcv/perf/perf_matmul.cpp b/modules/fastcv/perf/perf_matmul.cpp
+index 83af7618..a8e4f314 100644
+--- a/modules/fastcv/perf/perf_matmul.cpp
++++ b/modules/fastcv/perf/perf_matmul.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -10,6 +10,9 @@ namespace opencv_test {
+ typedef std::tuple<int /*rows1*/, int /*cols1*/, int /*cols2*/> MatMulPerfParams;
+ typedef perf::TestBaseWithParam<MatMulPerfParams> MatMulPerfTest;
+ 
++typedef std::tuple<int /*rows1*/, int /*cols1*/, int /*cols2*/, float> MatMulGemmPerfParams;
++typedef perf::TestBaseWithParam<MatMulGemmPerfParams> MatMulGemmPerfTest;
++
+ PERF_TEST_P(MatMulPerfTest, run,
+     ::testing::Combine(::testing::Values(8, 16, 128, 256), // rows1
+                        ::testing::Values(8, 16, 128, 256), // cols1
+@@ -37,4 +40,34 @@ PERF_TEST_P(MatMulPerfTest, run,
+     SANITY_CHECK_NOTHING();
+ }
+ 
++PERF_TEST_P(MatMulGemmPerfTest, run,
++    ::testing::Combine(::testing::Values(8, 16, 128, 256), // rows1
++                       ::testing::Values(8, 16, 128, 256), // cols1
++                       ::testing::Values(8, 16, 128, 256), // cols2
++                       ::testing::Values(2.5, 5.8))   // alpha
++           )
++{
++    auto p = GetParam();
++    int rows1 = std::get<0>(p);
++    int cols1 = std::get<1>(p);
++    int cols2 = std::get<2>(p);
++    float alpha = std::get<3>(p);
++
++    RNG& rng = cv::theRNG();
++    Mat src1(rows1, cols1, CV_32FC1), src2(cols1, cols2, CV_32FC1);
++    cvtest::randUni(rng, src1, Scalar::all(-128.0), Scalar::all(128.0));
++    cvtest::randUni(rng, src2, Scalar::all(-128.0), Scalar::all(128.0));
++
++    Mat dst;
++
++    while (next())
++    {
++        startTimer();
++        cv::fastcv::gemm(src1, src2, dst, alpha, noArray(), 0);
++        stopTimer();
++    }
++
++    SANITY_CHECK_NOTHING();
++}
++
+ } // namespace
+diff --git a/modules/fastcv/src/arithm.cpp b/modules/fastcv/src/arithm.cpp
+index bf8077cb..244af33e 100644
+--- a/modules/fastcv/src/arithm.cpp
++++ b/modules/fastcv/src/arithm.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -32,5 +32,153 @@ void matmuls8s32(InputArray _src1, InputArray _src2, OutputArray _dst)
+                            (int32_t*)dst.data, dst.step);
+ }
+ 
++void arithmetic_op(InputArray _src1, InputArray _src2, OutputArray _dst, int op)
++{
++    CV_Assert(!_src1.empty() && (_src1.depth() == CV_8U || _src1.depth() == CV_16S || _src1.depth() == CV_32F));
++    CV_Assert(!_src2.empty() && _src2.type() == _src1.type());
++    CV_Assert(_src2.size() == _src1.size());
++
++    Mat src1 = _src1.getMat();
++    Mat src2 = _src2.getMat();
++
++    _dst.create(_src1.rows(), _src1.cols(), _src1.type());
++    Mat dst = _dst.getMat();
++
++    INITIALIZATION_CHECK;
++
++    fcvConvertPolicy policy = FASTCV_CONVERT_POLICY_SATURATE;
++
++    int nStripes = cv::getNumThreads();
++
++    int func = FCV_OPTYPE(_src1.depth(), op);
++    switch(func)
++    {
++        case FCV_OPTYPE(CV_8U, 0):
++            cv::parallel_for_(cv::Range(0, src1.rows), [&](const cv::Range &range){
++                          int rangeHeight = range.end - range.start;
++                          const uchar* yS1 =  src1.data + static_cast<size_t>(range.start)*src1.step[0];
++                          const uchar* yS2 =  src2.data + static_cast<size_t>(range.start)*src2.step[0];
++                          uchar* yD = dst.data + static_cast<size_t>(range.start)*dst.step[0];
++                          fcvAddu8(yS1, src1.cols, rangeHeight, src1.step[0],
++                                     yS2, src2.step[0], policy, yD, dst.step[0]);
++                          }, nStripes);
++            break;
++        case FCV_OPTYPE(CV_16S, 0):
++            cv::parallel_for_(cv::Range(0, src1.rows), [&](const cv::Range &range){
++                          int rangeHeight = range.end - range.start;
++                          const short* yS1 =  (short*)src1.data + static_cast<size_t>(range.start)*(src1.step[0]/sizeof(short));
++                          const short* yS2 =  (short*)src2.data + static_cast<size_t>(range.start)*(src2.step[0]/sizeof(short));
++                          short* yD = (short*)dst.data + static_cast<size_t>(range.start)*(dst.step[0]/sizeof(short));
++                          fcvAdds16_v2(yS1, src1.cols, rangeHeight, src1.step[0],
++                                     yS2, src2.step[0], policy, yD, dst.step[0]);
++                          }, nStripes);
++            break;
++        case FCV_OPTYPE(CV_32F, 0):
++            cv::parallel_for_(cv::Range(0, src1.rows), [&](const cv::Range &range){
++                          int rangeHeight = range.end - range.start;
++                          const float* yS1 =  (float*)src1.data + static_cast<size_t>(range.start)*(src1.step[0]/sizeof(float));
++                          const float* yS2 =  (float*)src2.data + static_cast<size_t>(range.start)*(src2.step[0]/sizeof(float));
++                          float* yD = (float*)dst.data + static_cast<size_t>(range.start)*(dst.step[0]/sizeof(float));
++                          fcvAddf32(yS1, src1.cols, rangeHeight, src1.step[0],
++                                     yS2, src2.step[0], yD, dst.step[0]);
++                          }, nStripes);
++            break;
++        case FCV_OPTYPE(CV_8U, 1):
++            cv::parallel_for_(cv::Range(0, src1.rows), [&](const cv::Range &range){
++                          int rangeHeight = range.end - range.start;
++                          const uchar* yS1 =  src1.data + static_cast<size_t>(range.start)*src1.step[0];
++                          const uchar* yS2 =  src2.data + static_cast<size_t>(range.start)*src2.step[0];
++                          uchar* yD = dst.data + static_cast<size_t>(range.start)*dst.step[0];
++                          fcvSubtractu8(yS1, src1.cols, rangeHeight, src1.step[0],
++                                     yS2, src2.step[0], policy, yD, dst.step[0]);
++                          }, nStripes);
++            break;
++        case FCV_OPTYPE(CV_16S, 1):
++            cv::parallel_for_(cv::Range(0, src1.rows), [&](const cv::Range &range){
++                          int rangeHeight = range.end - range.start;
++                          const short* yS1 =  (short*)src1.data + static_cast<size_t>(range.start)*(src1.step[0]/sizeof(short));
++                          const short* yS2 =  (short*)src2.data + static_cast<size_t>(range.start)*(src2.step[0]/sizeof(short));
++                          short* yD = (short*)dst.data + static_cast<size_t>(range.start)*(dst.step[0]/sizeof(short));
++                          fcvSubtracts16(yS1, src1.cols, rangeHeight, src1.step[0],
++                                     yS2, src2.step[0], policy, yD, dst.step[0]);
++                          }, nStripes);
++            break;
++        default:
++            CV_Error(cv::Error::StsBadArg, cv::format("op type is not supported"));
++            break;
++    }
++}
++
++
++void gemm(InputArray _src1, InputArray _src2, OutputArray _dst, float alpha, InputArray _src3, float beta)
++{
++    CV_Assert(!_src1.empty() && _src1.type() == CV_32FC1);
++    CV_Assert(_src1.cols() == _src2.rows());
++    Mat src1 = _src1.getMat();
++
++    CV_Assert(!_src2.empty() && _src2.type() == CV_32FC1);
++    Mat src2 = _src2.getMat();
++
++    bool isSrc3 = !_src3.empty();
++
++    Mat src3 = _src3.getMat();
++
++    _dst.create(_src1.rows(), _src2.cols(), CV_32FC1);
++
++    Mat dst = _dst.getMat();
++
++    CV_Assert(!FCV_CMP_EQ(alpha,0));
++
++    cv::Mat dst_temp1, dst_temp2;
++    float *dstp = NULL;
++    bool inplace = false;
++    size_t dst_stride;
++    fcvStatus status = FASTCV_SUCCESS;
++
++    int n = src1.cols, m = src1.rows, k = src2.cols;
++
++    INITIALIZATION_CHECK;
++
++    if(src1.data == dst.data || src2.data == dst.data || (isSrc3 && (src3.data == dst.data)))
++    {
++        dst_temp1 = cv::Mat(m, k, CV_32FC1);
++        dstp = dst_temp1.ptr<float>();
++        inplace = true;
++        dst_stride = dst_temp1.step[0];
++    }
++    else
++    {
++        dstp = (float32_t*)dst.data;
++        dst_stride = dst.step[0];
++    }
++    float32_t *dstp1 = dstp;
++    status = fcvMatrixMultiplyf32_v2((float32_t*)src1.data, n, m, src1.step[0], (float32_t*)src2.data, k,
++                                        src2.step[0], dstp, dst_stride);
++
++    bool isAlpha = !(FCV_CMP_EQ(alpha,0) || FCV_CMP_EQ(alpha,1));
++    if(isAlpha && status == FASTCV_SUCCESS)
++    {
++        status = fcvMultiplyScalarf32(dstp, k, m, dst_stride, alpha, dstp1, dst_stride);
++    }
++
++    if(isSrc3 && (!FCV_CMP_EQ(beta,0)) && status == FASTCV_SUCCESS)
++    {
++        cv::Mat dst3 = cv::Mat(m, k, CV_32FC1);
++        if(!FCV_CMP_EQ(beta,1))
++        {
++            status = fcvMultiplyScalarf32((float32_t*)src3.data, k, m, src3.step[0], beta, (float32_t*)dst3.data, dst3.step[0]);
++            if(status == FASTCV_SUCCESS)
++                fcvAddf32_v2(dstp, k, m, dst_stride, (float32_t*)dst3.data, dst3.step[0], dstp1, dst_stride);
++        }
++        else
++            fcvAddf32_v2(dstp, k, m, dst_stride, (float32_t*)src3.data, src3.step[0], dstp1, dst_stride);
++    }
++
++    if(inplace == true)
++    {
++        dst_temp1(cv::Rect(0, 0, k, m)).copyTo(dst(cv::Rect(0, 0, k, m)));
++    }
++}
++
+ } // fastcv::
+ } // cv::
+diff --git a/modules/fastcv/src/channel.cpp b/modules/fastcv/src/channel.cpp
+new file mode 100644
+index 00000000..68e349d4
+--- /dev/null
++++ b/modules/fastcv/src/channel.cpp
+@@ -0,0 +1,143 @@
++/*
++ * Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++ * SPDX-License-Identifier: Apache-2.0
++*/
++
++#include "precomp.hpp"
++
++namespace cv {
++namespace fastcv {
++
++void merge(InputArrayOfArrays _mv, OutputArray _dst)
++{
++    CV_Assert(!_mv.empty());
++    std::vector<cv::Mat> mv;
++    _mv.getMatVector(mv);
++    int count = mv.size();
++
++    CV_Assert(!mv.empty());
++
++    CV_Assert(count == 2 || count == 3 || count == 4);
++    CV_Assert(!mv[0].empty());
++    CV_Assert(mv[0].dims <= 2);
++
++    for(int i = 0; i < count; i++ )
++    {
++        CV_Assert(mv[i].size == mv[0].size && mv[i].step[0] == mv[0].step[0] && mv[i].type() == CV_8UC1);
++    }
++
++     _dst.create(mv[0].dims, mv[0].size, CV_MAKE_TYPE(CV_8U,count));
++    Mat dst = _dst.getMat();
++
++    INITIALIZATION_CHECK;
++
++    int nStripes = cv::getNumThreads();
++
++    switch(count)
++    {
++        case 2:
++        cv::parallel_for_(cv::Range(0, mv[0].rows), [&](const cv::Range &range){
++                          int height_ = range.end - range.start;
++                          const uchar* yS1 =  mv[0].data + static_cast<size_t>(range.start) * mv[0].step[0];
++                          const uchar* yS2 =  mv[1].data + static_cast<size_t>(range.start) * mv[1].step[0];
++                          uchar* yD = dst.data + static_cast<size_t>(range.start) * dst.step[0];
++                          fcvChannelCombine2Planesu8(yS1, mv[0].cols, height_, mv[0].step[0], yS2, mv[1].step[0], yD, dst.step[0]);
++                          }, nStripes);
++
++        break;
++
++        case 3:
++        cv::parallel_for_(cv::Range(0, mv[0].rows), [&](const cv::Range &range){
++                          int height_ = range.end - range.start;
++                          const uchar* yS1 =  mv[0].data + static_cast<size_t>(range.start) * mv[0].step[0];
++                          const uchar* yS2 =  mv[1].data + static_cast<size_t>(range.start) * mv[1].step[0];
++                          const uchar* yS3 =  mv[2].data + static_cast<size_t>(range.start) * mv[2].step[0];
++                          uchar* yD = dst.data + static_cast<size_t>(range.start) * dst.step[0];
++                          fcvChannelCombine3Planesu8(yS1, mv[0].cols, height_, mv[0].step[0], yS2, mv[1].step[0], yS3, mv[2].step[0], yD, dst.step[0]);
++                          }, nStripes);
++
++        break;
++
++        case 4:
++        cv::parallel_for_(cv::Range(0, mv[0].rows), [&](const cv::Range &range){
++                          int height_ = range.end - range.start;
++                          const uchar* yS1 =  mv[0].data + static_cast<size_t>(range.start) * mv[0].step[0];
++                          const uchar* yS2 =  mv[1].data + static_cast<size_t>(range.start) * mv[1].step[0];
++                          const uchar* yS3 =  mv[2].data + static_cast<size_t>(range.start) * mv[2].step[0];
++                          const uchar* yS4 =  mv[3].data + static_cast<size_t>(range.start) * mv[3].step[0];
++                          uchar* yD = dst.data + static_cast<size_t>(range.start) * dst.step[0];
++                          fcvChannelCombine4Planesu8(yS1, mv[0].cols, height_, mv[0].step[0], yS2, mv[1].step[0], yS3, mv[2].step[0], yS4, mv[3].step[0], yD, dst.step[0]);
++                          }, nStripes);
++
++        break;
++
++        default:
++        CV_Error(cv::Error::StsBadArg, cv::format("count is not supported"));
++        break;
++    }
++}
++
++void split(InputArray _src, OutputArrayOfArrays _mv)
++{
++    CV_Assert(!_src.empty());
++    Mat src = _src.getMat();
++
++    int depth = src.depth(), cn = src.channels();
++
++    CV_Assert(depth == CV_8U && (cn == 2 || cn == 3 || cn == 4));
++    CV_Assert(src.dims <= 2);
++
++    for( int k = 0; k < cn; k++ )
++    {
++        _mv.create(src.dims, src.size, depth, k);
++    }
++
++    std::vector<cv::Mat> mv(cn);
++    _mv.getMatVector(mv);
++
++    INITIALIZATION_CHECK;
++
++    int nStripes = cv::getNumThreads();
++
++    if(src.rows * src.cols < 640 * 480)
++        if(cn == 3 || cn == 4)
++            nStripes = 1;
++
++    if(cn == 2)
++    {
++        cv::parallel_for_(cv::Range(0, src.rows), [&](const cv::Range &range){
++                      int height_ = range.end - range.start;
++                      const uchar* yS =  src.data + static_cast<size_t>(range.start) * src.step[0];
++                      uchar* y1D = mv[0].data + static_cast<size_t>(range.start) * mv[0].step[0];
++                      uchar* y2D = mv[1].data + static_cast<size_t>(range.start) * mv[1].step[0];
++                      fcvDeinterleaveu8(yS, src.cols, height_, src.step[0], y1D, mv[0].step[0], y2D, mv[1].step[0]);
++                      }, nStripes);
++    }
++    else if(cn == 3)
++    {
++        for(int i=0; i<cn; i++)
++        {
++            cv::parallel_for_(cv::Range(0, src.rows), [&](const cv::Range &range){
++                      int height_ = range.end - range.start;
++                      const uchar* yS =  src.data + static_cast<size_t>(range.start) * src.step[0];
++                      uchar* yD = mv[i].data + static_cast<size_t>(range.start) * mv[i].step[0];
++                      fcvChannelExtractu8(yS, src.cols, height_, src.step[0], NULL, 0, NULL, 0, (fcvChannelType)i, (fcvImageFormat)FASTCV_RGB, yD, mv[i].step[0]);
++                      }, nStripes);
++        }
++    }
++    else if(cn == 4)
++    {
++        for(int i=0; i<cn; i++)
++        {
++            cv::parallel_for_(cv::Range(0, src.rows), [&](const cv::Range &range){
++                      int height_ = range.end - range.start;
++                      const uchar* yS =  src.data + static_cast<size_t>(range.start) * src.step[0];
++                      uchar* yD = mv[i].data + static_cast<size_t>(range.start) * mv[i].step[0];
++                      fcvChannelExtractu8(yS, src.cols, height_, src.step[0], NULL, 0, NULL, 0, (fcvChannelType)i, (fcvImageFormat)FASTCV_RGBX, yD, mv[i].step[0]);
++                      }, nStripes);
++        }
++    }
++}
++
++} // fastcv::
++} // cv::
+diff --git a/modules/fastcv/test/test_arithm.cpp b/modules/fastcv/test/test_arithm.cpp
+index 39979908..bc1a9917 100644
+--- a/modules/fastcv/test/test_arithm.cpp
++++ b/modules/fastcv/test/test_arithm.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -10,6 +10,9 @@ namespace opencv_test { namespace {
+ typedef std::tuple<int /*rows1*/, int /*cols1*/, int /*cols2*/> MatMulTestParams;
+ class MatMulTest : public ::testing::TestWithParam<MatMulTestParams> {};
+ 
++typedef std::tuple<Size, int /*depth*/, int /*op type*/> ArithmOpTestParams;
++class ArithmOpTest : public ::testing::TestWithParam<ArithmOpTestParams> {};
++
+ TEST_P(MatMulTest, accuracy)
+ {
+     auto p = GetParam();
+@@ -48,9 +51,42 @@ TEST_P(MatMulTest, accuracy)
+     }
+ }
+ 
++TEST_P(ArithmOpTest, accuracy)
++{
++    auto p = GetParam();
++    Size sz = std::get<0>(p);
++    int depth = std::get<1>(p);
++    int op = std::get<2>(p);
++    RNG& rng = cv::theRNG();
++    Mat src1(sz, depth), src2(sz, depth);
++
++    cvtest::randUni(rng, src1, Scalar::all(0), Scalar::all(128));
++    cvtest::randUni(rng, src2, Scalar::all(0), Scalar::all(128));
++
++    Mat dst;
++    cv::fastcv::arithmetic_op(src1, src2, dst, op);
++
++    Mat ref;
++    if(op == 0)
++        cv::add(src1, src2, ref);
++    else if(op == 1)
++        cv::subtract(src1, src2, ref);
++
++    double normInf = cvtest::norm(ref, dst, cv::NORM_INF);
++    double normL2  = cvtest::norm(ref, dst, cv::NORM_L2);
++
++    EXPECT_EQ(normInf, 0);
++    EXPECT_EQ(normL2, 0);
++}
++
+ INSTANTIATE_TEST_CASE_P(FastCV_Extension, MatMulTest,
+                          ::testing::Combine(::testing::Values(8, 16, 128, 256),   // rows1
+                                             ::testing::Values(8, 16, 128, 256),   // cols1
+                                             ::testing::Values(8, 16, 128, 256))); // cols2
+ 
++INSTANTIATE_TEST_CASE_P(FastCV_Extension, ArithmOpTest,
++                         ::testing::Combine(::testing::Values(perf::szVGA, perf::sz720p, perf::sz1080p),   // sz
++                                            ::testing::Values(CV_8U, CV_16S), // depth
++                                            ::testing::Values(0,1))); // op type
++
+ }} // namespaces opencv_test, ::
+diff --git a/modules/fastcv/test/test_channel.cpp b/modules/fastcv/test/test_channel.cpp
+new file mode 100644
+index 00000000..b3ed86ec
+--- /dev/null
++++ b/modules/fastcv/test/test_channel.cpp
+@@ -0,0 +1,72 @@
++/*
++ * Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++ * SPDX-License-Identifier: Apache-2.0
++*/
++
++#include "test_precomp.hpp"
++
++namespace opencv_test { namespace {
++
++typedef std::tuple<Size, int> ChannelMergeTestParams;
++class ChannelMergeTest : public ::testing::TestWithParam<ChannelMergeTestParams> {};
++
++typedef std::tuple<Size, int> ChannelSplitTestParams;
++class ChannelSplitTest : public ::testing::TestWithParam<ChannelSplitTestParams> {};
++
++TEST_P(ChannelMergeTest, accuracy)
++{
++    int depth = CV_8UC1;
++    Size sz = std::get<0>(GetParam());
++    int count = std::get<1>(GetParam());
++    std::vector<Mat> src_mats;
++
++    RNG& rng = cv::theRNG();
++
++    for(int i = 0; i < count; i++)
++    {
++        Mat tmp(sz, depth);
++        src_mats.push_back(tmp);
++        cvtest::randUni(rng, src_mats[i], Scalar::all(0), Scalar::all(127));
++    }
++
++    Mat dst;
++    cv::fastcv::merge(src_mats, dst);
++
++    Mat ref;
++    cv::merge(src_mats, ref);
++
++    double normInf = cvtest::norm(ref, dst, cv::NORM_INF);
++
++    EXPECT_EQ(normInf, 0);
++}
++
++TEST_P(ChannelSplitTest, accuracy)
++{
++    Size sz = std::get<0>(GetParam());
++    int cn = std::get<1>(GetParam());
++    std::vector<Mat> dst_mats(cn), ref_mats(cn);
++
++    RNG& rng = cv::theRNG();
++    Mat src(sz, CV_MAKE_TYPE(CV_8U,cn));
++    cvtest::randUni(rng, src, Scalar::all(0), Scalar::all(127));
++
++    cv::fastcv::split(src, dst_mats);
++
++    cv::split(src, ref_mats);
++
++    for(int i=0; i<cn; i++)
++    {
++        double normInf = cvtest::norm(ref_mats[i], dst_mats[i], cv::NORM_INF);
++        EXPECT_EQ(normInf, 0);
++    }
++}
++
++INSTANTIATE_TEST_CASE_P(FastCV_Extension, ChannelMergeTest,
++                         ::testing::Combine(::testing::Values(perf::szODD, perf::szVGA, perf::sz720p, perf::sz1080p),   // sz
++                                            ::testing::Values(2,3,4)));  // count
++
++INSTANTIATE_TEST_CASE_P(FastCV_Extension, ChannelSplitTest,
++                         ::testing::Combine(::testing::Values(perf::szODD, perf::szVGA, perf::sz720p, perf::sz1080p),   // sz
++                                            ::testing::Values(2,3,4)));    // cn
++
++}} // namespaces opencv_test, ::
+diff --git a/modules/fastcv/test/test_pyramid.cpp b/modules/fastcv/test/test_pyramid.cpp
+index 29acf9ab..84c834fc 100644
+--- a/modules/fastcv/test/test_pyramid.cpp
++++ b/modules/fastcv/test/test_pyramid.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -126,16 +126,17 @@ TEST_P(SobelPyramidTest, accuracy)
+     {
+         cv::Mat ref, dst;
+         double normInf, normL2;
+-        ref = refPyrDx[i];
+-        dst = pyrDx[i];
++        cv::Rect roi(1, 1, pyr[i].cols - 2, pyr[i].rows - 2);
++        ref = refPyrDx[i](roi);
++        dst = pyrDx[i](roi);
+         normInf = cvtest::norm(dst, ref, cv::NORM_INF);
+         normL2  = cvtest::norm(dst, ref, cv::NORM_L2) / dst.total();
+ 
+         EXPECT_LE(normInf, 76.1);
+         EXPECT_LT(normL2,   0.4);
+ 
+-        ref = refPyrDy[i];
+-        dst = pyrDy[i];
++        ref = refPyrDy[i](roi);
++        dst = pyrDy[i](roi);
+         normInf = cvtest::norm(dst, ref, cv::NORM_INF);
+         normL2  = cvtest::norm(dst, ref, cv::NORM_L2) / dst.total();
+ 
+-- 
+2.34.1
+

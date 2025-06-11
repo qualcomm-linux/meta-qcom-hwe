@@ -1,17 +1,17 @@
-From 0141830e67ac7c60c474ab3c1e7d3e30c27c7943 Mon Sep 17 00:00:00 2001
-From: Pulkit Singh Tak <quic_ptak@quicinc.com>
-Date: Mon, 10 Feb 2025 15:10:26 +0530
-Subject: [PATCH] FROMLIST: Using fastcv static lib for compilation
+From e517347450636012e5f7a65a504e4ac9e1224c50 Mon Sep 17 00:00:00 2001
+From: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Date: Thu, 13 Feb 2025 09:17:08 +0300
+Subject: [PATCH] FROMLIST: Switch to static instance of FastCV on Linux.
 
-Signed-off-by: Pulkit Singh Tak <quic_ptak@quicinc.com>
-Upstream-Status: SUBMITTED [https://github.com/opencv/opencv/pull/26917]
+Signed-off-by: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Upstream-Status: Submitted [https://github.com/opencv/opencv/pull/26917]
 ---
- 3rdparty/fastcv/fastcv.cmake   |  9 +++++----
- cmake/OpenCVFindLibsPerf.cmake | 23 ++++++++++++++++-------
- 2 files changed, 21 insertions(+), 11 deletions(-)
+ 3rdparty/fastcv/fastcv.cmake   |  7 ++++---
+ cmake/OpenCVFindLibsPerf.cmake | 21 +++++++++++++++------
+ 2 files changed, 19 insertions(+), 9 deletions(-)
 
 diff --git a/3rdparty/fastcv/fastcv.cmake b/3rdparty/fastcv/fastcv.cmake
-index b8172705ca..12c6616a16 100644
+index b8172705ca..5c81c11300 100644
 --- a/3rdparty/fastcv/fastcv.cmake
 +++ b/3rdparty/fastcv/fastcv.cmake
 @@ -1,7 +1,7 @@
@@ -41,15 +41,8 @@ index b8172705ca..12c6616a16 100644
    set(OPENCV_FASTCV_URL "https://raw.githubusercontent.com/opencv/opencv_3rdparty/${FASTCV_COMMIT}/fastcv/")
  
    ocv_download( FILENAME        ${FCV_PACKAGE_NAME}
-@@ -40,4 +41,4 @@ function(download_fastcv root_dir)
-     message(WARNING "FastCV: package download failed!")
-   endif()
- 
--endfunction()
-+endfunction()
-\ No newline at end of file
 diff --git a/cmake/OpenCVFindLibsPerf.cmake b/cmake/OpenCVFindLibsPerf.cmake
-index c2380e6ce5..a31842dfbb 100644
+index c2380e6ce5..c5fb628c44 100644
 --- a/cmake/OpenCVFindLibsPerf.cmake
 +++ b/cmake/OpenCVFindLibsPerf.cmake
 @@ -181,7 +181,14 @@ endif(WITH_KLEIDICV)
@@ -88,9 +81,7 @@ index c2380e6ce5..a31842dfbb 100644
 -  if(HAVE_FASTCV)
 -    set(FASTCV_LIBRARY "${FastCV_LIB_PATH}/libfastcvopt.so" CACHE PATH "FastCV library")
 -  endif()
--endif(WITH_FASTCV)
-+endif(WITH_FASTCV)
-\ No newline at end of file
+ endif(WITH_FASTCV)
 -- 
 2.34.1
 

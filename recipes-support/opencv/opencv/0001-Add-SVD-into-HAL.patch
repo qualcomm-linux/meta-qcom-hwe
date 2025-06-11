@@ -1,0 +1,156 @@
+From 0d092c7b1e87f0cfd34535c10f94c56298415928 Mon Sep 17 00:00:00 2001
+From: Xue Zhang <quic_xuezha@quicinc.com>
+Date: Wed, 12 Mar 2025 14:33:30 +0530
+Subject: [PATCH] Add SVD into HAL
+
+Signed-off-by: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Upstream-Status: Backport [https://github.com/opencv/opencv/commit/3962803e7a3c2bb7680b495f07a77383bac136c6]
+---
+ 3rdparty/fastcv/include/fastcv_hal_core.hpp | 33 +++++++++++-
+ 3rdparty/fastcv/src/fastcv_hal_core.cpp     | 58 +++++++++++++++++++--
+ 2 files changed, 87 insertions(+), 4 deletions(-)
+
+diff --git a/3rdparty/fastcv/include/fastcv_hal_core.hpp b/3rdparty/fastcv/include/fastcv_hal_core.hpp
+index 03c17dc6b5..c950ac7959 100644
+--- a/3rdparty/fastcv/include/fastcv_hal_core.hpp
++++ b/3rdparty/fastcv/include/fastcv_hal_core.hpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -32,6 +32,9 @@
+ #define cv_hal_mul16s               fastcv_hal_mul16s
+ #undef  cv_hal_mul32f
+ #define cv_hal_mul32f               fastcv_hal_mul32f
++#undef  cv_hal_SVD32f
++#define cv_hal_SVD32f               fastcv_hal_SVD32f
++
+ 
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ /// @brief look-up table transform of an array.
+@@ -219,4 +222,32 @@ int fastcv_hal_mul32f(
+     int             height,
+     double          scale);
+ 
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++/// Performs singular value decomposition of \f$M\times N\f$(\f$M>N\f$) matrix \f$A = U*\Sigma*V^T\f$.
++///
++/// @param src      Pointer to input MxN matrix A stored in column major order.
++///                 After finish of work src will be filled with rows of U or not modified (depends of flag CV_HAL_SVD_MODIFY_A).
++/// @param src_step Number of bytes between two consequent columns of matrix A.
++/// @param w        Pointer to array for singular values of matrix A (i. e. first N diagonal elements of matrix \f$\Sigma\f$).
++/// @param u        Pointer to output MxN or MxM matrix U (size depends of flags).
++///                 Pointer must be valid if flag CV_HAL_SVD_MODIFY_A not used.
++/// @param u_step   Number of bytes between two consequent rows of matrix U.
++/// @param vt       Pointer to array for NxN matrix V^T.
++/// @param vt_step  Number of bytes between two consequent rows of matrix V^T.
++/// @param m        Number fo rows in matrix A.
++/// @param n        Number of columns in matrix A.
++/// @param flags    Algorithm options (combination of CV_HAL_SVD_FULL_UV, ...).
++////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++int fastcv_hal_SVD32f(
++    float* src,
++    size_t src_step,
++    float* w,
++    float* u,
++    size_t u_step,
++    float* vt,
++    size_t vt_step,
++    int    m,
++    int    n,
++    int    flags);
++
+ #endif
+diff --git a/3rdparty/fastcv/src/fastcv_hal_core.cpp b/3rdparty/fastcv/src/fastcv_hal_core.cpp
+index d46bf9a172..0b35f2f91a 100644
+--- a/3rdparty/fastcv/src/fastcv_hal_core.cpp
++++ b/3rdparty/fastcv/src/fastcv_hal_core.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: Apache-2.0
+ */
+ 
+@@ -399,7 +399,7 @@ int fastcv_hal_mul8u(
+     int8_t sF;
+ 
+     if(FCV_CMP_EQ(scale,1.0))              { sF =  0; }
+-    else if(scale > 1.0)                    
++    else if(scale > 1.0)
+     {
+         if(FCV_CMP_EQ(scale,2.0))          { sF = -1; }
+         else if(FCV_CMP_EQ(scale,4.0))     { sF = -2; }
+@@ -471,7 +471,7 @@ int fastcv_hal_mul16s(
+     int8_t sF;
+ 
+     if(FCV_CMP_EQ(scale,1.0))              { sF =  0; }
+-    else if(scale > 1.0)                    
++    else if(scale > 1.0)
+     {
+         if(FCV_CMP_EQ(scale,2.0))          { sF = -1; }
+         else if(FCV_CMP_EQ(scale,4.0))     { sF = -2; }
+@@ -571,4 +571,56 @@ int fastcv_hal_mul32f(
+ 
+     fcvStatus status = FASTCV_SUCCESS;
+     CV_HAL_RETURN(status, hal_mul32f);
++}
++
++int fastcv_hal_SVD32f(
++    float*  src,
++    size_t  src_step,
++    float*  w,
++    float*  u,
++    size_t  u_step,
++    float*  vt,
++    size_t  vt_step,
++    int     m,
++    int     n,
++    int     flags)
++{
++    if (n * sizeof(float) != src_step)
++        CV_HAL_RETURN_NOT_IMPLEMENTED("step is not supported");
++
++    INITIALIZATION_CHECK;
++
++    fcvStatus status = FASTCV_SUCCESS;
++
++    cv::Mat tmpU(m, n, CV_32F);
++    cv::Mat tmpV(n, n, CV_32F);
++
++    switch (flags)
++    {
++        case CV_HAL_SVD_NO_UV:
++        {
++            status = fcvSVDf32_v2(src, m, n, w, u, vt, (float32_t *)tmpU.data, (float32_t *)tmpV.data, false);
++            break;
++        }
++        case CV_HAL_SVD_SHORT_UV:
++        {
++            if ((n * sizeof(float) == u_step) && (n * sizeof(float) == vt_step))
++                status = fcvSVDf32_v2(src, m, n, w, u, vt, (float32_t *)tmpU.data, (float32_t *)tmpV.data, false);
++            else
++                CV_HAL_RETURN_NOT_IMPLEMENTED("step is not supported");
++            break;
++        }
++        case CV_HAL_SVD_FULL_UV:
++        {
++            if ((n * sizeof(float) == u_step) && (n * sizeof(float) == vt_step))
++                status = fcvSVDf32_v2(src, m, n, w, u, vt, (float32_t *)tmpU.data, (float32_t *)tmpV.data, true);
++            else
++                CV_HAL_RETURN_NOT_IMPLEMENTED("step is not supported");
++            break;
++        }
++        default:
++            CV_HAL_RETURN_NOT_IMPLEMENTED(cv::format("Flags:%d is not supported", flags));
++    }
++
++    CV_HAL_RETURN(status, fastcv_hal_SVD32f);
+ }
+\ No newline at end of file
+-- 
+2.34.1
+

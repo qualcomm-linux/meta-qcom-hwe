@@ -1,0 +1,57 @@
+From 62e97dad2a5cedaa80ea2024c6697725766a51f5 Mon Sep 17 00:00:00 2001
+From: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Date: Mon, 3 Mar 2025 09:22:59 +0300
+Subject: [PATCH] Warning fixes for FastCV module.
+
+Signed-off-by: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Upstream-Status: Backport [https://github.com/opencv/opencv_contrib/commit/bdc05185847a1ab8fd57fece62b59f67da12057b]
+---
+ modules/fastcv/perf/perf_hough.cpp | 4 ++--
+ modules/fastcv/test/test_mser.cpp  | 6 +++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/modules/fastcv/perf/perf_hough.cpp b/modules/fastcv/perf/perf_hough.cpp
+index 78424a69..a809de51 100644
+--- a/modules/fastcv/perf/perf_hough.cpp
++++ b/modules/fastcv/perf/perf_hough.cpp
+@@ -21,7 +21,7 @@ PERF_TEST_P(HoughLinesPerfTest, run,
+ {
+     auto p = GetParam();
+     std::string fname = std::get<0>(p);
+-    double threshold  = std::get<1>(p);
++    double thrld  = std::get<1>(p);
+ 
+     cv::Mat src = imread(cvtest::findDataFile(fname), cv::IMREAD_GRAYSCALE);
+     // make it aligned by 8
+@@ -34,7 +34,7 @@ PERF_TEST_P(HoughLinesPerfTest, run,
+     {
+         std::vector<cv::Vec4f> lines;
+         startTimer();
+-        cv::fastcv::houghLines(src, lines, threshold);
++        cv::fastcv::houghLines(src, lines, thrld);
+         stopTimer();
+     }
+ 
+diff --git a/modules/fastcv/test/test_mser.cpp b/modules/fastcv/test/test_mser.cpp
+index d3cb35bf..b334915c 100644
+--- a/modules/fastcv/test/test_mser.cpp
++++ b/modules/fastcv/test/test_mser.cpp
+@@ -81,12 +81,12 @@ TEST_P(MSERTest, accuracy)
+     // find pair of contours by similar moments
+     typedef cv::Matx<double, 10, 1> MomentVec;
+ 
+-    auto calcEstimate = [](const std::vector<std::vector<Point>>& contours, Size srcSize) -> std::vector<std::pair<Mat, MomentVec>>
++    auto calcEstimate = [](const std::vector<std::vector<Point>>& ctrs, Size srcSize) -> std::vector<std::pair<Mat, MomentVec>>
+     {
+         std::vector<std::pair<Mat, MomentVec>> res;
+-        for (size_t i = 0; i < contours.size(); i++)
++        for (size_t i = 0; i < ctrs.size(); i++)
+         {
+-            const std::vector<Point>& contour = contours[i];
++            const std::vector<Point>& contour = ctrs[i];
+             Mat ptsMap(srcSize, CV_8U, Scalar(255));
+             for(size_t j = 0; j < contour.size(); ++j)
+             {
+-- 
+2.34.1
+

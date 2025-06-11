@@ -1,0 +1,183 @@
+From 8e491e1a69fee5351dc7484766388974588be970 Mon Sep 17 00:00:00 2001
+From: Aditi Sharma <quic_adsha@quicinc.com>
+Date: Wed, 9 Apr 2025 17:38:26 +0530
+Subject: [PATCH] Fastcv extn for integrate YUV(YCbCr) image and bug fix in split extn
+
+Signed-off-by: Alexander Smorkalov <alexander.smorkalov@opencv.ai>
+Upstream-Status: Backport [https://github.com/opencv/opencv_contrib/commit/e3165a9904abd0c554f294555b2ea7855871adc3]
+---
+ .../fastcv/include/opencv2/fastcv/arithm.hpp  | 18 ++++++++++
+ modules/fastcv/perf/perf_arithm.cpp           | 32 ++++++++++++++++++
+ modules/fastcv/src/arithm.cpp                 | 24 ++++++++++++++
+ modules/fastcv/src/channel.cpp                |  2 +-
+ modules/fastcv/test/test_arithm.cpp           | 33 +++++++++++++++++++
+ 5 files changed, 108 insertions(+), 1 deletion(-)
+ create mode 100644 modules/fastcv/perf/perf_arithm.cpp
+
+diff --git a/modules/fastcv/include/opencv2/fastcv/arithm.hpp b/modules/fastcv/include/opencv2/fastcv/arithm.hpp
+index 098d63df..29f5fdfe 100644
+--- a/modules/fastcv/include/opencv2/fastcv/arithm.hpp
++++ b/modules/fastcv/include/opencv2/fastcv/arithm.hpp
+@@ -65,6 +65,24 @@ CV_EXPORTS_W void gemm(InputArray src1, InputArray src2, OutputArray dst, float
+ 
+ //! @}
+ 
++//! @addtogroup fastcv
++//! @{
++
++/**
++ * @brief Integral of a YCbCr420 image.
++ *        Note: Input height should be multiple of 2. Input width and stride should be multiple of 16.
++ *              Output stride should be multiple of 8.
++ *              It is optimized for Qualcomm's processors
++ * @param Y Input Y component of 8UC1 YCbCr420 image.
++ * @param CbCr Input CbCr component(interleaved) of 8UC1 YCbCr420 image.
++ * @param IY Output Y integral of CV_32S one channel, size (Y height + 1)*(Y width + 1)
++ * @param ICb Output Cb integral of CV_32S one channel, size (Y height/2 + 1)*(Y width/2 + 1)
++ * @param ICr Output Cr integral of CV_32S one channel, size (Y height/2 + 1)*(Y width/2 + 1)
++ */
++CV_EXPORTS_W void integrateYUV(InputArray Y, InputArray CbCr, OutputArray IY, OutputArray ICb, OutputArray ICr);
++
++//! @}
++
+ } // fastcv::
+ } // cv::
+ 
+diff --git a/modules/fastcv/perf/perf_arithm.cpp b/modules/fastcv/perf/perf_arithm.cpp
+new file mode 100644
+index 00000000..c1cf04a5
+--- /dev/null
++++ b/modules/fastcv/perf/perf_arithm.cpp
+@@ -0,0 +1,32 @@
++/*
++ * Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++ * SPDX-License-Identifier: Apache-2.0
++*/
++
++#include "perf_precomp.hpp"
++
++namespace opencv_test {
++
++typedef perf::TestBaseWithParam<tuple<Size, int>> IntegrateYUVPerfTest;
++
++PERF_TEST_P(IntegrateYUVPerfTest, run,
++    ::testing::Combine(::testing::Values(perf::szVGA, perf::sz720p, perf::sz1080p), // image size
++                       ::testing::Values(CV_8U)                                     // image depth
++                      )
++           )
++{
++    cv::Size srcSize = get<0>(GetParam());
++    int depth = get<1>(GetParam());
++
++    cv::Mat Y(srcSize, depth), CbCr(srcSize.height/2, srcSize.width, depth);
++    cv::Mat IY, ICb, ICr;
++    RNG& rng = cv::theRNG();
++    cvtest::randUni(rng, Y, Scalar::all(0), Scalar::all(255));
++    cvtest::randUni(rng, CbCr, Scalar::all(0), Scalar::all(255));
++
++    TEST_CYCLE() cv::fastcv::integrateYUV(Y, CbCr, IY, ICb, ICr);
++
++    SANITY_CHECK_NOTHING();
++}
++
++} // namespace
+\ No newline at end of file
+diff --git a/modules/fastcv/src/arithm.cpp b/modules/fastcv/src/arithm.cpp
+index 244af33e..8b9a4be1 100644
+--- a/modules/fastcv/src/arithm.cpp
++++ b/modules/fastcv/src/arithm.cpp
+@@ -180,5 +180,29 @@ void gemm(InputArray _src1, InputArray _src2, OutputArray _dst, float alpha, Inp
+     }
+ }
+ 
++void integrateYUV(InputArray _Y, InputArray _CbCr, OutputArray _IY, OutputArray _ICb, OutputArray _ICr)
++{
++    CV_Assert(!_Y.empty() && !_CbCr.empty());
++    CV_Assert(_Y.type() == _CbCr.type() && _Y.type() == CV_8UC1);
++    Mat Y = _Y.getMat();
++    Mat CbCr = _CbCr.getMat();
++    int Ywidth = Y.cols;
++    int Yheight = Y.rows;
++
++    INITIALIZATION_CHECK;
++
++    _IY.create(Yheight + 1, Ywidth + 1, CV_32SC1);
++    _ICb.create(Yheight/2 + 1, Ywidth/2 + 1, CV_32SC1);
++    _ICr.create(Yheight/2 + 1, Ywidth/2 + 1, CV_32SC1);
++
++    Mat IY_ = _IY.getMat();
++    Mat ICb_ = _ICb.getMat();
++    Mat ICr_ = _ICr.getMat();
++
++    fcvIntegrateImageYCbCr420PseudoPlanaru8(Y.data, CbCr.data, Ywidth, Yheight, Y.step[0],
++                                            CbCr.step[0], (uint32_t*)IY_.data, (uint32_t*)ICb_.data, (uint32_t*)ICr_.data,
++                                            IY_.step[0], ICb_.step[0], ICr_.step[0]);
++}
++
+ } // fastcv::
+ } // cv::
+diff --git a/modules/fastcv/src/channel.cpp b/modules/fastcv/src/channel.cpp
+index 68e349d4..0283ac4a 100644
+--- a/modules/fastcv/src/channel.cpp
++++ b/modules/fastcv/src/channel.cpp
+@@ -86,7 +86,7 @@ void split(InputArray _src, OutputArrayOfArrays _mv)
+ 
+     CV_Assert(depth == CV_8U && (cn == 2 || cn == 3 || cn == 4));
+     CV_Assert(src.dims <= 2);
+-
++    _mv.create(cn, 1, depth);
+     for( int k = 0; k < cn; k++ )
+     {
+         _mv.create(src.dims, src.size, depth, k);
+diff --git a/modules/fastcv/test/test_arithm.cpp b/modules/fastcv/test/test_arithm.cpp
+index bc1a9917..216faa72 100644
+--- a/modules/fastcv/test/test_arithm.cpp
++++ b/modules/fastcv/test/test_arithm.cpp
+@@ -79,6 +79,36 @@ TEST_P(ArithmOpTest, accuracy)
+     EXPECT_EQ(normL2, 0);
+ }
+ 
++typedef testing::TestWithParam<tuple<Size>> IntegrateYUVTest;
++
++TEST_P(IntegrateYUVTest, accuracy)
++{
++    auto p = GetParam();
++    Size srcSize = std::get<0>(p);
++    int depth = CV_8U;
++
++    cv::Mat Y(srcSize, depth), CbCr(srcSize.height/2, srcSize.width, depth);
++    cv::Mat IY, ICb, ICr;
++    RNG& rng = cv::theRNG();
++    cvtest::randUni(rng, Y, Scalar::all(0), Scalar::all(255));
++    cvtest::randUni(rng, CbCr, Scalar::all(0), Scalar::all(255));
++
++    cv::fastcv::integrateYUV(Y, CbCr, IY, ICb, ICr);
++
++    CbCr = CbCr.reshape(2,0);
++    std::vector<cv::Mat> ref;
++    cv::fastcv::split(CbCr, ref);
++
++    cv::Mat IY_ref, ICb_ref, ICr_ref;
++    cv::integral(Y,IY_ref,CV_32S);
++    cv::integral(ref[0],ICb_ref,CV_32S);
++    cv::integral(ref[1],ICr_ref,CV_32S);
++
++    EXPECT_EQ(IY_ref.at<int>(IY_ref.rows - 1, IY_ref.cols - 1), IY.at<int>(IY.rows - 1, IY.cols - 1));
++    EXPECT_EQ(ICb_ref.at<int>(ICb_ref.rows - 1, ICb_ref.cols - 1), ICb.at<int>(ICb.rows - 1, ICb.cols - 1));
++    EXPECT_EQ(ICr_ref.at<int>(ICr_ref.rows - 1, ICr_ref.cols - 1), ICr.at<int>(ICr.rows - 1, ICr.cols - 1));
++}
++
+ INSTANTIATE_TEST_CASE_P(FastCV_Extension, MatMulTest,
+                          ::testing::Combine(::testing::Values(8, 16, 128, 256),   // rows1
+                                             ::testing::Values(8, 16, 128, 256),   // cols1
+@@ -89,4 +119,7 @@ INSTANTIATE_TEST_CASE_P(FastCV_Extension, ArithmOpTest,
+                                             ::testing::Values(CV_8U, CV_16S), // depth
+                                             ::testing::Values(0,1))); // op type
+ 
++INSTANTIATE_TEST_CASE_P(FastCV_Extension, IntegrateYUVTest,
++                         Values(perf::szVGA, perf::sz720p, perf::sz1080p)); // sz
++
+ }} // namespaces opencv_test, ::
+-- 
+2.34.1
+
