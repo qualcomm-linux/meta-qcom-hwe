@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/${LICENSE};md5=89aea4e17d99a7ca
 
 QCOM_BT_SRC ?= "git://git.codelinaro.org/clo/le/platform/qcom-opensource/bt.git;protocol=https"
 QCOM_BT_SRCBRANCH ?= "bt-performant.qclinux.1.0.r1-rel"
-QCOM_BT_SRCREV    ?= "6656f553a4bbe3f22d7503d72de400c53ce54737"
+QCOM_BT_SRCREV    ?= "994ecfd61700075ee47270d282fcf2e3c80e4c36"
 
 SRCREV_FORMAT = "qcombt"
 

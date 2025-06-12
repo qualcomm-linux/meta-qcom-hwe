@@ -10,11 +10,11 @@ RDEPENDS:${PN} = "property-vault"
 
 QCOM_SYSTEM_BT_SRC ?= "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/system/bt.git;protocol=https"
 QCOM_SYSTEM_BT_SRCBRANCH ?= "bt-performant.qclinux.1.0.r1-rel"
-QCOM_SYSTEM_BT_SRCREV ?= "db943ed562f68d7f3a6d41dc79e0fdb731320e5e"
+QCOM_SYSTEM_BT_SRCREV ?= "9926241f385dd5c7f5a8316bfbfc9647ba225923"
 
 QCOM_BLUETOOTH_EXT_SRC ?= "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/bluetooth_ext.git;protocol=https"
 QCOM_BLUETOOTH_EXT_SRCBRANCH ?= "bt-performant.qclinux.1.0.r1-rel"
-QCOM_BLUETOOTH_EXT_SRCREV ?= "996bbb712e62c5c22489cd84fad1a93a91d65ddc"
+QCOM_BLUETOOTH_EXT_SRCREV ?= "b5cb2b66c841bdc0ee62d6e4926dc053cf304442"
 
 SRCREV_FORMAT = "qcomsystembt_qcombluetoothext"
 

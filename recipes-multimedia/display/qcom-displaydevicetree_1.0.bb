@@ -7,7 +7,7 @@ inherit module deploy
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/opensource/display-devicetree.git;protocol=https"
 SRCBRANCH  = "display-kernel.qclinux.1.0.r2-rel"
-SRCREV     = "6137fd8853738c658e1e25eb36a1d334dafd57fe"
+SRCREV     = "05bdee019918f932fdcb48f2e7ed251b2bd12542"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=display/vendor/qcom/opensource/display-devicetree"
 S = "${WORKDIR}/display/vendor/qcom/opensource/display-devicetree"

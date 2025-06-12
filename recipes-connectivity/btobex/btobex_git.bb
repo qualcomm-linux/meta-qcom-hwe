@@ -8,7 +8,7 @@ DEPENDS += "glib-2.0 btvendorhal"
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/qcom-opensource/bt.git;protocol=https"
 SRCBRANCH  = "bt-performant.qclinux.1.0.r1-rel"
-SRCREV     = "6656f553a4bbe3f22d7503d72de400c53ce54737"
+SRCREV     = "994ecfd61700075ee47270d282fcf2e3c80e4c36"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=bluetooth/btapp"
 

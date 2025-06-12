@@ -6,7 +6,7 @@ inherit module deploy
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom/opensource/graphics-devicetree.git;protocol=https"
 SRCBRANCH  = "gfx-kernel.le.0.0.r1-rel"
-SRCREV     = "2db3b287a95e3ccf147a46384153d31d5bb4f694"
+SRCREV     = "ffd13778e77beb7f09ae10bf43ba646c142eb62e"
 
 SRC_URI =  "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=graphics-devicetree"
 
