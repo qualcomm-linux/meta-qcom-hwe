@@ -7,7 +7,7 @@ DESCRIPTION = "Audio IO expander"
 
 PBT_ARCH = "armv8-2a"
 
-ARMV8_SHA256SUM = "b876bdf2d03bf8adbaff9cb5413d7ff158fba795bf2c8d977d5129dc7b856f0e"
+ARMV8_SHA256SUM = "eacda8b32eb7c91dac87f9b9609aa168d91851dd0e0ea7e288e57d96c0f35b71"
 SRC_URI[armv8-2a.sha256sum] = "${ARMV8_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"
