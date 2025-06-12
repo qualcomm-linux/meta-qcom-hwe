@@ -1,56 +1,12 @@
-# For Kodiak IDP
-ACTION=="add", SUBSYSTEM=="soc", \
-               KERNEL=="soc0", \
-               ATTR{machine}=="QCM6490", \
-               ATTR{soc_id}=="497", \
+# For Kodiak
+ACTION=="add", ATTR{soc_id}=="497|498|575", \
                RUN+="/bin/sh -c '/sbin/modprobe camera_qcm6490'"
-
-# For Kodiak RB3
-ACTION=="add", SUBSYSTEM=="soc", \
-               KERNEL=="soc0", \
-               ATTR{machine}=="QCS6490", \
-               ATTR{soc_id}=="498", \
-               RUN+="/bin/sh -c '/sbin/modprobe camera_qcm6490'"
-
-# For Sogtsku Kodiak (QCS5430)
-ACTION=="add", SUBSYSTEM=="soc", \
-               KERNEL=="soc0", \
-               ATTR{machine}=="Qualcomm Technologies, Inc. qcs5430 fp1 addons rb3gen2 vision mezz platform", \
-               ATTR{soc_id}=="575", \
-               RUN+="/bin/sh -c '/sbin/modprobe camera_qcm6490"
-
-# For Lemans Ride-sx-9100 Auto
-ACTION=="add", SUBSYSTEM=="soc", \
-               KERNEL=="soc0", \
-               ATTR{machine}=="SA8775P", \
-               ATTR{soc_id}=="534", \
+# For Lemans
+ACTION=="add", ATTR{soc_id}=="534|667|676", \
                RUN+="/bin/sh -c '/sbin/modprobe camera_qcs9100'"
-
-# For Lemans Ride-sx-9100 IOT
-ACTION=="add", SUBSYSTEM=="soc", \
-               KERNEL=="soc0", \
-               ATTR{machine}=="QCS9100", \
-               ATTR{soc_id}=="667", \
-               RUN+="/bin/sh -c '/sbin/modprobe camera_qcs9100'"
-
-# For Lemans RB8 - QCS9075
-ACTION=="add", SUBSYSTEM=="soc", \
-               KERNEL=="soc0", \
-               ATTR{machine}=="QCS9075", \
-               ATTR{soc_id}=="676", \
-               RUN+="/bin/sh -c '/sbin/modprobe camera_qcs9100'"
-
-# For Monaco AUTO
-ACTION=="add", SUBSYSTEM=="soc", \
-               KERNEL=="soc0", \
-               ATTR{machine}=="SA7255P", \
-               ATTR{soc_id}=="606", \
+# For Monaco
+ACTION=="add", ATTR{soc_id}=="606|675|674", \
                RUN+="/bin/sh -c '/sbin/modprobe camera_qcs8300'"
 
-# For Monaco IOT
-ACTION=="add", SUBSYSTEM=="soc", \
-               KERNEL=="soc0", \
-               ATTR{machine}=="QCS8275", \
-               ATTR{soc_id}=="675", \
-               RUN+="/bin/sh -c '/sbin/modprobe camera_qcs8300'"
+
 
