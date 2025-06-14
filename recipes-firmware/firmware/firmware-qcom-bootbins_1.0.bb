@@ -40,6 +40,8 @@ python do_install() {
         name, ext = os.path.splitext(item)
         if name.startswith('partition') and ext == '.xml':
             os.remove(os.path.join(d.getVar('D'), item))
+        if name.startswith('contents') and ext == '.xml':
+            os.remove(os.path.join(d.getVar('D'), item))
 
 }
 
