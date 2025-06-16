@@ -1,0 +1,26 @@
+#Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+#SPDX-License-Identifier: BSD-3-Clause-Clear
+
+[Unit]
+Description=Multimedia Service Session Manager
+After=pipewire.service
+BindsTo=pipewire.service
+Conflicts=pipewire-media-session.service
+
+[Service]
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+NoNewPrivileges=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+Type=simple
+AmbientCapabilities=CAP_SYS_NICE
+ExecStart=/usr/bin/wireplumber
+Restart=on-failure
+User=pipewire
+Environment=PIPEWIRE_RUNTIME_DIR=%t/pipewire
+Environment=GIO_USE_VFS=local
+
+[Install]
+WantedBy=pipewire.service
+Alias=pipewire-session-manager.service
