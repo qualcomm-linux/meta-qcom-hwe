@@ -54,4 +54,4 @@ INSANE_SKIP:${PN} += "installed-vs-shipped"
 INSANE_SKIP:${PN} += "dev-so"
 
 SYSTEMD_SERVICE:${PN}:append:qcom = " adsprpcd.service cdsprpcd.service"
-SYSTEMD_SERVICE:${PN}:append:qcs9100 = " cdsp1rpcd.service"
+SYSTEMD_SERVICE:${PN}:append:qcs9100 = " cdsp1rpcd.service gdsprpcd.service gdsp1rpcd.service"
