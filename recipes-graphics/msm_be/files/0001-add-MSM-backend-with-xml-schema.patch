@@ -2521,7 +2521,7 @@ index 0000000..24ac7c1
 +#include <gbmint.h>
 +#include <gbm.h>
 +#include <gbm_backend_abi.h>
-+#include "drm-uapi/drm_fourcc.h"
++#include "drm/drm_fourcc.h"
 +
 +#define NUM_BACK_BUFFERS 3
 +
