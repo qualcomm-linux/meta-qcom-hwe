@@ -1,0 +1,41 @@
+From 168429bee755cafae794048a4016e290984612f4 Mon Sep 17 00:00:00 2001
+From: Ayushi Makhija <quic_amakhija@quicinc.com>
+Date: Fri, 2 May 2025 11:14:01 +0530
+Subject: [PATCH] UPSTREAM: dt-bindings: msm: dsi-controller-main: document the
+ SA8775P DSI CTRL
+
+Document the DSI CTRL on the SA8775P Platform.
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://patchwork.freedesktop.org/patch/649855/
+Link: https://lore.kernel.org/r/20250424062431.2040692-3-quic_amakhija@quicinc.com
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Signed-off-by: Ayushi Makhija <quic_amakhija@quicinc.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git 2a0195b94cbc0583c05cb4c9b1b57ba637a25180]
+---
+ .../devicetree/bindings/display/msm/dsi-controller-main.yaml    | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/display/msm/dsi-controller-main.yaml b/Documentation/devicetree/bindings/display/msm/dsi-controller-main.yaml
+index ffbd1dc9470e2..fe97d9efee94f 100644
+--- a/Documentation/devicetree/bindings/display/msm/dsi-controller-main.yaml
++++ b/Documentation/devicetree/bindings/display/msm/dsi-controller-main.yaml
+@@ -23,6 +23,7 @@ properties:
+               - qcom,msm8996-dsi-ctrl
+               - qcom,msm8998-dsi-ctrl
+               - qcom,qcm2290-dsi-ctrl
++              - qcom,sa8775p-dsi-ctrl
+               - qcom,sc7180-dsi-ctrl
+               - qcom,sc7280-dsi-ctrl
+               - qcom,sdm660-dsi-ctrl
+@@ -348,6 +349,7 @@ allOf:
+         compatible:
+           contains:
+             enum:
++              - qcom,sa8775p-dsi-ctrl
+               - qcom,sc7180-dsi-ctrl
+               - qcom,sc7280-dsi-ctrl
+               - qcom,sm6150-dsi-ctrl
+--
+2.34.1
+
