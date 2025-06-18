@@ -59,6 +59,8 @@ PREFERRED_VERSION_wpa-supplicant:qcom-custom-bsp = "2.10.qcom"
 
 #Use qcom specific version of fastrpc in custom-bsp
 PREFERRED_VERSION_fastrpc:qcom-custom-bsp ?= "15.0.qcom"
+#Use upstream fastrpc in base-bsp
+PREFERRED_VERSION_fastrpc:qcom-base-bsp ?= "0.0+"
 
 #Use qcom specific version of OpenCV
 PREFERRED_VERSION_opencv = "4.11.0.qcom"
