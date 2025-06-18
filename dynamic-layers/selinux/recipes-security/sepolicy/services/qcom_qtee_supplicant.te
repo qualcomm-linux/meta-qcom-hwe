@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+# Copyright (c) 2023-2025 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 
 policy_module(qcom_qtee_supplicant, 1.0)
@@ -20,6 +20,9 @@ qcom_allow_smcinvoke_rw(qcom_qtee_supplicant_t)
 # Access UFS storage
 qcom_allow_ufs_bsg_rw(qcom_qtee_supplicant_t)
 allow qcom_qtee_supplicant_t self:capability { setgid setuid sys_rawio };
+
+# Access to eMMC RPMB storage
+qcom_allow_mmc_rpmb_rw(qcom_qtee_supplicant_t)
 
 # Access gpfspath_oem_config.xml file for data paths
 files_read_etc_files(qcom_qtee_supplicant_t)
