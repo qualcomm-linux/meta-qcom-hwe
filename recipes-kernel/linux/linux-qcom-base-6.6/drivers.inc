@@ -474,4 +474,5 @@ SRC_URI:append = " \
     file://common/0001-FROMLIST-dt-bindings-thermal-Add-qcom-qmi-cooling-ya.patch \
     file://common/0002-FROMLIST-remoteproc-qcom-probe-all-child-devices.patch \
     file://common/0003-FROMLIST-thermal-qcom-add-qmi-cooling-driver.patch \
+    file://common/0001-PENDING-soc-qcom-ice-Fix-bkey-size-check.patch \
     "
