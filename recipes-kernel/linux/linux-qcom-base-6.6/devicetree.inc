@@ -149,6 +149,7 @@ SRC_URI:append = " \
     file://qcs615/0001-UPSTREAM-arm64-dts-qcom-qcs615-add-SDHC1-and-SDHC2.patch \
     file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-disable-the-CTI-devic.patch \
     file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-Add-ADSP-and-CDSP-fas.patch \
+    file://qcs615/0001-PENDING-arm64-dts-qcom-qcm615-Enable-tsens-thermal-z.patch \
     "
 
 # qcs615 board dts patches

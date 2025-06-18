@@ -1,0 +1,207 @@
+From 30d5c3d0aa28ad61e10d95a3c7c197fac47543ea Mon Sep 17 00:00:00 2001
+From: Gaurav Kohli <quic_gkohli@quicinc.com>
+Date: Wed, 28 May 2025 10:45:30 +0530
+Subject: [PATCH 1/1] PENDING: arm64: dts: qcom: qcm615: Enable tsens thermal
+ zones
+
+Enable tsens thermal zones and cooling maps for CDSP subsystem.
+
+Change-Id: I25765c28346deb11ca449d2d2724600a47bead93
+Signed-off-by: Gaurav Kohli <quic_gkohli@quicinc.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/qcs615.dtsi | 84 ++++++++++++++++++++++++----
+ 1 file changed, 74 insertions(+), 10 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615.dtsi b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+index 41ce14fb0052..94c7cbe4a029 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+@@ -3207,6 +3207,15 @@ remoteproc_cdsp: remoteproc@8300000 {
+ 
+ 			status = "disabled";
+ 
++			cooling {
++				compatible = "qcom,qmi-cooling-cdsp";
++
++				cdsp_sw: cdsp_sw {
++				label = "cdsp_sw";
++				#cooling-cells = <2>;
++				};
++			};
++
+ 			glink-edge {
+ 				interrupts = <GIC_SPI 574 IRQ_TYPE_EDGE_RISING>;
+ 				mboxes = <&apss_shared 4>;
+@@ -4819,13 +4828,13 @@ gpu-thermal {
+ 
+ 			trips {
+ 
+-				gpu_trip: trip-point0 {
++				gpu_alert0: trip-point0 {
+ 					temperature = <105000>;
+ 					hysteresis = <5000>;
+ 					type = "passive";
+ 				};
+ 
+-				trip-point1 {
++				gpu_alert1: trip-point1 {
+ 					temperature = <110000>;
+ 					hysteresis = <5000>;
+ 					type = "passive";
+@@ -4834,10 +4843,16 @@ trip-point1 {
+ 
+ 			cooling-maps {
+ 				map0 {
+-					trip = <&gpu_trip>;
++					trip = <&gpu_alert0>;
+ 					cooling-device = <&gpu THERMAL_NO_LIMIT
+ 								THERMAL_NO_LIMIT>;
+ 				};
++
++				map1 {
++					trip = <&gpu_alert1>;
++					cooling-device = <&cdsp_sw 5 5>;
++				};
++
+ 			};
+ 		};
+ 
+@@ -4846,78 +4861,127 @@ q6-hvx-thermal {
+ 
+ 			trips {
+ 
+-				trip-point0 {
++				q6_hvx_alert0: trip-point0 {
+ 					temperature = <105000>;
+ 					hysteresis = <5000>;
+ 					type = "passive";
+ 				};
+ 
+-				trip-point1 {
++				q6_hvx_alert1: trip-point1 {
+ 					temperature = <110000>;
+ 					hysteresis = <5000>;
+ 					type = "passive";
+ 				};
+ 			};
++
++			cooling-maps {
++				map0 {
++					trip = <&q6_hvx_alert0>;
++					cooling-device = <&cdsp_sw
++							THERMAL_NO_LIMIT 5>;
++				};
++
++				map1 {
++					trip = <&q6_hvx_alert1>;
++					cooling-device = <&cdsp_sw 5 5>;
++				};
++
++			};
+ 		};
+ 
+ 		mdm-core-thermal {
+ 			thermal-sensors = <&tsens0 11>;
+ 
+ 			trips {
+-				trip-point0 {
++				mdm_core_alert0: trip-point0 {
+ 					temperature = <110000>;
+ 					hysteresis = <10000>;
+ 					type = "passive";
+ 				};
+ 			};
++
++			cooling-maps {
++				map0 {
++					trip = <&mdm_core_alert0>;
++					cooling-device = <&cdsp_sw 5 5>;
++				};
++			};
+ 		};
+ 
+ 		camera-thermal {
+ 			thermal-sensors = <&tsens0 12>;
+ 
+ 			trips {
+-				trip-point0 {
++				camera_alert0: trip-point0 {
+ 					temperature = <110000>;
+ 					hysteresis = <5000>;
+ 					type = "passive";
+ 				};
+ 			};
++
++			cooling-maps {
++				map0 {
++					trip = <&camera_alert0>;
++					cooling-device = <&cdsp_sw 5 5>;
++				};
++			};
+ 		};
+ 
+ 		wlan-thermal {
+ 			thermal-sensors = <&tsens0 13>;
+ 
+ 			trips {
+-				trip-point0 {
++				wlan_alert0: trip-point0 {
+ 					temperature = <110000>;
+ 					hysteresis = <5000>;
+ 					type = "passive";
+ 				};
+ 			};
++
++			cooling-maps {
++				map0 {
++					trip = <&wlan_alert0>;
++					cooling-device = <&cdsp_sw 5 5>;
++				};
++			};
+ 		};
+ 
+ 		display-thermal {
+ 			thermal-sensors = <&tsens0 14>;
+ 
+-			trips {
++			display_alert0: trips {
+ 				trip-point0 {
+ 					temperature = <110000>;
+ 					hysteresis = <5000>;
+ 					type = "passive";
+ 				};
+ 			};
++
++			cooling-maps {
++				map0 {
++					trip = <&display_alert0>;
++					cooling-device = <&cdsp_sw 5 5>;
++				};
++			};
+ 		};
+ 
+ 		video-thermal {
+ 			thermal-sensors = <&tsens0 15>;
+ 
+ 			trips {
+-				trip-point0 {
++				video_alert0: trip-point0 {
+ 					temperature = <110000>;
+ 					hysteresis = <5000>;
+ 					type = "passive";
+ 				};
+ 			};
++
++			cooling-maps {
++				map0 {
++					trip = <&video_alert0>;
++					cooling-device = <&cdsp_sw 5 5>;
++				};
++			};
+ 		};
+ 	};
+ };
+-- 
+2.34.1
+
