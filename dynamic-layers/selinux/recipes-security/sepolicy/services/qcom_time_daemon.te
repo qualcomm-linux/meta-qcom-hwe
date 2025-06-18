@@ -17,7 +17,8 @@ allow qcom_time_daemon_t self:unix_stream_socket { accept listen };
 
 allow qcom_time_daemon_t self:capability sys_time;
 files_list_var_lib(qcom_time_daemon_t)
-qcom_time_data_files(qcom_time_daemon_t)
+manage_dirs_pattern(qcom_time_daemon_t, qcom_time_data_t, qcom_time_data_t)
+manage_files_pattern(qcom_time_daemon_t, qcom_time_data_t, qcom_time_data_t)
 dev_read_realtime_clock(qcom_time_daemon_t)
 logging_send_syslog_msg(qcom_time_daemon_t)
-
+systemd_tmpfilesd_managed(qcom_time_data_t)
