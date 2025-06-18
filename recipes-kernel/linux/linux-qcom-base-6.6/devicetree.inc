@@ -298,3 +298,9 @@ SRC_URI:append = " \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-Add-sound.patch \
     file://qcs9075/0045-FROMLIST-arm64-qcs9075-evk-remove-uart-bt-en-and-b.patch \
     "
+
+# qcs8275 board dts patches
+SRC_URI:append = " \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Add-support-for-QCS8275-IQ8-E.patch \
+    file://addons/0002-QCLINUX-arm64-dts-qcom-Add-msm-id-board-id-for-qcs82.patch \
+    "

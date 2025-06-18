@@ -1,0 +1,297 @@
+From 8a30350940157b1a31e230e4402a45e660e694fb Mon Sep 17 00:00:00 2001
+From: Nirmesh Kumar Singh <quic_nkumarsi@quicinc.com>
+Date: Mon, 7 Apr 2025 00:22:21 +0530
+Subject: [PATCH] PENDING: arm64: dts: qcom: Add support for QCS8275 IQ8 EVK
+ board
+
+IQ8 EVK board is based on the QCS8275 SoC.
+
+QCS8275 is another SoC under IQ8 series of SoCs. Unlike QCS8300
+which has safety features, QCS8275 doesn't have the feature.
+It is designed for compute-heavy and AI-based solutions.
+
+IQ8 EVK board is a single board computer (SBC) that supports various
+industrial applications, including factory automation, industrial
+robots, drones, edge AI boxes, machine vision, autonomous mobile
+robots (AMRs), and industrial gateways.
+
+Board Details:
+
+SOC:
+	SoC qcs8275 with Octa-core (2.35 GHz)(2x Gold+,2x Gold,4x Silver)
+	Memory: 2x 8GB LPDDR5
+	Storage: 1x 128GB UFS, micro SD card, EEPROMs for MACs
+	Debug: JTAG, FTDI
+	2x USB 3.1 Gen2, 1x USB 2.0
+
+Display:
+	2x mini-DP
+
+Audio/Camera/Video:
+	1x I2S mic
+	2x I2S speaker amps
+	additional I2S on GPIOs
+	3x Quad deserializers
+	3x CSI (C-PHY or D-PHY) cameras
+
+Connectivity:
+	m.2 module (NFA765A - HSP) - directly to PCIE0
+	2x printed antennas
+	RJ45 (2.5GbE)
+PCIE:
+	1x PCIex4 slot
+	1x m.2 E key
+
+Signed-off-by: Nirmesh Kumar Singh <quic_nkumarsi@quicinc.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/Makefile             |   2 +
+ .../boot/dts/qcom/qcs8275-iq-8275-evk.dts     | 223 ++++++++++++++++++
+ 2 files changed, 225 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+
+diff --git a/arch/arm64/boot/dts/qcom/Makefile b/arch/arm64/boot/dts/qcom/Makefile
+index b26933cc2a1e..4e8a98c518d6 100644
+--- a/arch/arm64/boot/dts/qcom/Makefile
++++ b/arch/arm64/boot/dts/qcom/Makefile
+@@ -86,6 +86,8 @@ dtb-$(CONFIG_ARCH_QCOM)	+= qcs404-evb-1000.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs404-evb-4000.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs615-ride.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs6490-rb3gen2.dtb
++dtb-$(CONFIG_ARCH_QCOM)	+= qcs8275-iq-8275-evk.dtb
++dtb-$(CONFIG_ARCH_QCOM)	+= qcs8300-addons-ride.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs8300-ride.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qdu1000-idp.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qrb2210-rb1.dtb
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+new file mode 100644
+index 000000000000..02ebe87a3c61
+--- /dev/null
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -0,0 +1,223 @@
++// SPDX-License-Identifier: BSD-3-Clause
++/*
++ * Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
++ */
++
++/dts-v1/;
++
++#include <dt-bindings/regulator/qcom,rpmh-regulator.h>
++#include "qcs8300.dtsi"
++/ {
++	model = "Qualcomm Technologies, Inc. IQ 8275 EVK";
++	compatible = "qcom,qcs8275-iq-8275-evk", "qcom,qcs8275", "qcom,qcs8300";
++
++	aliases {
++		serial0 = &uart7;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	clocks {
++		xo_board_clk: xo-board-clk {
++			compatible = "fixed-clock";
++			#clock-cells = <0>;
++			clock-frequency = <38400000>;
++		};
++
++		sleep_clk: sleep-clk {
++			compatible = "fixed-clock";
++			#clock-cells = <0>;
++			clock-frequency = <32000>;
++		};
++	};
++};
++
++&apps_rsc {
++	regulators-0 {
++		compatible = "qcom,pmm8654au-rpmh-regulators";
++		qcom,pmic-id = "a";
++
++		vreg_s4a: smps4 {
++			regulator-name = "vreg_s4a";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_s9a: smps9 {
++			regulator-name = "vreg_s9a";
++			regulator-min-microvolt = <1352000>;
++			regulator-max-microvolt = <1352000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l3a: ldo3 {
++			regulator-name = "vreg_l3a";
++			regulator-min-microvolt = <1200000>;
++			regulator-max-microvolt = <1200000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l4a: ldo4 {
++			regulator-name = "vreg_l4a";
++			regulator-min-microvolt = <880000>;
++			regulator-max-microvolt = <912000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l5a: ldo5 {
++			regulator-name = "vreg_l5a";
++			regulator-min-microvolt = <1200000>;
++			regulator-max-microvolt = <1200000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l6a: ldo6 {
++			regulator-name = "vreg_l6a";
++			regulator-min-microvolt = <880000>;
++			regulator-max-microvolt = <912000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l7a: ldo7 {
++			regulator-name = "vreg_l7a";
++			regulator-min-microvolt = <880000>;
++			regulator-max-microvolt = <912000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l8a: ldo8 {
++			regulator-name = "vreg_l8a";
++			regulator-min-microvolt = <2504000>;
++			regulator-max-microvolt = <2960000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l9a: ldo9 {
++			regulator-name = "vreg_l9a";
++			regulator-min-microvolt = <2970000>;
++			regulator-max-microvolt = <3072000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++
++	regulators-1 {
++		compatible = "qcom,pmm8654au-rpmh-regulators";
++		qcom,pmic-id = "c";
++
++		vreg_s5c: smps5 {
++			regulator-name = "vreg_s5c";
++			regulator-min-microvolt = <1104000>;
++			regulator-max-microvolt = <1104000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l1c: ldo1 {
++			regulator-name = "vreg_l1c";
++			regulator-min-microvolt = <300000>;
++			regulator-max-microvolt = <500000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l2c: ldo2 {
++			regulator-name = "vreg_l2c";
++			regulator-min-microvolt = <900000>;
++			regulator-max-microvolt = <904000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l4c: ldo4 {
++			regulator-name = "vreg_l4c";
++			regulator-min-microvolt = <1200000>;
++			regulator-max-microvolt = <1200000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l6c: ldo6 {
++			regulator-name = "vreg_l6c";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l7c: ldo7 {
++			regulator-name = "vreg_l7c";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l8c: ldo8 {
++			regulator-name = "vreg_l8c";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++
++		vreg_l9c: ldo9 {
++			regulator-name = "vreg_l9c";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allow-set-load;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
++						   RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++};
++
++&qupv3_id_0 {
++	status = "okay";
++};
++
++&tlmm {
++
++	dp_hot_plug_det: dp-hot-plug-det-state {
++	/* TODO: Add the required nodes once mdss_dp0 is available.*/
++	};
++};
++
++&uart7 {
++	status = "okay";
++};
+-- 
+2.34.1
+
