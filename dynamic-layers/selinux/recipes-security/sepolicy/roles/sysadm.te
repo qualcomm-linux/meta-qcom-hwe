@@ -65,3 +65,7 @@ allow sysadm_t self:packet_socket create_socket_perms;
 allow sysadm_t self:unix_dgram_socket create_socket_perms;
 kernel_request_load_module(sysadm_t)
 
+##LCA test app rules
+qcom_loc_read_loc_sock_files(sysadm_t)
+
+qcom_loc_locclient_generic_rules(sysadm_t)
