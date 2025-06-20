@@ -1,0 +1,30 @@
+From b762b27d3ff938960b15141eba8f2e400e50eea8 Mon Sep 17 00:00:00 2001
+From: Nirmesh Kumar Singh <quic_nkumarsi@quicinc.com>
+Date: Fri, 20 Jun 2025 16:35:29 +0530
+Subject: [PATCH] QCLINUX: arm64: dts: fix base BSP compilation issue for
+ QCS8275
+
+remove addons dt from makefile to resolve compilation
+issue on base bsp.
+
+Signed-off-by: Nirmesh Kumar Singh <quic_nkumarsi@quicinc.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/Makefile | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/Makefile b/arch/arm64/boot/dts/qcom/Makefile
+index 2f8c1e1909b6..d55e19dfd2fb 100644
+--- a/arch/arm64/boot/dts/qcom/Makefile
++++ b/arch/arm64/boot/dts/qcom/Makefile
+@@ -87,7 +87,6 @@ dtb-$(CONFIG_ARCH_QCOM)	+= qcs404-evb-4000.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs615-ride.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs6490-rb3gen2.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs8275-iq-8275-evk.dtb
+-dtb-$(CONFIG_ARCH_QCOM)	+= qcs8300-addons-ride.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs8300-ride.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qdu1000-idp.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qrb2210-rb1.dtb
+-- 
+2.34.1
+

@@ -309,4 +309,5 @@ SRC_URI:append = " \
     file://addons/0002-QCLINUX-arm64-dts-qcom-Add-msm-id-board-id-for-qcs82.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-enable-vi.patch \
+    file://qcs8275/0001-QCLINUX-arm64-dts-fix-base-BSP-compilation-issue-for.patch \
     "
