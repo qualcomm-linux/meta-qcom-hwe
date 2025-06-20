@@ -1,0 +1,47 @@
+####################################################################################################
+This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+####################################################################################################
+From 967613fe4907daf219d76ecd00ae8675a3182d85 Mon Sep 17 00:00:00 2001
+From: Raghavender Reddy Bujala <rbujala@qti.qualcomm.com>
+Date: Mon, 16 Jun 2025 12:02:40 +0530
+Subject: [PATCH] QCLINUX: Wireplumber: Enable bluez plugin.
+
+- Disable bluez seat monitoring
+- Add bluetooth.conf file for user setting
+
+Signed-off-by: Raghavender Reddy Bujala <rbujala@qti.qualcomm.com>
+Upstream-Status: pending
+---
+ src/config/meson.build      | 3 +++
+ src/config/wireplumber.conf | 1 +
+ 2 files changed, 4 insertions(+)
+
+diff --git a/src/config/meson.build b/src/config/meson.build
+index 322e2c30..8cc13425 100644
+--- a/src/config/meson.build
++++ b/src/config/meson.build
+@@ -4,3 +4,6 @@ install_subdir('wireplumber.conf.d.examples',
+   install_dir : wireplumber_doc_dir / 'examples' / 'wireplumber.conf.d',
+   strip_directory : true,
+ )
++install_data('wireplumber.conf.d.examples/bluetooth.conf',
++  install_dir : wireplumber_data_dir / 'wireplumber.conf.d'
++)
+diff --git a/src/config/wireplumber.conf b/src/config/wireplumber.conf
+index 4d231a5b..fffe7027 100644
+--- a/src/config/wireplumber.conf
++++ b/src/config/wireplumber.conf
+@@ -72,6 +72,7 @@ wireplumber.profiles = {
+     hardware.bluetooth = required
+     hardware.video-capture = required
+     policy.standard = required
++    monitor.bluez.seat-monitoring = disabled
+     #policy.role-priority-system = optional
+   }
+ }
+-- 
+2.34.1
+
