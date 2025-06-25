@@ -65,6 +65,10 @@ allow sysadm_t self:packet_socket create_socket_perms;
 allow sysadm_t self:unix_dgram_socket create_socket_perms;
 kernel_request_load_module(sysadm_t)
 
+# Required for udhcpc
+allow sysadm_t self:rawip_socket create_socket_perms;
+files_exec_usr_files(sysadm_t)
+
 ##LCA test app rules
 qcom_loc_read_loc_sock_files(sysadm_t)
 
