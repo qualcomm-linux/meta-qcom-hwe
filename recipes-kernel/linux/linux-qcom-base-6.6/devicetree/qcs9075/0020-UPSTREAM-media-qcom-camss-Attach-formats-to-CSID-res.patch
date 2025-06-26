@@ -1,4 +1,4 @@
-From fc49c5b508591fedebf4c6aa06c53d139cdbf2f2 Mon Sep 17 00:00:00 2001
+From a81aa0a699506c07475e664f54589c55c4940de9 Mon Sep 17 00:00:00 2001
 From: Radoslav Tsvetkov <quic_rtsvetko@quicinc.com>
 Date: Thu, 23 Nov 2023 15:42:55 +0200
 Subject: [PATCH 20/42] UPSTREAM: media: qcom: camss: Attach formats to CSID
@@ -585,7 +585,7 @@ index 05ff5fa8095a..70f2fde6fb31 100644
  	csid->testgen.nmodes = CSID_PAYLOAD_MODE_NUM_SUPPORTED_GEN2;
  }
 diff --git a/drivers/media/platform/qcom/camss/camss-csid.c b/drivers/media/platform/qcom/camss/camss-csid.c
-index c1fcc51b6f45..d5513c0a4db8 100644
+index b725b8086b05..ac4ce1d0d9cc 100644
 --- a/drivers/media/platform/qcom/camss/camss-csid.c
 +++ b/drivers/media/platform/qcom/camss/camss-csid.c
 @@ -45,6 +45,450 @@ const char * const csid_testgen_modes[] = {
@@ -1067,7 +1067,7 @@ index c1fcc51b6f45..d5513c0a4db8 100644
  				 csid->fmt[MSM_CSIPHY_PAD_SINK].code);
  	link_freq = camss_get_link_freq(&csid->subdev.entity, fmt->bpp,
  					csid->phy.lane_cnt);
-@@ -302,12 +746,12 @@ static void csid_try_format(struct csid_device *csid,
+@@ -304,12 +748,12 @@ static void csid_try_format(struct csid_device *csid,
  	case MSM_CSID_PAD_SINK:
  		/* Set format on sink pad */
  
@@ -1083,7 +1083,7 @@ index c1fcc51b6f45..d5513c0a4db8 100644
  			fmt->code = MEDIA_BUS_FMT_UYVY8_1X16;
  
  		fmt->width = clamp_t(u32, fmt->width, 1, 8191);
-@@ -331,12 +775,12 @@ static void csid_try_format(struct csid_device *csid,
+@@ -334,12 +778,12 @@ static void csid_try_format(struct csid_device *csid,
  			/* Test generator is enabled, set format on source */
  			/* pad to allow test generator usage */
  
@@ -1099,7 +1099,7 @@ index c1fcc51b6f45..d5513c0a4db8 100644
  				fmt->code = MEDIA_BUS_FMT_UYVY8_1X16;
  
  			fmt->width = clamp_t(u32, fmt->width, 1, 8191);
-@@ -364,10 +808,10 @@ static int csid_enum_mbus_code(struct v4l2_subdev *sd,
+@@ -367,10 +811,10 @@ static int csid_enum_mbus_code(struct v4l2_subdev *sd,
  	struct csid_device *csid = v4l2_get_subdevdata(sd);
  
  	if (code->pad == MSM_CSID_PAD_SINK) {
@@ -1110,9 +1110,9 @@ index c1fcc51b6f45..d5513c0a4db8 100644
 -		code->code = csid->formats[code->index].code;
 +		code->code = csid->res->formats->formats[code->index].code;
  	} else {
- 		if (csid->testgen_mode->cur.val == 0) {
- 			struct v4l2_mbus_framefmt *sink_fmt;
-@@ -381,10 +825,10 @@ static int csid_enum_mbus_code(struct v4l2_subdev *sd,
+ 		if (csid->testgen.nmodes == CSID_PAYLOAD_MODE_DISABLED ||
+ 		    csid->testgen_mode->cur.val == 0) {
+@@ -385,10 +829,10 @@ static int csid_enum_mbus_code(struct v4l2_subdev *sd,
  			if (!code->code)
  				return -EINVAL;
  		} else {
