@@ -24,7 +24,6 @@
         "/usr/lib/libVideoCtrl.so",
         "/usr/lib/libIB2C.so",
         "/usr/lib/libIB2C.so.1",
-        "/usr/lib/libIB2C.so.1.0",
         "/usr/lib/libEGL_adreno.so.1",
         "/usr/lib/libGLESv2_adreno.so.2",
         "/usr/lib/libpropertyvault.so.0",
