@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f2
 
 DESCRIPTION = "Adreno Graphics"
 
-DEPENDS += "wayland glib-2.0 linux-kernel-qcom-headers property-vault qcom-libdmabufheap virtual/libgbm libdrm"
+DEPENDS += "wayland glib-2.0 linux-kernel-qcom-headers property-vault qcom-libdmabufheap virtual/libgbm libdrm libxcb libx11 xcb-util-image"
 
 PROVIDES  = "  virtual/libgles1 virtual/libgles2 virtual/egl adrenocl"
 RPROVIDES:${PN} = " libegl libgles1 libgles2 adrenocl"
