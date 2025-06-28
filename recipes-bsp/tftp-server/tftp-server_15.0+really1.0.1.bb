@@ -9,7 +9,7 @@ DEPENDS += "glib-2.0 virtual/kernel qmi-framework property-vault libcap"
 
 PBT_ARCH = "armv8-2a"
 
-ARMV8_SHA256SUM = "98b6baa25f077bbf3ef98b208dff7720cb043142fa6bd579fbf8567b9ccfa4d7"
+ARMV8_SHA256SUM = "85412278a1bf12102a1fd7505302ab304533f47a372f42d5bbd9bd56fac23e47"
 SRC_URI[armv8-2a.sha256sum] = "${ARMV8_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"

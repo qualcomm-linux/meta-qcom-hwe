@@ -7,7 +7,7 @@ DESCRIPTION = "Sensors-test-core Library"
 
 DEPENDS += "glib-2.0 property-vault syslog-plumber protobuf diag qcom-sensors-api qcom-sensinghub qcom-sensors-utils qcom-sensors-core"
 
-QCM6490_SHA256SUM = "05d4fd4b26a4b7f5d9c165e68549d03daf01f45fd6d1767d9e54e353d224be00"
+QCM6490_SHA256SUM = "847d622455d1a6a58c095bb883f7e6e7f4ff6d2d804f37ba8a842dd04fdc8264"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 
