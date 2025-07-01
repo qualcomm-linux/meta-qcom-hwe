@@ -30,6 +30,7 @@ allow sysadm_t self:capability2 wake_alarm;
 corenet_tcp_bind_all_unreserved_ports(sysadm_t)
 init_use_script_fds(sysadm_t)
 qcom_weston_etc_execute(sysadm_t)
+init_dbus_chat_script(sysadm_t)
 
 # Required for ostree
 kernel_manage_unlabeled_files(sysadm_t)
@@ -63,3 +64,4 @@ allow sysadm_t self:netlink_route_socket create_netlink_socket_perms;
 allow sysadm_t self:packet_socket create_socket_perms;
 allow sysadm_t self:unix_dgram_socket create_socket_perms;
 kernel_request_load_module(sysadm_t)
+
