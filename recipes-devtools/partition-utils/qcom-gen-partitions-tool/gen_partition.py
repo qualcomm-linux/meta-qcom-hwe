@@ -160,11 +160,16 @@ def generate_ptool_xml (disk_params, partition_entries_dict, output_xml):
       parser_instruction_text
    )
 
-   phy_part = ET.SubElement(root, "physical_partition")
+   lun_index=0
+   while lun_index < 2:
+      phy_part = ET.SubElement(root, "physical_partition")
 
-   for partition_index, entry in partition_entries_dict.items():
-      part_entry = parse_partition_entry(entry)
-      part = ET.SubElement(phy_part, "partition", attrib=part_entry)
+      for partition_index, entry in partition_entries_dict.items():
+         part_entry = parse_partition_entry(entry)
+         if part_entry["physical_partition"] == str(lun_index):
+             del part_entry["physical_partition"]
+             part = ET.SubElement(phy_part, "partition", attrib=part_entry)
+      lun_index +=1
 
    xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml()
    with open(output_xml, "w") as f:
