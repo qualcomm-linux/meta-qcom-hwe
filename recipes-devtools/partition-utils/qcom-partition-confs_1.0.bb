@@ -12,9 +12,12 @@ PROVIDES += "virtual/partconf"
 FILESEXTRAPATHS:prepend := "${THISDIR}:"
 
 SRC_URI = " \
-    file://qcm6490-partitions.conf \
-    file://qcs9100-partitions.conf \
-    file://qcs8300-partitions.conf \
+    file://ufs/qcm6490-partitions.conf \
+    file://ufs/qcs9100-partitions.conf \
+    file://ufs/qcs8300-partitions.conf \
+    file://emmc/qcm6490-partitions.conf \
+    file://emmc/qcs9100-partitions.conf \
+    file://emmc/qcs8300-partitions.conf \
 "
 
 S = "${WORKDIR}"
@@ -24,25 +27,32 @@ do_configure[noexec] = "1"
 # Current partitions configuration is SOC_FAMILY specific.
 # When extending to machines make sure PACKAGE_ARCH is updated
 PARTCONF ?= ""
-PARTCONF:qcm6490 = "qcm6490-partitions.conf"
-PARTCONF:qcs9100 = "qcs9100-partitions.conf"
-PARTCONF:qcs8300 = "qcs8300-partitions.conf"
+PARTCONF:qcm6490 = "ufs/qcm6490-partitions.conf emmc/qcm6490-partitions.conf"
+PARTCONF:qcs9100 = "ufs/qcs9100-partitions.conf emmc/qcs9100-partitions.conf"
+PARTCONF:qcs8300 = "ufs/qcs8300-partitions.conf emmc/qcs8300-partitions.conf"
 
 PACKAGE_ARCH = "${SOC_ARCH}"
 
+do_compile[cleandirs] += "${B}/partition_emmc ${B}/partition_ufs"
 do_compile() {
-    # Generate partition.xml using gen_partition utility
-    ${PYTHON} ${STAGING_BINDIR_NATIVE}/gen_partition.py \
-        -i ${WORKDIR}/${PARTCONF} \
-        -o ${B}/partition.xml
-}
+    set -- ${PARTCONF}
 
-do_install() {
-    install -D -m0644 ${B}/partition.xml ${D}${sysconfdir}/partition.xml
+    # Generate partition.xml using gen_partition utility for ufs and emmc
+    ${PYTHON} ${STAGING_BINDIR_NATIVE}/gen_partition.py \
+        -i ${WORKDIR}/"$1" \
+        -o ${B}/partition_ufs/partition.xml
+
+    ${PYTHON} ${STAGING_BINDIR_NATIVE}/gen_partition.py \
+        -i ${WORKDIR}/"$2" \
+        -o ${B}/partition_emmc/partition.xml
 }
 
 inherit deploy
 do_deploy() {
-    install -m 0644 ${D}${sysconfdir}/partition.xml -D ${DEPLOYDIR}/partition.xml
+    mkdir -p ${DEPLOYDIR}/partition_ufs
+    mkdir -p ${DEPLOYDIR}/partition_emmc
+    install -m 0644 ${B}/partition_ufs/partition.xml -D ${DEPLOYDIR}/partition.xml
+    install -m 0644 ${B}/partition_ufs/partition.xml -D ${DEPLOYDIR}/partition_ufs/partition.xml
+    install -m 0644 ${B}/partition_emmc/partition.xml -D ${DEPLOYDIR}/partition_emmc/partition.xml
 }
 addtask deploy before do_build after do_install
