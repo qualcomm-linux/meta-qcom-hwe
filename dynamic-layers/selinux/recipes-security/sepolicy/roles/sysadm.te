@@ -31,6 +31,28 @@ corenet_tcp_bind_all_unreserved_ports(sysadm_t)
 init_use_script_fds(sysadm_t)
 qcom_weston_etc_execute(sysadm_t)
 
+# Required for ostree
+kernel_manage_unlabeled_files(sysadm_t)
+kernel_manage_unlabeled_dirs(sysadm_t)
+kernel_manage_unlabeled_symlinks(sysadm_t)
+kernel_map_unlabeled_file(sysadm_t)
+fs_remount_xattr_fs(sysadm_t)
+fs_unmount_xattr_fs(sysadm_t)
+auth_manage_shadow(sysadm_t)
+files_mounton_root(sysadm_t)
+files_mounton_tmp(sysadm_t)
+fs_mount_tmpfs(sysadm_t)
+fs_unmount_tmpfs(sysadm_t)
+files_mounton_user_tmpfs(sysadm_t)
+term_mount_devpts(sysadm_t)
+kernel_mount_proc(sysadm_t)
+kernel_remount_proc(sysadm_t)
+kernel_mounton_proc_dirs(sysadm_t)
+kernel_mounton_proc_file(sysadm_t)
+kernel_mounton_sysctl_dirs(sysadm_t)
+kernel_mounton_sysctl_files(sysadm_t)
+dev_remount_sysfs(sysadm_t)
+
 # Required for WLAN wpa_supplicant/hostapd
 allow sysadm_t self:capability { chown dac_override dac_read_search fsetid net_admin net_raw };
 allow sysadm_t self:fifo_file rw_fifo_file_perms;
