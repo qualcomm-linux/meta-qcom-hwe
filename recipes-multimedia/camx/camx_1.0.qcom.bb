@@ -18,9 +18,8 @@ SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT
 FILES:${PN} = "\
     /usr/lib/* \
     /usr/bin/* \
-    /usr/include/* \
     /lib/firmware/*"
-FILES:${PN}-dev = ""
+FILES:${PN}-dev = "/usr/include/*"
 
 #Skips check for .so symlinks
 INSANE_SKIP = "1"
