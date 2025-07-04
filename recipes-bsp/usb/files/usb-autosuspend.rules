@@ -11,7 +11,7 @@ ACTION=="add", SUBSYSTEM=="udc", KERNEL=="a400000.usb", \
 RUN+="/bin/sh -c 'echo 3000 > /sys/bus/platform/devices/a400000.usb/power/autosuspend_delay_ms'"
 
 ACTION=="add", SUBSYSTEM=="udc", KERNEL=="a600000.usb", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/a600000.usb/power/control'"
+RUN+="/bin/sh -c 'echo on > /sys/bus/platform/devices/a600000.usb/power/control'"
 
 ACTION=="add", SUBSYSTEM=="udc", KERNEL=="8c00000.usb", \
 RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/8c00000.usb/power/control'"
