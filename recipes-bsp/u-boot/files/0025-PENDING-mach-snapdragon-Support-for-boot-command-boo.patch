@@ -1,4 +1,4 @@
-From c7490ce84f5a0495502f2ffb99b835cdff38b4fe Mon Sep 17 00:00:00 2001
+From 39ce273799484587d5fb7f94b569f6012343b0d6 Mon Sep 17 00:00:00 2001
 From: Aswin Murugan <quic_aswinm@quicinc.com>
 Date: Thu, 6 Feb 2025 15:10:18 +0530
 Subject: [PATCH] PENDING: mach-snapdragon: Support for boot command bootqli
@@ -19,7 +19,7 @@ Upstream-Status: Pending
  create mode 100644 cmd/bootqli.c
 
 diff --git a/board/qualcomm/default.env b/board/qualcomm/default.env
-index 534a56abd3..742136d0a5 100644
+index f399cdcf942..adc441dbbbf 100644
 --- a/board/qualcomm/default.env
 +++ b/board/qualcomm/default.env
 @@ -9,4 +9,4 @@ bootmenu_0=Boot first available device=run do_boot
@@ -27,9 +27,9 @@ index 534a56abd3..742136d0a5 100644
  bootmenu_2=Reset device=reset
  menucmd=bootmenu
 -bootcmd=scsi device 0; scsi read 0xd3500000 0x6 0x4000; bootm 0xd3500000
-+bootcmd=bootqli
++bootcmd=bootqli || run do_boot
 diff --git a/cmd/Kconfig b/cmd/Kconfig
-index 1d7ddb4ed3..8494934bc4 100644
+index 1d7ddb4ed36..8494934bc46 100644
 --- a/cmd/Kconfig
 +++ b/cmd/Kconfig
 @@ -347,6 +347,24 @@ config CMD_BOOTI
@@ -58,7 +58,7 @@ index 1d7ddb4ed3..8494934bc4 100644
  	bool "Support booting Linux OS images"
  	depends on CMD_BOOTM || CMD_BOOTZ || CMD_BOOTI
 diff --git a/cmd/Makefile b/cmd/Makefile
-index d1f369deec..0f9506fee7 100644
+index d1f369deec0..0f9506fee7d 100644
 --- a/cmd/Makefile
 +++ b/cmd/Makefile
 @@ -38,6 +38,7 @@ obj-$(CONFIG_CMD_BOOTMENU) += bootmenu.o
@@ -71,7 +71,7 @@ index d1f369deec..0f9506fee7 100644
  obj-$(CONFIG_CMD_CAT) += cat.o
 diff --git a/cmd/bootqli.c b/cmd/bootqli.c
 new file mode 100644
-index 0000000000..33ca6170f1
+index 00000000000..33ca6170f16
 --- /dev/null
 +++ b/cmd/bootqli.c
 @@ -0,0 +1,102 @@
@@ -178,7 +178,7 @@ index 0000000000..33ca6170f1
 +	"bootqli - Load image(s) and boots the kernel\n"
 +	);
 diff --git a/configs/qcs9100_defconfig b/configs/qcs9100_defconfig
-index bbee62f417..1cb23dee27 100644
+index bbee62f4179..1cb23dee27e 100644
 --- a/configs/qcs9100_defconfig
 +++ b/configs/qcs9100_defconfig
 @@ -18,6 +18,8 @@ CONFIG_DEBUG_UART_CLOCK=14745600
@@ -191,7 +191,7 @@ index bbee62f417..1cb23dee27 100644
  CONFIG_DEFAULT_DEVICE_TREE="qcom/qcs9100-ride-r3"
  # CONFIG_ENV_IS_DEFAULT is not set
 diff --git a/drivers/scsi/scsi-uclass.c b/drivers/scsi/scsi-uclass.c
-index 1ee8236c05..c2e34082bc 100644
+index 1ee8236c05c..c2e34082bce 100644
 --- a/drivers/scsi/scsi-uclass.c
 +++ b/drivers/scsi/scsi-uclass.c
 @@ -10,7 +10,9 @@
@@ -240,7 +240,7 @@ index 1ee8236c05..c2e34082bc 100644
  {
  	struct scsi_ops *ops = scsi_get_ops(dev);
 diff --git a/include/scsi.h b/include/scsi.h
-index b18ae37b86..dea99ebf2a 100644
+index b18ae37b861..dea99ebf2a5 100644
 --- a/include/scsi.h
 +++ b/include/scsi.h
 @@ -349,6 +349,17 @@ int scsi_scan(bool verbose);
