@@ -1,0 +1,89 @@
+From b775d6b9e65575439e6a3f4f6bbf0bf09fd3c1fa Mon Sep 17 00:00:00 2001
+From: Shashank Maurya <quic_ssmaurya@quicinc.com>
+Date: Thu, 17 Apr 2025 18:58:41 +0530
+Subject: [PATCH] PENDING: arm64: dts: qcom: qcs9075-iq-9075-evk: Enable
+ Display Port
+
+Enable DPTX0 and DPTX1 along with their corresponding PHYs for
+qcs9075-iq-9075-evk platform.
+
+Signed-off-by: Shashank Maurya <quic_ssmaurya@quicinc.com>
+Upstream-Status: Pending
+---
+ .../boot/dts/qcom/qcs9075-iq-9075-evk.dts     | 53 +++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index 97011c1d9719..f7533146776c 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -651,6 +651,47 @@ &llcc {
+ 	status = "okay";
+ };
+
++&mdss0 {
++	status = "okay";
++};
++
++&mdss0_dp0 {
++	pinctrl-0 = <&dp0_hot_plug_det>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&mdss0_dp0_out {
++	data-lanes = <0 1 2 3>;
++	link-frequencies = /bits/ 64 <1620000000 2700000000 5400000000 8100000000>;
++};
++
++&mdss0_dp0_phy {
++	vdda-phy-supply = <&vreg_l1c>;
++	vdda-pll-supply = <&vreg_l4a>;
++
++	status = "okay";
++};
++
++&mdss0_dp1 {
++	status = "okay";
++	pinctrl-0 = <&dp1_hot_plug_det>;
++	pinctrl-names = "default";
++};
++
++&mdss0_dp1_out {
++	data-lanes = <0 1 2 3>;
++	link-frequencies = /bits/ 64 <1620000000 2700000000 5400000000 8100000000>;
++};
++
++&mdss0_dp1_phy {
++	vdda-phy-supply = <&vreg_l1c>;
++	vdda-pll-supply = <&vreg_l4a>;
++
++	status = "okay";
++};
++
+ &pcie0 {
+ 	perst-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
+ 	wake-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
+@@ -919,6 +960,18 @@ &spi19 {
+ };
+
+ &tlmm {
++	dp0_hot_plug_det: dp0-hot-plug-det-state {
++		pins = "gpio101";
++		function = "edp0_hot";
++		bias-disable;
++	};
++
++	dp1_hot_plug_det: dp1-hot-plug-det-state {
++		pins = "gpio102";
++		function = "edp1_hot";
++		bias-disable;
++	};
++
+ 	ethernet0_default: ethernet0-default-state {
+ 		ethernet0_mdc: ethernet0-mdc-pins {
+ 			pins = "gpio8";
+-- 
+2.34.1
+
