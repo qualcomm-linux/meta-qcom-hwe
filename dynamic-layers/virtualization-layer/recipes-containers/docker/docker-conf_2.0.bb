@@ -21,16 +21,33 @@ do_install:prepend () {
     MACHINE_NAME=`echo "${MACHINE_NAME%%-*}"`
 
     local CONFIG_JSON="${WORKDIR}/mappings_${MACHINE_NAME}.json"
-    local PATH_TO_DOCKER_CDI_JSON="${WORKDIR}/docker-run-cdi-hw-acc.json"
+
     local SUPPORTED_MACHINE="false"
 
+    # Parse all mappings.json files to map the machine name to correct target
     for SUPPORTED_JSON in ${WORKDIR}/mappings_*.json; do
-        [ "${CONFIG_JSON}" == "${SUPPORTED_JSON}" ] && {
-            SUPPORTED_MACHINE="true"
-        } || {
+        local JSON_CONTENT=$(cat ${SUPPORTED_JSON})
+
+        declare -a SOC_LIST=""
+        SOC_LIST=$(
+            echo ${JSON_CONTENT} | jq '.Soc[]' | tr -d '"'
+        )
+        [ -z "${SOC_LIST}" ] && {
+            echo "Soc attribute in ${SUPPORTED_JSON} is not set !!!"
             continue;
         }
+
+        for SOC in ${SOC_LIST[@]}; do
+            [ "$(echo "$SOC" | tr '[:upper:]' '[:lower:]')" == "$MACHINE_NAME" ] && {
+                SUPPORTED_MACHINE="true"
+                CONFIG_JSON=${SUPPORTED_JSON}
+            } || {
+                continue;
+            }
+        done
     done
+
+    local PATH_TO_DOCKER_CDI_JSON="${WORKDIR}/docker-run-cdi-hw-acc.json"
 
     [ "${SUPPORTED_MACHINE}" == "true" ] && {
         local JSON_CONTENT=$(cat ${CONFIG_JSON})
@@ -119,15 +136,26 @@ do_install () {
     local MACHINE_NAME=${MACHINE}
     MACHINE_NAME=`echo "${MACHINE_NAME%%-*}"`
 
-    local CONFIG_JSON="${WORKDIR}/mappings_${MACHINE_NAME}.json"
     local SUPPORTED_MACHINE="false"
 
+    # Parse all mappings.json files to map the machine name to correct target
     for SUPPORTED_JSON in ${WORKDIR}/mappings_*.json; do
-        [ "${CONFIG_JSON}" == "${SUPPORTED_JSON}" ] && {
-            SUPPORTED_MACHINE="true"
-        } || {
+        local JSON_CONTENT=$(cat ${SUPPORTED_JSON})
+
+        declare -a SOC_LIST=""
+        SOC_LIST=`echo ${JSON_CONTENT} | jq '.Soc[]' | tr -d '"'`
+        [ -z "${SOC_LIST}" ] && {
+            echo "Soc attribute in ${SUPPORTED_JSON} is not set !!!"
             continue;
         }
+
+        for SOC in ${SOC_LIST[@]}; do
+            [ "$(echo "$SOC" | tr '[:upper:]' '[:lower:]')" == "$MACHINE_NAME" ] && {
+                SUPPORTED_MACHINE="true"
+            } || {
+                continue;
+            }
+        done
     done
 
     [ "${SUPPORTED_MACHINE}" == "true" ] && {
