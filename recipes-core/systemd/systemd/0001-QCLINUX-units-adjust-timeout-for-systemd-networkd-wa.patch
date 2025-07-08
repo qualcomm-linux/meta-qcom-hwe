@@ -1,0 +1,45 @@
+From d3d9a716be8795e5f30b7d6b515c4f9d1a90d1c4 Mon Sep 17 00:00:00 2001
+From: Miaoqing Pan <quic_miaoqing@quicinc.com>
+Date: Tue, 1 Jul 2025 15:11:03 +0800
+Subject: [PATCH] QCLINUX: units: adjust timeout for
+ systemd-networkd-wait-online
+
+Adjust timeout from 120s to 10s for systemd-networkd-wait-online, as
+systemd-networkd-wait-online conflicts with NetworkManager-wait-online.
+
+Signed-off-by: Miaoqing Pan <quic_miaoqing@quicinc.com>
+Upstream-Status: Pending
+---
+ units/systemd-networkd-wait-online.service.in  | 2 +-
+ units/systemd-networkd-wait-online@.service.in | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/units/systemd-networkd-wait-online.service.in b/units/systemd-networkd-wait-online.service.in
+index 7768121f5f..b336dd4a64 100644
+--- a/units/systemd-networkd-wait-online.service.in
++++ b/units/systemd-networkd-wait-online.service.in
+@@ -19,7 +19,7 @@ Before=network-online.target shutdown.target
+ 
+ [Service]
+ Type=oneshot
+-ExecStart={{LIBEXECDIR}}/systemd-networkd-wait-online
++ExecStart={{LIBEXECDIR}}/systemd-networkd-wait-online --timeout=10
+ RemainAfterExit=yes
+ 
+ [Install]
+diff --git a/units/systemd-networkd-wait-online@.service.in b/units/systemd-networkd-wait-online@.service.in
+index 60d173490b..b4cae5760e 100644
+--- a/units/systemd-networkd-wait-online@.service.in
++++ b/units/systemd-networkd-wait-online@.service.in
+@@ -19,7 +19,7 @@ Before=network-online.target shutdown.target
+ 
+ [Service]
+ Type=oneshot
+-ExecStart={{LIBEXECDIR}}/systemd-networkd-wait-online -i %i
++ExecStart={{LIBEXECDIR}}/systemd-networkd-wait-online -i %i --timeout=10
+ RemainAfterExit=yes
+ 
+ [Install]
+-- 
+2.34.1
+
