@@ -76,3 +76,6 @@ corenet_udp_bind_all_ports(sysadm_t)
 qcom_loc_read_loc_sock_files(sysadm_t)
 
 qcom_loc_locclient_generic_rules(sysadm_t)
+
+# Execute ostree commands in its own domain
+domtrans_ostree(sysadm_t, sysadm_r)
