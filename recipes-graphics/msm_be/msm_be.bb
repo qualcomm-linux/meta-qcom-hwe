@@ -9,6 +9,7 @@ LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://docs/license.rst;md5=63779ec98d78d823a9dc533a0735ef10"
 
 PE = "2"
+PV = "1.0"
 
 PROVIDES += "virtual/libgbm"
 
