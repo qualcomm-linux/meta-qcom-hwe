@@ -13,3 +13,6 @@ echo 100 > /proc/sys/vm/swappiness
 # Disable periodic kcompactd wakeups. We do not use THP, so having many
 # huge pages is not as necessary.
 echo 0 > /proc/sys/vm/compaction_proactiveness
+
+# Create camera cgroup
+mkdir -p /sys/fs/cgroup/camera-framework
