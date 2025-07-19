@@ -33,7 +33,7 @@ AUTOTOOLS_SCRIPT_PATH = "${S}/stack/bluetooth_ext/certification_tools"
 
 DEPENDS  += "glib-2.0 btvendorhal libchrome fluoride libbsd"
 
-CPPFLAGS:qcm6490 = " -DSUPPORT_ESL_AP"
+CPPFLAGS:qcm6490 = " -DSUPPORT_VENDOR_AP"
 
 EXTRA_OEMAKE += 'BT_SOURCE=${S}'
 

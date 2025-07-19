@@ -42,7 +42,7 @@ DEPENDS += "btvendorhal glib-2.0 property-vault libchrome fluoride qcom-audiorou
 RDEPENDS:${PN} = "property-vault"
 
 CPPFLAGS:append = " -DUSE_LIBHW_AOSP -DUSE_GEN_GATT"
-CPPFLAGS:qcm6490 = " -DSUPPORT_ESL_AP"
+CPPFLAGS:qcm6490 = " -DSUPPORT_VENDOR_AP"
 SECURITY_CFLAGS = "${SECURITY_NO_PIE_CFLAGS}"
 
 EXTRA_OECONF = " \
