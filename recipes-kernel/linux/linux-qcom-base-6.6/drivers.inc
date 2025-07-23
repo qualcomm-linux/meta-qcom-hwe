@@ -484,4 +484,5 @@ SRC_URI:append = " \
     file://qcs9100/0008-UPSTREAM-drm-bridge-anx7625-fix-drm_bridge-ops-flags-to-support-hot-plugging.patch \
     file://qcs9100/0009-UPSTREAM-drm-bridge-anx7625-fix-anx7625_sink_detect-to-return-correct-hpd-status.patch \
     file://qcs9100/0010-UPSTREAM-drm-bridge-anx7625-change-the-gpiod_set_value-API.patch \
+    file://common/0145-BACKPORT-Bluetooth-hci_event-Fix-not-using-key-en.patch \
     "
