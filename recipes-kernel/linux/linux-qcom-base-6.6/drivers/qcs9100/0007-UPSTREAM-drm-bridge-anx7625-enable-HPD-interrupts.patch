@@ -1,0 +1,57 @@
+From cf621b588f9d3267f12188fe3e91f80016bfd5e4 Mon Sep 17 00:00:00 2001
+From: Ayushi Makhija <quic_amakhija@quicinc.com>
+Date: Thu, 24 Apr 2025 11:54:28 +0530
+Subject: [PATCH] UPSTREAM: drm/bridge: anx7625: enable HPD interrupts
+
+When the device enters the suspend state, it prevents
+HPD interrupts from occurring. To address this, implement
+.hpd_enable() and .hpd_disable() callbacks functions of
+the drm_bridge.
+
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Link: https://lore.kernel.org/r/20250505094245.2660750-4-quic_amakhija@quicinc.com
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Signed-off-by: Ayushi Makhija <quic_amakhija@quicinc.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git ca8a78cdceb48ad3b753f836068611265840ef22]
+---
+drivers/gpu/drm/bridge/analogix/anx7625.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/drivers/gpu/drm/bridge/analogix/anx7625.c b/drivers/gpu/drm/bridge/analogix/anx7625.c
+index ddf944651c55..5863e807acaa 100644
+--- a/drivers/gpu/drm/bridge/analogix/anx7625.c
++++ b/drivers/gpu/drm/bridge/analogix/anx7625.c
+@@ -2510,6 +2510,22 @@ static struct edid *anx7625_bridge_get_edid(struct drm_bridge *bridge,
+ 	return anx7625_get_edid(ctx);
+ }
+
++static void anx7625_bridge_hpd_enable(struct drm_bridge *bridge)
++{
++	struct anx7625_data *ctx = bridge_to_anx7625(bridge);
++	struct device *dev = ctx->dev;
++
++	pm_runtime_get_sync(dev);
++}
++
++static void anx7625_bridge_hpd_disable(struct drm_bridge *bridge)
++{
++	struct anx7625_data *ctx = bridge_to_anx7625(bridge);
++	struct device *dev = ctx->dev;
++
++	pm_runtime_put_sync(dev);
++}
++
+ static const struct drm_bridge_funcs anx7625_bridge_funcs = {
+ 	.attach = anx7625_bridge_attach,
+ 	.detach = anx7625_bridge_detach,
+@@ -2523,6 +2539,8 @@ static const struct drm_bridge_funcs anx7625_bridge_funcs = {
+ 	.atomic_reset = drm_atomic_helper_bridge_reset,
+ 	.detect = anx7625_bridge_detect,
+ 	.get_edid = anx7625_bridge_get_edid,
++	.hpd_enable = anx7625_bridge_hpd_enable,
++	.hpd_disable = anx7625_bridge_hpd_disable,
+ };
+
+ static int anx7625_register_i2c_dummy_clients(struct anx7625_data *ctx,
+--
+2.34.1

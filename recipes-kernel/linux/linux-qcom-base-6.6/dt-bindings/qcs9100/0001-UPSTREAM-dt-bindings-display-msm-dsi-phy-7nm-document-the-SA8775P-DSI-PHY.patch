@@ -1,0 +1,33 @@
+From 7cb2d7cd710fea4b6cb82bfbaedf92482ef2093e Mon Sep 17 00:00:00 2001
+From: Ayushi Makhija <quic_amakhija@quicinc.com>
+Date: Thu, 24 Apr 2025 11:54:21 +0530
+Subject: [PATCH] UPSTREAM: dt-bindings: display: msm-dsi-phy-7nm: document the
+ SA8775P DSI PHY
+
+Document the DSI PHY on the SA8775P Platform.
+
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Link: https://patchwork.freedesktop.org/patch/649838/
+Link: https://lore.kernel.org/r/20250424062431.2040692-2-quic_amakhija@quicinc.com
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Signed-off-by: Ayushi Makhija <quic_amakhija@quicinc.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git 850e13b65e3ce47c88aedae812352e55848a21c2]
+---
+ Documentation/devicetree/bindings/display/msm/dsi-phy-7nm.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/display/msm/dsi-phy-7nm.yaml b/Documentation/devicetree/bindings/display/msm/dsi-phy-7nm.yaml
+index 321470435e65..fd5728f3e89f 100644
+--- a/Documentation/devicetree/bindings/display/msm/dsi-phy-7nm.yaml
++++ b/Documentation/devicetree/bindings/display/msm/dsi-phy-7nm.yaml
+@@ -17,6 +17,7 @@ properties:
+     enum:
+       - qcom,dsi-phy-7nm
+       - qcom,dsi-phy-7nm-8150
++      - qcom,sa8775p-dsi-phy-5nm
+       - qcom,sc7280-dsi-phy-7nm
+       - qcom,sm6375-dsi-phy-7nm
+       - qcom,sm8350-dsi-phy-5nm
+--
+2.34.1
+

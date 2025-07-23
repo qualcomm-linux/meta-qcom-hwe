@@ -478,4 +478,10 @@ SRC_URI:append = " \
     file://common/0001-PENDING-soc-qcom-ice-Fix-bkey-size-check.patch \
     file://common/0143-FROMLIST-driver-bluetooth-hci_qca-fix-ssr-fail-wh.patch \
     file://common/0144-FORMLIST-driver-bluetooth_hci_qca-fix-unable.patch \
+    file://qcs9100/0005-UPSTREAM-drm-msm-dsi-add-DSI-PHY-configuration-on-SA8775P.patch \
+    file://qcs9100/0006-UPSTREAM-drm-msm-dsi-add-DSI-support-for-SA8775P.patch \
+    file://qcs9100/0007-UPSTREAM-drm-bridge-anx7625-enable-HPD-interrupts.patch \
+    file://qcs9100/0008-UPSTREAM-drm-bridge-anx7625-fix-drm_bridge-ops-flags-to-support-hot-plugging.patch \
+    file://qcs9100/0009-UPSTREAM-drm-bridge-anx7625-fix-anx7625_sink_detect-to-return-correct-hpd-status.patch \
+    file://qcs9100/0010-UPSTREAM-drm-bridge-anx7625-change-the-gpiod_set_value-API.patch \
     "
