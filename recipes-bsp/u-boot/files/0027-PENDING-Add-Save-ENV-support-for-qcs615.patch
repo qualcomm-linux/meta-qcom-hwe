@@ -1,0 +1,29 @@
+From 1a627cc2b3318f95c6f51fde04752b388f0adda7 Mon Sep 17 00:00:00 2001
+From: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Date: Fri, 4 Jul 2025 20:29:17 +0530
+Subject: [PATCH 27/27] PENDING: Add Save ENV support for qcs615
+
+Added save env support for qcs615
+
+Signed-off-by: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ configs/qcom_qcs615_defconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/configs/qcom_qcs615_defconfig b/configs/qcom_qcs615_defconfig
+index 59ff2097336..cdba7e5b811 100644
+--- a/configs/qcom_qcs615_defconfig
++++ b/configs/qcom_qcs615_defconfig
+@@ -19,5 +19,8 @@ CONFIG_DEFAULT_DEVICE_TREE="qcom/qcs615-ride"
+ CONFIG_REMAKE_ELF=y
+ CONFIG_OF_LIVE_QCS615=y
+ 
++CONFIG_ENV_IS_IN_SCSI=y
++CONFIG_SCSI_ENV_PART_UUID="71cb9cd0-acf1-b6cb-ad91-be9572fe11a9"
++
+ # Address where U-Boot will be loaded
+ CONFIG_TEXT_BASE=0x9fc00000
+-- 
+2.34.1
+

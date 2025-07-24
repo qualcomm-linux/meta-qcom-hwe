@@ -1,0 +1,92 @@
+From d08b553e190eb85ce2c5613f38909326b825a001 Mon Sep 17 00:00:00 2001
+From: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Date: Fri, 25 Jul 2025 18:06:53 +0530
+Subject: [PATCH 2/4] SUBMITTED: efi_loader: Remove authentication header in
+ efi variable data
+
+efi_get_variable_mem() returned auth header along with ESL data for
+authenticated variables like PK, KEK, and DB. This caused issues in
+later stages where the auth header was misinterpreted as ESL data,
+leading to parsing failures, the efi_get_variable_mem() is expected
+to return esl data alone.
+Added a check to remove the auth header if the variable has the
+EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS attribute. Now,
+only the ESL data is returned from the function.
+
+Signed-off-by: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Upstream-Status: Submitted
+---
+ lib/efi_loader/efi_var_mem.c | 42 +++++++++++++++++++++++++++++-------
+ 1 file changed, 34 insertions(+), 8 deletions(-)
+
+diff --git a/lib/efi_loader/efi_var_mem.c b/lib/efi_loader/efi_var_mem.c
+index 31180df9e3a..f73daf8bdc9 100644
+--- a/lib/efi_loader/efi_var_mem.c
++++ b/lib/efi_loader/efi_var_mem.c
+@@ -309,9 +309,12 @@ efi_get_variable_mem(const u16 *variable_name, const efi_guid_t *vendor,
+ 		     u32 *attributes, efi_uintn_t *data_size, void *data,
+ 		     u64 *timep, u32 mask)
+ {
+-	efi_uintn_t old_size;
++	efi_uintn_t old_size, var_data_size, auth_size;
+ 	struct efi_var_entry *var;
+ 	u16 *pdata;
++	void *var_data;
++	struct efi_time *timestamp;
++	struct win_certificate_uefi_guid *cert;
+ 
+ 	if (!variable_name || !vendor || !data_size)
+ 		return EFI_INVALID_PARAMETER;
+@@ -335,19 +338,42 @@ efi_get_variable_mem(const u16 *variable_name, const efi_guid_t *vendor,
+ 	if (!u16_strcmp(variable_name, vtf))
+ 		return efi_var_collect_mem(data, data_size, EFI_VARIABLE_NON_VOLATILE);
+ 
++	for (pdata = var->name; *pdata; ++pdata)
++		;
++	++pdata;
++
++	var_data = (void *)pdata;
++	var_data_size = var->length;
++
++	/* Handle EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS */
++	if (var->attr & EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS) {
++		if (var_data_size > sizeof(struct efi_time)) {
++			timestamp = (struct efi_time *)var_data;
++			cert = (struct win_certificate_uefi_guid *)(timestamp + 1);
++			auth_size = sizeof(struct efi_time) + cert->hdr.dwLength;
++			if (var_data_size > auth_size) {
++				var_data = (u8 *)var_data + auth_size;
++				var_data_size -= auth_size;
++			}
++		}
++	}
++	/*
++	 * EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS type is old & not
++	 * expected for auth variables
++	 */
++	else if (var->attr & EFI_VARIABLE_AUTHENTICATED_WRITE_ACCESS)
++		return EFI_INVALID_PARAMETER;
++
+ 	old_size = *data_size;
+-	*data_size = var->length;
+-	if (old_size < var->length)
++	*data_size = var_data_size;
++
++	if (old_size < var_data_size)
+ 		return EFI_BUFFER_TOO_SMALL;
+ 
+ 	if (!data)
+ 		return EFI_INVALID_PARAMETER;
+ 
+-	for (pdata = var->name; *pdata; ++pdata)
+-		;
+-	++pdata;
+-
+-	efi_memcpy_runtime(data, pdata, var->length);
++	efi_memcpy_runtime(data, var_data, var_data_size);
+ 
+ 	return EFI_SUCCESS;
+ }
+-- 
+2.34.1
+

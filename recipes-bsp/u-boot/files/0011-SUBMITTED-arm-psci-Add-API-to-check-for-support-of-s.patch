@@ -1,0 +1,55 @@
+From d7c2a38399f658ffea5445c8611c02e8e566a7bb Mon Sep 17 00:00:00 2001
+From: Varadarajan Narayanan <quic_varada@quicinc.com>
+Date: Fri, 13 Jun 2025 10:49:53 +0530
+Subject: [PATCH 11/27] SUBMITTED: arm: psci: Add API to check for support of
+ specific PSCI function
+
+Add an API to check if a specific PSCI function is supported or not.
+This is based on the psci_features() function present in Linux kernel
+(drivers/firmware/psci/psci.c).
+
+Signed-off-by: Varadarajan Narayanan <quic_varada@quicinc.com>
+Upstream-Status: Submitted
+---
+ arch/arm/cpu/armv8/fwcall.c   | 15 +++++++++++++++
+ arch/arm/include/asm/system.h |  1 +
+ 2 files changed, 16 insertions(+)
+
+diff --git a/arch/arm/cpu/armv8/fwcall.c b/arch/arm/cpu/armv8/fwcall.c
+index 87de09979b1..f834d770dd6 100644
+--- a/arch/arm/cpu/armv8/fwcall.c
++++ b/arch/arm/cpu/armv8/fwcall.c
+@@ -129,3 +129,18 @@ void __noreturn psci_system_off(void)
+ 	while (1)
+ 		;
+ }
++
++int psci_features(u32 psci_func_id)
++{
++	struct pt_regs regs;
++
++	regs.regs[0] = ARM_PSCI_1_0_FN_PSCI_FEATURES;
++	regs.regs[1] = psci_func_id;
++
++	if (use_smc_for_psci)
++		smc_call(&regs);
++	else
++		hvc_call(&regs);
++
++	return regs.regs[0];
++}
+diff --git a/arch/arm/include/asm/system.h b/arch/arm/include/asm/system.h
+index 4c1b81483c9..0b788bcf0e5 100644
+--- a/arch/arm/include/asm/system.h
++++ b/arch/arm/include/asm/system.h
+@@ -336,6 +336,7 @@ void smc_call(struct pt_regs *args);
+ void __noreturn psci_system_reset(void);
+ void __noreturn psci_system_reset2(u32 reset_level, u32 cookie);
+ void __noreturn psci_system_off(void);
++int psci_features(u32 psci_func_id);
+ 
+ #ifdef CONFIG_ARMV8_PSCI
+ extern char __secure_start[];
+-- 
+2.34.1
+

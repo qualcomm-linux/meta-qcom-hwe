@@ -1,0 +1,35 @@
+From ae7daa07d5492470f2bcd994cb4888144579ea7b Mon Sep 17 00:00:00 2001
+From: Balaji Selvanathan <quic_bselvana@quicinc.com>
+Date: Fri, 31 Jan 2025 17:22:55 +0530
+Subject: [PATCH 10/27] SUBMITTED: Changes to fix bugs related to Lemans in
+ U-Boot
+
+Changes to fix bugs related to Lemans in U-Boot
+
+Signed-off-by: Balaji Selvanathan <quic_bselvana@quicinc.com>
+Upstream-Status: Submitted
+---
+ drivers/usb/dwc3/dwc3-generic.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/usb/dwc3/dwc3-generic.c b/drivers/usb/dwc3/dwc3-generic.c
+index 21452ad1569..4800eb64484 100644
+--- a/drivers/usb/dwc3/dwc3-generic.c
++++ b/drivers/usb/dwc3/dwc3-generic.c
+@@ -460,9 +460,13 @@ static void dwc3_qcom_select_utmi_clk(void __iomem *qscratch_base)
+ 	setbits_le32(qscratch_base + QSCRATCH_GENERAL_CFG,
+ 			  PIPE_UTMI_CLK_DIS);
+ 
++	udelay(100);
++
+ 	setbits_le32(qscratch_base + QSCRATCH_GENERAL_CFG,
+ 			  PIPE_UTMI_CLK_SEL | PIPE3_PHYSTATUS_SW);
+ 
++	udelay(100);
++
+ 	clrbits_le32(qscratch_base + QSCRATCH_GENERAL_CFG,
+ 			  PIPE_UTMI_CLK_DIS);
+ }
+-- 
+2.34.1
+

@@ -1,0 +1,67 @@
+From a658016da74bf192901a736b76bd80c9332e178f Mon Sep 17 00:00:00 2001
+From: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Date: Mon, 2 Jun 2025 12:25:01 +0530
+Subject: [PATCH 18/27] SUBMITTED: mach-snapdragon: fixup power-domains
+
+RPMH power domain properties were initially removed from the
+device tree due to the absence of driver support. Since RPMH
+power domain driver is added now, the fixups are removed.
+
+Signed-off-by: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Upstream-Status: Submitted
+---
+ arch/arm/mach-snapdragon/of_fixup.c | 31 -----------------------------
+ 1 file changed, 31 deletions(-)
+
+diff --git a/arch/arm/mach-snapdragon/of_fixup.c b/arch/arm/mach-snapdragon/of_fixup.c
+index 96a9e0164ee..7bfff89a35c 100644
+--- a/arch/arm/mach-snapdragon/of_fixup.c
++++ b/arch/arm/mach-snapdragon/of_fixup.c
+@@ -117,36 +117,6 @@ static void fixup_usb_nodes(struct device_node *root)
+ 	}
+ }
+ 
+-/* Remove all references to the rpmhpd device */
+-static void fixup_power_domains(struct device_node *root)
+-{
+-	struct device_node *pd = NULL, *np = NULL;
+-	struct property *prop;
+-	const __be32 *val;
+-
+-	/* All Qualcomm platforms name the rpm(h)pd "power-controller" */
+-	for_each_of_allnodes_from(root, pd) {
+-		if (pd->name && !strcmp("power-controller", pd->name))
+-			break;
+-	}
+-
+-	/* Sanity check that this is indeed a power domain controller */
+-	if (!of_find_property(pd, "#power-domain-cells", NULL)) {
+-		log_err("Found power-controller but it doesn't have #power-domain-cells\n");
+-		return;
+-	}
+-
+-	/* Remove all references to the power domain controller */
+-	for_each_of_allnodes_from(root, np) {
+-		if (!(prop = of_find_property(np, "power-domains", NULL)))
+-			continue;
+-
+-		val = prop->value;
+-		if (val[0] == cpu_to_fdt32(pd->phandle))
+-			of_remove_property(np, prop);
+-	}
+-}
+-
+ #define time_call(func, ...) \
+ 	do { \
+ 		u64 start = timer_get_us(); \
+@@ -159,7 +129,6 @@ static int qcom_of_fixup_nodes(void * __maybe_unused ctx, struct event *event)
+ 	struct device_node *root = event->data.of_live_built.root;
+ 
+ 	time_call(fixup_usb_nodes, root);
+-	time_call(fixup_power_domains, root);
+ 
+ 	return 0;
+ }
+-- 
+2.34.1
+

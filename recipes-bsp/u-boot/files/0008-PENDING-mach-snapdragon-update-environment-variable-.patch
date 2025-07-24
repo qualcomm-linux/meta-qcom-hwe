@@ -1,0 +1,29 @@
+From 7dc898fed39776a75513c1391bd1ab45d178cc9d Mon Sep 17 00:00:00 2001
+From: Varadarajan Narayanan <quic_varada@quicinc.com>
+Date: Thu, 9 Jan 2025 19:44:58 +0530
+Subject: [PATCH 08/27] PENDING: mach-snapdragon: update environment variable
+ to boot up FIT image
+
+Fit image support for Lemans
+
+Signed-off-by: Varadarajan Narayanan <quic_varada@quicinc.com>
+Upstream-Status: Pending
+---
+ board/qualcomm/default.env | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/board/qualcomm/default.env b/board/qualcomm/default.env
+index dbf6f4e7260..3507f78e13a 100644
+--- a/board/qualcomm/default.env
++++ b/board/qualcomm/default.env
+@@ -2,6 +2,7 @@ stdin=serial,button-kbd
+ stdout=serial,vidconsole
+ stderr=serial,vidconsole
+ preboot=scsi scan; usb start
++bootargs=root=/dev/disk/by-partlabel/system rw rootwait console=ttyMSM0,115200n8 earlycon
+ fastboot=fastboot -l $fastboot_addr_r usb 0
+ do_boot=bootefi bootmgr
+ bootmenu_0=Boot first available device=run do_boot
+-- 
+2.34.1
+

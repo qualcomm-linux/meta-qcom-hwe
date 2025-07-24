@@ -1,0 +1,75 @@
+From 8aced89d3ee17c7df6ea4e059c314ec8509d5fac Mon Sep 17 00:00:00 2001
+From: Gopinath Sekar <gopinath.sekar@oss.qualcomm.com>
+Date: Wed, 25 Jun 2025 15:16:07 +0530
+Subject: [PATCH 22/27] SUBMITTED: watchdog: qcom: Add max timeout check to
+ prevent overflow
+
+Added a check to ensure the requested timeout does not exceed the
+hardware's maximum supported value. This prevents register overflow
+and ensures watchdog reliability.
+
+So, added a check in qcom_wdt_start() to ensure the requested timeout
+does not exceed the hardware-supported maximum value. If the requested
+value exceeds the maximum value, then the timeout is clamped
+at maximum value.
+
+The timeout is first converted to watchdog ticks and then compared
+against QCOM_WDT_MAX_TIMEOUT. This helps prevent misconfiguration
+and potential watchdog misbehavior due to overflow.
+
+QCOM_WDT_MAX_TIMEOUT is set to 0xFFFFF, as Qualcomm SoCs typically
+use 20 bits to store bark/bite timeout values.
+
+This work builds upon the previous submission:
+https://lore.kernel.org/u-boot/20250527124926.128413-1-balaji.selvanathan@oss.qualcomm.com/
+
+Signed-off-by: Gopinath Sekar <gopinath.sekar@oss.qualcomm.com>
+Upstream-Status: Submitted
+---
+ drivers/watchdog/qcom-wdt.c | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/watchdog/qcom-wdt.c b/drivers/watchdog/qcom-wdt.c
+index 4b972cff72c..e4ebb1f31d4 100644
+--- a/drivers/watchdog/qcom-wdt.c
++++ b/drivers/watchdog/qcom-wdt.c
+@@ -17,6 +17,9 @@
+ 
+ #include <asm/io.h>
+ 
++/* Maximum allowed timeout value in Qcom SoCs*/
++#define QCOM_WDT_MAX_TIMEOUT	0xfffff
++
+ enum wdt_reg {
+ 	WDT_RST,
+ 	WDT_EN,
+@@ -55,8 +58,24 @@ static void __iomem *wdt_addr(struct qcom_wdt *wdt, enum wdt_reg reg)
+ int qcom_wdt_start(struct udevice *dev, u64 timeout_ms, ulong flags)
+ {
+ 	struct qcom_wdt *wdt = dev_get_priv(dev);
+-	ulong bark_timeout_s = ((timeout_ms - 1)  * wdt->clk_rate) / 1000;
+-	ulong bite_timeout_s = (timeout_ms * wdt->clk_rate) / 1000;
++	u64 tmp_timeout;
++	u32 bark_timeout_s, bite_timeout_s;
++
++	/* Compute timeout in watchdog ticks */
++	tmp_timeout = (timeout_ms * (u64)wdt->clk_rate) / 1000;
++	if (tmp_timeout > QCOM_WDT_MAX_TIMEOUT) {
++		dev_warn(dev,
++			 "Requested timeout (%llu ms) exceeds maximum allowed value (%llu ms). "
++			 "Using max timeout instead.\n",
++			 timeout_ms,
++			 ((u64)QCOM_WDT_MAX_TIMEOUT * 1000) / wdt->clk_rate);
++		tmp_timeout = (u32)QCOM_WDT_MAX_TIMEOUT;
++		timeout_ms = (tmp_timeout * 1000) / wdt->clk_rate;
++	}
++
++	bite_timeout_s = (u32)tmp_timeout;
++	tmp_timeout = ((timeout_ms - 1) * (u64)wdt->clk_rate) / 1000;
++	bark_timeout_s = (u32)tmp_timeout;
+ 
+ 	writel(0, wdt_addr(wdt, WDT_EN));
+ 	writel(BIT(0), wdt_addr(wdt, WDT_RST));
+-- 
+2.34.1
+

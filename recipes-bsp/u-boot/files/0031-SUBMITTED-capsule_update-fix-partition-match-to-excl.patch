@@ -1,0 +1,34 @@
+From 78e51c87d006877d4e141bae2ecc6bb92e3623a7 Mon Sep 17 00:00:00 2001
+From: Balaji Selvanathan <balaji.selvanathan@oss.qualcomm.com>
+Date: Thu, 24 Jul 2025 12:15:40 +0530
+Subject: [PATCH 4/4] SUBMITTED: capsule_update: fix partition match to exclude
+ uefisecapps
+
+- Update partition name match to use "uefi_" instead of "uefi".
+- Prevents incorrect matches with partitions like uefisecapps_a/b.
+- Ensures only uefi_a and uefi_b partitions are considered valid.
+- Fixes capsule update logic when identifying target partitions.
+- Avoids flashing to unintended secure apps partitions.
+
+Signed-off-by: Balaji Selvanathan <balaji.selvanathan@oss.qualcomm.com>
+Upstream-Status: Submitted
+---
+ arch/arm/mach-snapdragon/capsule_update.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-snapdragon/capsule_update.c b/arch/arm/mach-snapdragon/capsule_update.c
+index 4dced4961b6..11ef4a0f4b9 100644
+--- a/arch/arm/mach-snapdragon/capsule_update.c
++++ b/arch/arm/mach-snapdragon/capsule_update.c
+@@ -136,7 +136,7 @@ static int find_target_partition(int *devnum, enum uclass_id *uclass,
+ 			 * flags might not be set so we assume the A partition unless the B
+ 			 * partition is active.
+ 			 */
+-			if (!strncmp(info.name, "uefi", strlen("uefi"))) {
++			if (!strncmp(info.name, "uefi_", strlen("uefi_"))) {
+ 				/*
+ 				 * If U-Boot was chainloaded somehow we can't be flashed to
+ 				 * the uefi partition
+-- 
+2.34.1
+
