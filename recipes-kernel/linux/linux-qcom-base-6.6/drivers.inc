@@ -237,10 +237,10 @@ SRC_URI:append = " \
     file://qcs9100/0003-PENDING-thermal-qcom-Add-support-for-MBG-Temp-monito.patch \
     file://qcs8300/0002-phy-qcom-qmp-pcie-add-dual-lane-PHY-support-for-QCS8.patch \
     file://qcs8300/0004-PCI-qcom-Add-QCS8300-PCIe-support.patch \
-    file://qcs9100/0004-FROMLIST-soc-qcom-geni-se-Add-support-to-load-QUP-SE.patch \
-    file://qcs9100/0005-FROMLIST-i2c-qcom-geni-Load-i2c-qup-Firmware-from-li.patch \
-    file://qcs9100/0006-FROMLIST-spi-geni-qcom-Load-spi-qup-Firmware-from-li.patch \
-    file://qcs9100/0007-FROMLIST-serial-qcom-geni-Load-UART-qup-Firmware-fro.patch \
+    file://common/0004-FROMLIST-soc-qcom-geni-se-Add-support-to-load-QUP-SE.patch \
+    file://common/0005-FROMLIST-i2c-qcom-geni-Load-i2c-qup-Firmware-from-li.patch \
+    file://common/0006-FROMLIST-spi-geni-qcom-Load-spi-qup-Firmware-from-li.patch \
+    file://common/0007-FROMLIST-serial-qcom-geni-Load-UART-qup-Firmware-fro.patch \
     file://common/0001-UPSTREAM-drm-msm-dp-Replace-open-coded-drm_dp_read_d.patch \
     file://common/0002-UPSTREAM-drm-msm-dp-Use-drm_dp_read_sink_count-helpe.patch \
     file://common/0003-UPSTREAM-drm-msm-dp-Remove-dead-code-related-to-down.patch \
@@ -486,4 +486,5 @@ SRC_URI:append = " \
     file://qcs9100/0010-UPSTREAM-drm-bridge-anx7625-change-the-gpiod_set_value-API.patch \
     file://common/0145-BACKPORT-Bluetooth-hci_event-Fix-not-using-key-en.patch \
     file://common/0146-FROMLIST-driver-bluetooth-hci_qca-Multiple-trigge.patch \
+    file://common/0001-PENDING-serial-qcom-geni-Add-DFS-clock-mode-support-.patch \
     "
