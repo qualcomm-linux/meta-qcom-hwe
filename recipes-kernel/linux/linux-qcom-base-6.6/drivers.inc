@@ -400,7 +400,6 @@ SRC_URI:append = " \
     file://common/0001-FROMLIST-wifi-ath11k-add-function-to-get-next-srng-d.patch \
     file://common/0002-FROMLIST-wifi-ath11k-fix-HTC-rx-insufficient-length.patch \
     file://common/0002-BACKPORT-clk-qcom-gdsc-Update-the-status-poll-timeou.patch \
-    file://common/0001-FROMLIST-wifi-ath11k-fix-node-corruption-in-ar-arvif.patch \
     file://common/0141-BACKPORT-driver-bluetooth-hci_qca-fix-SSR-unable-.patch \
     file://common/0001-PENDING-ASoC-dt-bindings-q6dsp-Add-High-Speed-Audio-.patch \
     file://common/0002-PENDING-ASoC-qcom-q6dsp-Add-SDR-High-speed-DAI-suppo.patch \
