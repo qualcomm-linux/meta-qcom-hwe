@@ -21,6 +21,8 @@ qcom_weston_script_execute(sysadm_t)
 qcom_connect_perf_hal_socket(sysadm_t)
 qcom_allow_ssgtzd_sock_write(sysadm_t)
 qcom_ssgtzd_socket_connect(sysadm_t)
+qcom_allow_smcinvoke_rw(sysadm_t)
+qcom_qseecom_alloc_buf_rw(sysadm_t)
 
 qcom_unlink_bt_src_socket_file(sysadm_t)
 qcom_read_loc_sock_dir(sysadm_t)
