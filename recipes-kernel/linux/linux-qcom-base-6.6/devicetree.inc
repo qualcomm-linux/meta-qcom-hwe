@@ -316,4 +316,5 @@ SRC_URI:append = " \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-qcs8275-iq-8275-evk-Add-firmw.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-add-io-expander-and-remotepro.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Add-UFS-support-for-QCS8275-I.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-camss-for-qcs8275-iq-8.patch \
     "
