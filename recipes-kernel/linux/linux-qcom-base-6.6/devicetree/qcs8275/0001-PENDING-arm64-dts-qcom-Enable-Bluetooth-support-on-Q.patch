@@ -1,0 +1,48 @@
+From 542c737528fdcf1a0d699253e3efacab5a7597de Mon Sep 17 00:00:00 2001
+From: Cheng Jiang <quic_chejiang@quicinc.com>
+Date: Fri, 8 Aug 2025 08:55:24 +0800
+Subject: [PATCH] PENDING: arm64: dts: qcom: Enable Bluetooth support on
+ QCS8275 IQ8 EVK
+
+Add Bluetooth support for IQ8-8275-EVK board.
+
+Signed-off-by: Cheng Jiang <quic_chejiang@quicinc.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index 5550889ce792..519be6712a96 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -17,6 +17,7 @@ / {
+ 
+ 	aliases {
+ 		serial0 = &uart7;
++		serial1 = &uart2;
+ 	};
+ 
+ 	chosen {
+@@ -304,6 +305,18 @@ qup_i2c15_default: qup-i2c15-state {
+ 	};
+ };
+ 
++&uart2 {
++	pinctrl-names = "default";
++	status = "okay";
++
++	/* HS UART Instance */
++	bluetooth: bluetooth {
++		compatible = "qcom,wcn6855-bt";
++		pinctrl-names = "default";
++		max-speed = <3200000>;
++	};
++};
++
+ &uart7 {
+ 	status = "okay";
+ };
+-- 
+2.34.1
+
