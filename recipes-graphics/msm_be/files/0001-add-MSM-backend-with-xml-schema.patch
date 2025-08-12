@@ -1,13 +1,13 @@
-From 3667c19b0ca488bc388c7f090614142c86dd2c68 Mon Sep 17 00:00:00 2001
+From f8f2b036d59e33c5593577188607688ba9ff122f Mon Sep 17 00:00:00 2001
 From: Devanshi Bansal <quic_devanshi@quicinc.com>
-Date: Thu, 27 Mar 2025 13:49:31 +0530
+Date: Tue, 15 Jul 2025 14:52:13 +0530
 Subject: [PATCH] add MSM backend with xml schema
 
 Signed-off-by: Devanshi Bansal <quic_devanshi@quicinc.com>
 
 Upstream-Status: Inappropriate [Downstream]
 ---
- src/gbm/backends/msm/buffer_alloc.c           |   98 ++
+ src/gbm/backends/msm/buffer_alloc.c           |  102 ++
  src/gbm/backends/msm/buffer_alloc.h           |   13 +
  src/gbm/backends/msm/buffer_layout.c          |  285 ++++
  src/gbm/backends/msm/buffer_layout.h          |   21 +
@@ -20,7 +20,7 @@ Upstream-Status: Inappropriate [Downstream]
  src/gbm/meson.build                           |   34 +
  src/test/gbmtest.c                            |  502 +++++++
  src/test/meson.build                          |   28 +
- 13 files changed, 3355 insertions(+)
+ 13 files changed, 3359 insertions(+)
  create mode 100644 src/gbm/backends/msm/buffer_alloc.c
  create mode 100644 src/gbm/backends/msm/buffer_alloc.h
  create mode 100644 src/gbm/backends/msm/buffer_layout.c
@@ -36,10 +36,10 @@ Upstream-Status: Inappropriate [Downstream]
 
 diff --git a/src/gbm/backends/msm/buffer_alloc.c b/src/gbm/backends/msm/buffer_alloc.c
 new file mode 100644
-index 0000000..5314b7d
+index 0000000..d34b531
 --- /dev/null
 +++ b/src/gbm/backends/msm/buffer_alloc.c
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,102 @@
 +/*
 + * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
 + * SPDX-License-Identifier: BSD-3-Clause-Clear
@@ -54,14 +54,18 @@ index 0000000..5314b7d
 +#include "buffer_alloc.h"
 +#include <sys/stat.h>
 +
-+int allocate_buffer(const struct gbm_msm_device *msm_dev, uint32_t size, uint32_t *handle) {
++int allocate_buffer(const struct gbm_msm_device *msm_dev, uint32_t size, uint32_t usage, uint32_t *handle) {
 +   if (!msm_dev || !handle)
 +      return -1;
 +
 +   struct drm_msm_gem_new args;
 +   memset(&args, 0, sizeof(args));
 +   args.size = size;
-+   args.flags = MSM_BO_CACHED;
++   if (usage & GBM_BO_USE_CURSOR)
++     args.flags = MSM_BO_CACHED_COHERENT;
++   else
++     args.flags = MSM_BO_CACHED;
++
 +   if(drmIoctl(msm_dev->base.v0.fd, DRM_IOCTL_MSM_GEM_NEW, &args)) {
 +      fprintf(stderr, "MSM_GEM_NEW failed \n");
 +      return -1;
@@ -140,7 +144,7 @@ index 0000000..5314b7d
 +}
 diff --git a/src/gbm/backends/msm/buffer_alloc.h b/src/gbm/backends/msm/buffer_alloc.h
 new file mode 100644
-index 0000000..cbd7ddd
+index 0000000..741cbba
 --- /dev/null
 +++ b/src/gbm/backends/msm/buffer_alloc.h
 @@ -0,0 +1,13 @@
@@ -152,7 +156,7 @@ index 0000000..cbd7ddd
 +#include <stdio.h>
 +#include "gbm_msm_int.h"
 +
-+int allocate_buffer(const struct gbm_msm_device *msm_dev, uint32_t size, uint32_t *handle);
++int allocate_buffer(const struct gbm_msm_device *msm_dev, uint32_t size, uint32_t usage, uint32_t *handle);
 +int import_gem_buffer(const struct gbm_msm_device *msm_dev, int fd, uint32_t *handle);
 +int get_fd(const struct gbm_msm_device *msm_dev, uint32_t handle, int *fd);
 +int free_buffer(const struct gbm_msm_device *msm_dev, uint32_t handle);
@@ -1744,7 +1748,7 @@ index 0000000..5cc909a
 +</formats>
 diff --git a/src/gbm/backends/msm/gbm_msm.c b/src/gbm/backends/msm/gbm_msm.c
 new file mode 100644
-index 0000000..324f903
+index 0000000..7e6d8e5
 --- /dev/null
 +++ b/src/gbm/backends/msm/gbm_msm.c
 @@ -0,0 +1,755 @@
@@ -2046,7 +2050,7 @@ index 0000000..324f903
 +   if (get_size(&bufdesc, &size) != 0)
 +      return NULL;
 +
-+   if (allocate_buffer(msm_dev, size, &(bo->base.v0.handle.u32)) != 0)
++   if (allocate_buffer(msm_dev, size, usage, &(bo->base.v0.handle.u32)) != 0)
 +      return NULL;
 +
 +   add_gem_handle(bo->base.v0.handle.u32);
@@ -2505,7 +2509,7 @@ index 0000000..324f903
 +
 diff --git a/src/gbm/backends/msm/gbm_msm.h b/src/gbm/backends/msm/gbm_msm.h
 new file mode 100644
-index 0000000..24ac7c1
+index 0000000..e933539
 --- /dev/null
 +++ b/src/gbm/backends/msm/gbm_msm.h
 @@ -0,0 +1,47 @@
