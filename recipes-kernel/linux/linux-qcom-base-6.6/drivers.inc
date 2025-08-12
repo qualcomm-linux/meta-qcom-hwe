@@ -486,4 +486,5 @@ SRC_URI:append = " \
     file://common/0145-BACKPORT-Bluetooth-hci_event-Fix-not-using-key-en.patch \
     file://common/0146-FROMLIST-driver-bluetooth-hci_qca-Multiple-trigge.patch \
     file://common/0001-PENDING-serial-qcom-geni-Add-DFS-clock-mode-support-.patch \
-    "
+    file://common/0147-FROMLIST-driver-bluetooth-hci_qca-SSR-Sub-System-.patch \
+"
