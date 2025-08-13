@@ -1,0 +1,345 @@
+From 23f848e3499890524e648b3923d05ab6787f30ba Mon Sep 17 00:00:00 2001
+From: bowehan <bowehan@qti.qualcomm.com>
+Date: Tue, 12 Aug 2025 10:53:36 +0800
+Subject: [PATCH 10/12] FROMLIST: drm/msm/dp: drop the entire HPD state machine
+
+Since internal HPD IRQ event handling has been moved to being handled by the DRM framework detect() and hpd_notify() callbacks, there is no need for the MSM driver to track the HPD state separately.
+
+Drop all references to the HPD state machine and replace existing checks
+with checks for link_ready or sink_count.
+
+Signed-off-by: Jessica Zhang <jessica.zhang@oss.qualcomm.com>
+Signed-off-by: bowehan <bowehan@qti.qualcomm.com>
+Link: https://lore.kernel.org/all/20250808-hpd-refactor-v2-11-7f4e1e741aa3@oss.qualcomm.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250808-hpd-refactor-v2-11-7f4e1e741aa3@oss.qualcomm.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_display.c | 172 ++++++++--------------------
+ 1 file changed, 47 insertions(+), 125 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index 0a13e12ce2d0..d9b6561dcd1d 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -45,14 +45,6 @@ enum {
+ 	ISR_HPD_REPLUG_COUNT,
+ };
+ 
+-/* event thread connection state */
+-enum {
+-	ST_DISCONNECTED,
+-	ST_MAINLINK_READY,
+-	ST_CONNECTED,
+-	ST_DISCONNECT_PENDING,
+-};
+-
+ #define MAX_DPCD_TRANSACTION_BYTES 16
+ 
+ struct msm_dp_display_private {
+@@ -84,8 +76,6 @@ struct msm_dp_display_private {
+ 	spinlock_t irq_thread_lock;
+ 	u32 hpd_isr_status;
+ 
+-	u32 hpd_state;
+-
+ 	bool wide_bus_supported;
+ 
+ 	u32 active_stream_cnt;
+@@ -300,8 +290,7 @@ static int msm_dp_display_send_hpd_notification(struct msm_dp_display_private *d
+ {
+ 	if ((hpd && dp->msm_dp_display.link_ready) ||
+ 			(!hpd && !dp->msm_dp_display.link_ready)) {
+-		drm_dbg_dp(dp->drm_dev, "HPD already %s\n",
+-				(hpd ? "on" : "off"));
++		drm_dbg_dp(dp->drm_dev, "HPD already %s\n", str_on_off(hpd));
+ 		return 0;
+ 	}
+ 
+@@ -473,30 +462,6 @@ static int msm_dp_display_usbpd_configure_cb(struct device *dev)
+ 	return msm_dp_display_process_hpd_high(dp);
+ }
+ 
+-static int msm_dp_display_notify_disconnect(struct device *dev)
+-{
+-	struct msm_dp_display_private *dp = dev_get_dp_display_private(dev);
+-	struct msm_dp *dp_display = &dp->msm_dp_display;
+-
+-	if (dp_display->mst_active) {
+-		msm_dp_mst_display_set_mgr_state(&dp->msm_dp_display, false);
+-		dp_display->mst_active = false;
+-	}
+-
+-	if (!dp->msm_dp_display.is_edp)
+-		drm_dp_set_subconnector_property(dp->msm_dp_display.connector,
+-						 connector_status_disconnected,
+-						 dp->panel->dpcd,
+-						 dp->panel->downstream_ports);
+-
+-	dp->msm_dp_display.link_ready = false;
+-
+-	if (!dp->msm_dp_display.internal_hpd)
+-		msm_dp_display_send_hpd_notification(dp, false);
+-
+-	return 0;
+-}
+-
+ static void msm_dp_display_handle_video_request(struct msm_dp_display_private *dp)
+ {
+ 	if (dp->link->sink_request & DP_TEST_LINK_VIDEO_PATTERN) {
+@@ -511,17 +476,11 @@ static int msm_dp_display_handle_port_status_changed(struct msm_dp_display_priva
+ 
+ 	if (drm_dp_is_branch(dp->panel->dpcd) && dp->link->sink_count == 0) {
+ 		drm_dbg_dp(dp->drm_dev, "sink count is zero, nothing to do\n");
+-		if (dp->hpd_state != ST_DISCONNECTED) {
+-			dp->hpd_state = ST_DISCONNECT_PENDING;
++		if (dp->msm_dp_display.link_ready)
+ 			msm_dp_display_send_hpd_notification(dp, false);
+-		}
+ 	} else {
+-		if (dp->hpd_state == ST_DISCONNECTED) {
+-			dp->hpd_state = ST_MAINLINK_READY;
++		if (!dp->msm_dp_display.link_ready)
+ 			rc = msm_dp_display_process_hpd_high(dp);
+-			if (rc)
+-				dp->hpd_state = ST_DISCONNECTED;
+-		}
+ 	}
+ 
+ 	return rc;
+@@ -532,7 +491,7 @@ static int msm_dp_display_handle_irq_hpd(struct msm_dp_display_private *dp)
+ 	u32 sink_request = dp->link->sink_request;
+ 
+ 	drm_dbg_dp(dp->drm_dev, "%d\n", sink_request);
+-	if (dp->hpd_state == ST_DISCONNECTED) {
++	if (!dp->msm_dp_display.link_ready) {
+ 		if (sink_request & DP_LINK_STATUS_UPDATED) {
+ 			drm_dbg_dp(dp->drm_dev, "Disconnected sink_request: %d\n",
+ 							sink_request);
+@@ -557,43 +516,36 @@ static int msm_dp_display_usbpd_attention_cb(struct device *dev)
+ 	struct msm_dp_display_private *dp = dev_get_dp_display_private(dev);
+ 	struct msm_dp *msm_dp_display = &dp->msm_dp_display;
+ 
++	if (msm_dp_display->mst_active) {
++		msm_dp_mst_display_hpd_irq(&dp->msm_dp_display);
++		return 0;
++	}
++
+ 	/* check for any test request issued by sink */
+ 	rc = msm_dp_link_process_request(dp->link);
+ 	if (!rc) {
+ 		sink_request = dp->link->sink_request;
+-		drm_dbg_dp(dp->drm_dev, "hpd_state=%d sink_request=%d\n",
+-					dp->hpd_state, sink_request);
+-		if (sink_request & DS_PORT_STATUS_CHANGED) {
+-			if (!msm_dp_display->mst_active)
+-				rc = msm_dp_display_handle_port_status_changed(dp);
+-		} else {
++		drm_dbg_dp(dp->drm_dev, "sink_request=%d\n", sink_request);
++		if (sink_request & DS_PORT_STATUS_CHANGED)
++			rc = msm_dp_display_handle_port_status_changed(dp);
++		else
+ 			rc = msm_dp_display_handle_irq_hpd(dp);
+-		}
+ 	}
+ 
+-	/* let MST specific IRQ events be handled by its callback */
+-	if (msm_dp_display->mst_active)
+-		msm_dp_mst_display_hpd_irq(&dp->msm_dp_display);
+-
+ 	return rc;
+ }
+ 
+ static int msm_dp_hpd_plug_handle(struct msm_dp_display_private *dp, u32 data)
+ {
+-	u32 state;
+ 	int ret;
+ 	struct platform_device *pdev = dp->msm_dp_display.pdev;
+ 
+ 	msm_dp_aux_enable_xfers(dp->aux, true);
+ 
+-	state =  dp->hpd_state;
+-	drm_dbg_dp(dp->drm_dev, "Before, type=%d hpd_state=%d\n",
+-			dp->msm_dp_display.connector_type, state);
+-
+-	if (state == ST_MAINLINK_READY || state == ST_CONNECTED) 
+-		return 0;
++	drm_dbg_dp(dp->drm_dev, "Before, type=%d\n",
++			dp->msm_dp_display.connector_type);
+ 
+-	if (state == ST_DISCONNECT_PENDING) 
++	if (dp->msm_dp_display.link_ready) 
+ 		return 0;
+ 
+ 	ret = pm_runtime_resume_and_get(&pdev->dev);
+@@ -604,14 +556,11 @@ static int msm_dp_hpd_plug_handle(struct msm_dp_display_private *dp, u32 data)
+ 
+ 	ret = msm_dp_display_usbpd_configure_cb(&pdev->dev);
+ 	if (ret) {	/* link train failed */
+-		dp->hpd_state = ST_DISCONNECTED;
++		dp->msm_dp_display.link_ready = false;
+ 		pm_runtime_put_sync(&pdev->dev);
+-	} else {
+-		dp->hpd_state = ST_MAINLINK_READY;
+ 	}
+-
+-	drm_dbg_dp(dp->drm_dev, "After, type=%d hpd_state=%d\n",
+-			dp->msm_dp_display.connector_type, state);
++	drm_dbg_dp(dp->drm_dev, "After, type=%d\n",
++			dp->msm_dp_display.connector_type);
+ 
+ 	/* uevent will complete connection part */
+ 	return 0;
+@@ -633,51 +582,45 @@ static void msm_dp_display_handle_plugged_change(struct msm_dp *msm_dp_display,
+ 
+ static int msm_dp_hpd_unplug_handle(struct msm_dp_display_private *dp, u32 data)
+ {
+-	u32 state;
+ 	struct platform_device *pdev = dp->msm_dp_display.pdev;
+ 
+ 	msm_dp_aux_enable_xfers(dp->aux, false);
+ 
+-	state = dp->hpd_state;
++	drm_dbg_dp(dp->drm_dev, "Before, type=%d\n",
++			dp->msm_dp_display.connector_type);
+ 
+-	drm_dbg_dp(dp->drm_dev, "Before, type=%d hpd_state=%d\n",
+-			dp->msm_dp_display.connector_type, state);
+-
+-	if (state == ST_DISCONNECTED) {
+-		/* triggered by irq_hdp with sink_count = 0 */
+-		if (dp->link->sink_count == 0) {
+-			msm_dp_display_host_phy_exit(dp);
+-		}
+-		msm_dp_display_notify_disconnect(&dp->msm_dp_display.pdev->dev);
++	if (!dp->msm_dp_display.link_ready) 
+ 		return 0;
+-	} else if (state == ST_DISCONNECT_PENDING) {
+-		return 0;
+-	} else if (state == ST_MAINLINK_READY) {
+-		msm_dp_ctrl_off_link(dp->ctrl);
++	
++/* triggered by irq_hdp with sink_count = 0 */
++		if (dp->link->sink_count == 0)
+ 		msm_dp_display_host_phy_exit(dp);
+-		dp->hpd_state = ST_DISCONNECTED;
+-		msm_dp_display_notify_disconnect(&dp->msm_dp_display.pdev->dev);
+-		pm_runtime_put_sync(&pdev->dev);
+-		return 0;
+-	}
+ 
+ 	/*
+ 	 * We don't need separate work for disconnect as
+ 	 * connect/attention interrupts are disabled
+ 	 */
+-	msm_dp_display_notify_disconnect(&dp->msm_dp_display.pdev->dev);
++	if (!dp->msm_dp_display.is_edp)
++		drm_dp_set_subconnector_property(dp->msm_dp_display.connector,
++						 connector_status_disconnected,
++						 dp->panel->dpcd,
++						 dp->panel->downstream_ports);
+ 
+-	if (!dp->active_stream_cnt) {
+-		dp->hpd_state = ST_DISCONNECTED;
+-	} else {
+-		dp->hpd_state = ST_DISCONNECT_PENDING;
++	dp->msm_dp_display.link_ready = false;
++
++	if (!dp->msm_dp_display.internal_hpd)
++		msm_dp_display_send_hpd_notification(dp, false);
++
++	if (dp->msm_dp_display.mst_active) {
++		msm_dp_mst_display_set_mgr_state(&dp->msm_dp_display, false);
++		dp->msm_dp_display.mst_active = false;
+ 	}
+ 
+ 	/* signal the disconnect event early to ensure proper teardown */
+ 	msm_dp_display_handle_plugged_change(&dp->msm_dp_display, false);
+ 
+-	drm_dbg_dp(dp->drm_dev, "After, type=%d hpd_state=%d\n",
+-			dp->msm_dp_display.connector_type, state);
++	drm_dbg_dp(dp->drm_dev, "After, type=%d\n",
++			dp->msm_dp_display.connector_type);
+ 
+ 	/* uevent will complete disconnection part */
+ 	pm_runtime_put_sync(&pdev->dev);
+@@ -686,23 +629,14 @@ static int msm_dp_hpd_unplug_handle(struct msm_dp_display_private *dp, u32 data)
+ 
+ static int msm_dp_irq_hpd_handle(struct msm_dp_display_private *dp, u32 data)
+ {
+-	u32 state;
+-
+ 	/* irq_hpd can happen at either connected or disconnected state */
+-	state =  dp->hpd_state;
+-	drm_dbg_dp(dp->drm_dev, "Before, type=%d hpd_state=%d\n",
+-			dp->msm_dp_display.connector_type, state);
+-
+-	if (state == ST_DISPLAY_OFF)
+- 		return 0;
+-
+-	if (state == ST_MAINLINK_READY || state == ST_DISCONNECT_PENDING)
+-		return 0;
++	drm_dbg_dp(dp->drm_dev, "Before, type=%d\n",
++			dp->msm_dp_display.connector_type);
+ 
+ 	msm_dp_display_usbpd_attention_cb(&dp->msm_dp_display.pdev->dev);
+ 
+-	drm_dbg_dp(dp->drm_dev, "After, type=%d hpd_state=%d\n",
+-			dp->msm_dp_display.connector_type, state);
++	drm_dbg_dp(dp->drm_dev, "After, type=%d\n",
++			dp->msm_dp_display.connector_type);
+ 
+ 	return 0;
+ }
+@@ -883,7 +817,7 @@ static int msm_dp_display_prepare(struct msm_dp_display_private *dp)
+ 		return rc;
+ 	}
+ 
+-	if (dp->hpd_state == ST_CONNECTED && !dp->active_stream_cnt) {
++	if (msm_dp_display->link_ready && !dp->active_stream_cnt) {
+ 		msm_dp_display_host_phy_init(dp);
+ 	}
+ 
+@@ -1659,9 +1593,6 @@ void msm_dp_display_enable_helper(struct msm_dp *dp, struct msm_dp_panel *msm_dp
+ 
+ 	msm_dp_display->active_stream_cnt++;
+ 
+-	/* completed connection */
+-	msm_dp_display->hpd_state = ST_CONNECTED;
+-
+ 	drm_dbg_dp(dp->drm_dev, "type=%d Done\n", dp->connector_type);
+ }
+ 
+@@ -1742,7 +1673,6 @@ void msm_dp_display_unprepare(struct msm_dp *msm_dp)
+ 
+ void msm_dp_display_atomic_post_disable_helper(struct msm_dp *dp, struct msm_dp_panel *msm_dp_panel)
+ {
+-	u32 state;
+ 	struct msm_dp_display_private *msm_dp_display;
+ 
+ 	msm_dp_display = container_of(dp, struct msm_dp_display_private, msm_dp_display);
+@@ -1750,21 +1680,13 @@ void msm_dp_display_atomic_post_disable_helper(struct msm_dp *dp, struct msm_dp_
+ 	if (dp->is_edp)
+ 		msm_dp_hpd_unplug_handle(msm_dp_display, 0);
+ 
+-	state = msm_dp_display->hpd_state;
+-	if (state != ST_DISCONNECT_PENDING && state != ST_CONNECTED)
+-		drm_dbg_dp(dp->drm_dev, "type=%d wrong hpd_state=%d\n",
+-			   dp->connector_type, state);
++	if (!dp->link_ready)
++		drm_dbg_dp(dp->drm_dev, "type=%d is disconnected\n", dp->connector_type);
+ 
+ 	msm_dp_display_audio_notify_disable(msm_dp_display);
+ 
+ 	msm_dp_display_disable(msm_dp_display, msm_dp_panel);
+ 
+-	state =  msm_dp_display->hpd_state;
+-	if (state == ST_DISCONNECT_PENDING && !msm_dp_display->active_stream_cnt) {
+-		/* completed disconnection */
+-		msm_dp_display->hpd_state = ST_DISCONNECTED;
+-	}
+-
+ 	drm_dbg_dp(dp->drm_dev, "type=%d Done\n", dp->connector_type);
+ }
+ 
+-- 
+2.34.1
+

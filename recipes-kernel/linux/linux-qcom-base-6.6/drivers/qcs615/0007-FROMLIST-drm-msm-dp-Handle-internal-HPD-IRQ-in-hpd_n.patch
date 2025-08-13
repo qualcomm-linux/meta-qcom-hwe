@@ -1,0 +1,240 @@
+From c8904460cf6aad7d634843a2d1a06c9119d7f15f Mon Sep 17 00:00:00 2001
+From: bowehan <bowehan@qti.qualcomm.com>
+Date: Mon, 11 Aug 2025 16:58:20 +0800
+Subject: [PATCH 07/11] FROMLIST: drm/msm/dp: Handle internal HPD IRQ in hpd_notify()
+
+Switch to using a threaded IRQ to handle HPD IRQ events and moving handling of internal HPD IRQ events to hpd_notify().
+
+This will simplify the handling of HPD events by unifying the handling
+of both external and internal HPD events in hpd_notify(). Also, having
+internal HPD IRQ use the DRM framework calls removes the need for msm_dp
+to track the HPD state internally.
+
+Signed-off-by: Jessica Zhang <jessica.zhang@oss.qualcomm.com>
+Signed-off-by: bowehan <bowehan@qti.qualcomm.com>
+Link: https://lore.kernel.org/all/20250808-hpd-refactor-v2-7-7f4e1e741aa3@oss.qualcomm.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250808-hpd-refactor-v2-7-7f4e1e741aa3@oss.qualcomm.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_display.c | 132 ++++++++++++++++++++--------
+ 1 file changed, 93 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index f476d2f5b88c..6cefb50fb131 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -101,6 +101,10 @@ struct msm_dp_display_private {
+ 
+ 	unsigned int max_stream;
+ 
++	/* HPD IRQ handling */
++	spinlock_t irq_thread_lock;
++	u32 hpd_isr_status;
++
+ 	/* event related only access by event thread */
+ 	struct mutex event_mutex;
+ 	wait_queue_head_t event_q;
+@@ -397,14 +401,8 @@ static int msm_dp_display_send_hpd_notification(struct msm_dp_display_private *d
+ 	/* reset video pattern flag on disconnect */
+ 	if (!hpd) {
+ 		dp->panel->video_test = false;
+-		if (!dp->msm_dp_display.is_edp)
+-			drm_dp_set_subconnector_property(dp->msm_dp_display.connector,
+-							 connector_status_disconnected,
+-							 dp->panel->dpcd,
+-							 dp->panel->downstream_ports);
+ 	}
+ 
+-	dp->msm_dp_display.link_ready = hpd;
+ 
+ 	drm_dbg_dp(dp->drm_dev, "type=%d hpd=%d\n",
+ 			dp->msm_dp_display.connector_type, hpd);
+@@ -483,6 +481,8 @@ static int msm_dp_display_process_hpd_high(struct msm_dp_display_private *dp)
+ 						 dp->panel->dpcd,
+ 						 dp->panel->downstream_ports);
+ 
++	dp->msm_dp_display.link_ready = true;
++
+ 	dp->msm_dp_display.psr_supported = dp->panel->psr_cap.version && psr_enabled;
+ 
+ 	dp->audio_supported = info->has_audio;
+@@ -502,7 +502,8 @@ static int msm_dp_display_process_hpd_high(struct msm_dp_display_private *dp)
+ 
+ 	msm_dp_display_set_mst_mgr_state(dp, true);
+ 
+-	msm_dp_display_send_hpd_notification(dp, true);
++	if (!dp->msm_dp_display.internal_hpd)
++		msm_dp_display_send_hpd_notification(dp, true);
+ 
+ end:
+ 	return rc;
+@@ -575,7 +576,16 @@ static int msm_dp_display_notify_disconnect(struct device *dev)
+ 		dp_display->mst_active = false;
+ 	}
+ 
+-	msm_dp_display_send_hpd_notification(dp, false);
++	if (!dp->msm_dp_display.is_edp)
++		drm_dp_set_subconnector_property(dp->msm_dp_display.connector,
++						 connector_status_disconnected,
++						 dp->panel->dpcd,
++						 dp->panel->downstream_ports);
++
++	dp->msm_dp_display.link_ready = false;
++
++	if (!dp->msm_dp_display.internal_hpd)
++		msm_dp_display_send_hpd_notification(dp, false);
+ 
+ 	return 0;
+ }
+@@ -1399,36 +1409,19 @@ enum drm_connector_status msm_dp_bridge_detect(struct drm_bridge *bridge)
+ static irqreturn_t msm_dp_display_irq_handler(int irq, void *dev_id)
+ {
+ 	struct msm_dp_display_private *dp = dev_id;
+-	irqreturn_t ret = IRQ_NONE;
+ 	u32 hpd_isr_status;
+-
+-	if (!dp) {
+-		DRM_ERROR("invalid data\n");
+-		return IRQ_NONE;
+-	}
++	unsigned long flags;
++	irqreturn_t ret = IRQ_HANDLED;
+ 
+ 	hpd_isr_status = msm_dp_catalog_hpd_get_intr_status(dp->catalog);
+ 
+ 	if (hpd_isr_status & 0x0F) {
+ 		drm_dbg_dp(dp->drm_dev, "type=%d isr=0x%x\n",
+ 			dp->msm_dp_display.connector_type, hpd_isr_status);
+-		/* hpd related interrupts */
+-		if (hpd_isr_status & DP_DP_HPD_PLUG_INT_MASK)
+-			msm_dp_add_event(dp, EV_HPD_PLUG_INT, 0, 0);
+-
+-		if (hpd_isr_status & DP_DP_IRQ_HPD_INT_MASK) {
+-			msm_dp_add_event(dp, EV_IRQ_HPD_INT, 0, 0);
+-		}
+-
+-		if (hpd_isr_status & DP_DP_HPD_REPLUG_INT_MASK) {
+-			msm_dp_add_event(dp, EV_HPD_UNPLUG_INT, 0, 0);
+-			msm_dp_add_event(dp, EV_HPD_PLUG_INT, 0, 3);
+-		}
+-
+-		if (hpd_isr_status & DP_DP_HPD_UNPLUG_INT_MASK)
+-			msm_dp_add_event(dp, EV_HPD_UNPLUG_INT, 0, 0);
+-
+-		ret = IRQ_HANDLED;
++		spin_lock_irqsave(&dp->irq_thread_lock, flags);
++		dp->hpd_isr_status |= hpd_isr_status;
++		ret = IRQ_WAKE_THREAD;
++		spin_unlock_irqrestore(&dp->irq_thread_lock, flags);
+ 	}
+ 
+ 	/* DP controller isr */
+@@ -1440,6 +1433,40 @@ static irqreturn_t msm_dp_display_irq_handler(int irq, void *dev_id)
+ 	return ret;
+ }
+ 
++static irqreturn_t msm_dp_display_irq_thread(int irq, void *dev_id)
++{
++	struct msm_dp_display_private *dp = dev_id;
++	irqreturn_t ret = IRQ_NONE;
++	unsigned long flags;
++	u32 hpd_isr_status;
++
++	if (!dp) {
++		DRM_ERROR("invalid data\n");
++		return IRQ_NONE;
++ 	}
++
++	spin_lock_irqsave(&dp->irq_thread_lock, flags);
++	hpd_isr_status = dp->hpd_isr_status;
++	dp->hpd_isr_status = 0;
++	spin_unlock_irqrestore(&dp->irq_thread_lock, flags);
++
++	/* hpd related interrupts */
++	if (hpd_isr_status & DP_DP_HPD_PLUG_INT_MASK)
++		msm_dp_display_send_hpd_notification(dp, true);
++
++	if (hpd_isr_status & DP_DP_HPD_UNPLUG_INT_MASK)
++		msm_dp_display_send_hpd_notification(dp, false);
++
++	if (hpd_isr_status & DP_DP_IRQ_HPD_INT_MASK) {
++		msm_dp_display_send_hpd_notification(dp, true);
++		msm_dp_irq_hpd_handle(dp, 0);
++	}
++
++	ret = IRQ_HANDLED;
++ 
++ 	return ret;
++ }
++
+ static int msm_dp_display_request_irq(struct msm_dp_display_private *dp)
+ {
+ 	int rc = 0;
+@@ -1451,9 +1478,13 @@ static int msm_dp_display_request_irq(struct msm_dp_display_private *dp)
+ 		return dp->irq;
+ 	}
+ 
+-	rc = devm_request_irq(&pdev->dev, dp->irq, msm_dp_display_irq_handler,
+-			      IRQF_TRIGGER_HIGH|IRQF_NO_AUTOEN,
+-			      "dp_display_isr", dp);
++	spin_lock_init(&dp->irq_thread_lock);
++	irq_set_status_flags(dp->irq, IRQ_NOAUTOEN);
++	rc = devm_request_threaded_irq(&pdev->dev, dp->irq,
++				       msm_dp_display_irq_handler,
++				       msm_dp_display_irq_thread,
++				       IRQ_TYPE_LEVEL_HIGH,
++				       "dp_display_isr", dp);
+ 
+ 	if (rc < 0) {
+ 		DRM_ERROR("failed to request IRQ%u: %d\n",
+@@ -1576,6 +1607,7 @@ static int msm_dp_display_probe(struct platform_device *pdev)
+ 	dp->wide_bus_supported = desc->wide_bus_supported;
+ 	dp->msm_dp_display.is_edp =
+ 		(dp->msm_dp_display.connector_type == DRM_MODE_CONNECTOR_eDP);
++	dp->hpd_isr_status = 0;
+ 
+ 	dp->max_stream = DEFAULT_STREAM_COUNT;
+ 
+@@ -2058,13 +2090,35 @@ void msm_dp_bridge_hpd_notify(struct drm_bridge *bridge,
+ 	struct msm_dp_bridge *msm_dp_bridge = to_dp_bridge(bridge);
+ 	struct msm_dp *msm_dp_display = msm_dp_bridge->msm_dp_display;
+ 	struct msm_dp_display_private *dp = container_of(msm_dp_display, struct msm_dp_display_private, msm_dp_display);
++	u32 hpd_link_status = 0;
+ 
+-	/* Without next_bridge interrupts are handled by the DP core directly */
+-	if (msm_dp_display->internal_hpd)
+-		return;
++	if (msm_dp_display->internal_hpd) {
++		if (pm_runtime_resume_and_get(&msm_dp_display->pdev->dev)) {
++			DRM_ERROR("failed to pm_runtime_resume\n");
++			return;
++		}
++
++		hpd_link_status = msm_dp_catalog_link_is_connected(dp->catalog);
++	}
+ 
+-	if (!msm_dp_display->link_ready && status == connector_status_connected)
++	drm_dbg_dp(dp->drm_dev, "type=%d link connected=0x%x, link_ready=%d, status=%d\n",
++		   msm_dp_display->connector_type, hpd_link_status,
++		   msm_dp_display->link_ready, status);
++
++	if ((!msm_dp_display->internal_hpd || hpd_link_status == ISR_CONNECTED) &&
++	    status == connector_status_connected)
++		msm_dp_hpd_plug_handle(dp, 0);
++	else if ((hpd_link_status == ISR_IRQ_HPD_PULSE_COUNT) &&
++	    status == connector_status_connected)
++		msm_dp_irq_hpd_handle(dp, 0);
++	else if (hpd_link_status == ISR_HPD_REPLUG_COUNT) {
+ 		msm_dp_hpd_plug_handle(dp, 0);
+-	else if (msm_dp_display->link_ready && status == connector_status_disconnected)
+ 		msm_dp_hpd_unplug_handle(dp, 0);
++	} else if ((!msm_dp_display->internal_hpd ||
++		    hpd_link_status == ISR_DISCONNECTED) &&
++		 status == connector_status_disconnected)
++		msm_dp_hpd_unplug_handle(dp, 0);
++
++	if (msm_dp_display->internal_hpd)
++		pm_runtime_put_sync(&msm_dp_display->pdev->dev);
+ }
+-- 
+2.34.1
+
