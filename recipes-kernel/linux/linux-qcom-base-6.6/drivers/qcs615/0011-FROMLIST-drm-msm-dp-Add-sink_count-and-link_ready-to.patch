@@ -1,0 +1,106 @@
+From a1d8acd4fbf565850e178be070a2254424ed141d Mon Sep 17 00:00:00 2001
+From: bowehan <bowehan@qti.qualcomm.com>
+Date: Tue, 12 Aug 2025 10:57:31 +0800
+Subject: [PATCH 11/12] FROMLIST: drm/msm/dp: Add sink_count and link_ready to
+ debug logs
+
+Add sink count and link_ready to the debug logs for [un]plug and HPD IRQ handling.
+
+Signed-off-by: Jessica Zhang <jessica.zhang@oss.qualcomm.com>
+Signed-off-by: bowehan <bowehan@qti.qualcomm.com>
+Link: https://lore.kernel.org/all/20250808-hpd-refactor-v2-12-7f4e1e741aa3@oss.qualcomm.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250808-hpd-refactor-v2-12-7f4e1e741aa3@oss.qualcomm.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_display.c | 38 +++++++++++++++++++----------
+ 1 file changed, 25 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index d9b6561dcd1d..25da8d8de82d 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -542,8 +542,10 @@ static int msm_dp_hpd_plug_handle(struct msm_dp_display_private *dp, u32 data)
+ 
+ 	msm_dp_aux_enable_xfers(dp->aux, true);
+ 
+-	drm_dbg_dp(dp->drm_dev, "Before, type=%d\n",
+-			dp->msm_dp_display.connector_type);
++	drm_dbg_dp(dp->drm_dev, "Before, type=%d sink_count=%d, link_ready=%d\n",
++			dp->msm_dp_display.connector_type,
++			dp->link->sink_count,
++			dp->msm_dp_display.link_ready);
+ 
+ 	if (dp->msm_dp_display.link_ready) 
+ 		return 0;
+@@ -559,8 +561,10 @@ static int msm_dp_hpd_plug_handle(struct msm_dp_display_private *dp, u32 data)
+ 		dp->msm_dp_display.link_ready = false;
+ 		pm_runtime_put_sync(&pdev->dev);
+ 	}
+-	drm_dbg_dp(dp->drm_dev, "After, type=%d\n",
+-			dp->msm_dp_display.connector_type);
++	drm_dbg_dp(dp->drm_dev, "After, type=%d sink_count=%d, link_ready=%d\n",
++			dp->msm_dp_display.connector_type,
++			dp->link->sink_count,
++			dp->msm_dp_display.link_ready);
+ 
+ 	/* uevent will complete connection part */
+ 	return 0;
+@@ -586,8 +590,10 @@ static int msm_dp_hpd_unplug_handle(struct msm_dp_display_private *dp, u32 data)
+ 
+ 	msm_dp_aux_enable_xfers(dp->aux, false);
+ 
+-	drm_dbg_dp(dp->drm_dev, "Before, type=%d\n",
+-			dp->msm_dp_display.connector_type);
++	drm_dbg_dp(dp->drm_dev, "Before, type=%d sink_count=%d, link_ready=%d\n",
++			dp->msm_dp_display.connector_type,
++			dp->link->sink_count,
++			dp->msm_dp_display.link_ready);
+ 
+ 	if (!dp->msm_dp_display.link_ready) 
+ 		return 0;
+@@ -619,8 +625,10 @@ static int msm_dp_hpd_unplug_handle(struct msm_dp_display_private *dp, u32 data)
+ 	/* signal the disconnect event early to ensure proper teardown */
+ 	msm_dp_display_handle_plugged_change(&dp->msm_dp_display, false);
+ 
+-	drm_dbg_dp(dp->drm_dev, "After, type=%d\n",
+-			dp->msm_dp_display.connector_type);
++	drm_dbg_dp(dp->drm_dev, "After, type=%d, sink_count=%d, link_ready=%d\n",
++			dp->msm_dp_display.connector_type,
++			dp->link->sink_count,
++			dp->msm_dp_display.link_ready);
+ 
+ 	/* uevent will complete disconnection part */
+ 	pm_runtime_put_sync(&pdev->dev);
+@@ -630,13 +638,17 @@ static int msm_dp_hpd_unplug_handle(struct msm_dp_display_private *dp, u32 data)
+ static int msm_dp_irq_hpd_handle(struct msm_dp_display_private *dp, u32 data)
+ {
+ 	/* irq_hpd can happen at either connected or disconnected state */
+-	drm_dbg_dp(dp->drm_dev, "Before, type=%d\n",
+-			dp->msm_dp_display.connector_type);
++	drm_dbg_dp(dp->drm_dev, "Before, type=%d, sink_count=%d, link_ready=%d\n",
++			dp->msm_dp_display.connector_type,
++			dp->link->sink_count,
++			dp->msm_dp_display.link_ready);
+ 
+ 	msm_dp_display_usbpd_attention_cb(&dp->msm_dp_display.pdev->dev);
+ 
+-	drm_dbg_dp(dp->drm_dev, "After, type=%d\n",
+-			dp->msm_dp_display.connector_type);
++	drm_dbg_dp(dp->drm_dev, "After, type=%d, sink_count=%d, link_ready=%d\n",
++			dp->msm_dp_display.connector_type,
++			dp->link->sink_count,
++			dp->msm_dp_display.link_ready);
+ 
+ 	return 0;
+ }
+@@ -1789,7 +1801,7 @@ void msm_dp_bridge_hpd_notify(struct drm_bridge *bridge,
+ 		hpd_link_status = msm_dp_catalog_link_is_connected(dp->catalog);
+ 	}
+ 
+-	drm_dbg_dp(dp->drm_dev, "type=%d link connected=0x%x, link_ready=%d, status=%d\n",
++	drm_dbg_dp(dp->drm_dev, "type=%d link hpd_link_status=0x%x, link_ready=%d, status=%d\n",
+ 		   msm_dp_display->connector_type, hpd_link_status,
+ 		   msm_dp_display->link_ready, status);
+ 
+-- 
+2.34.1
+

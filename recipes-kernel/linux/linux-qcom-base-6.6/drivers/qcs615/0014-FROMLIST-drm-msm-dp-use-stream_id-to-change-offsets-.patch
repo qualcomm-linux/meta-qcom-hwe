@@ -1,0 +1,58 @@
+From 0923212c04f9b5a1a1f2676a8d23f9cf532a4deb Mon Sep 17 00:00:00 2001
+From: Abhinav Kumar <quic_abhinavk@quicinc.com>
+Date: Wed, 27 Aug 2025 15:34:34 +0800
+Subject: [PATCH 2/2] FROMLIST: drm/msm/dp: use stream_id to change offsets in
+ dp_catalog
+
+Use the dp_panel's stream_id to adjust the offsets for stream 1
+which will be used for MST in the dp_catalog. Stream 1 share the
+same link clk with stream 0 with different reg offset. Also add
+additional register defines for stream 1.
+
+Signed-off-by: Abhinav Kumar <quic_abhinavk@quicinc.com>
+Signed-off-by: Yongxing Mou <yongxing.mou@oss.qualcomm.com>
+Signed-off-by: bowehan <bowehan@qti.qualcomm.com>
+Link: https://lore.kernel.org/all/20250825-msm-dp-mst-v3-15-01faacfcdedd@oss.qualcomm.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250825-msm-dp-mst-v3-15-01faacfcdedd@oss.qualcomm.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_catalog.c | 9 +++++++--
+ drivers/gpu/drm/msm/dp/dp_reg.h     | 1 +
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_catalog.c b/drivers/gpu/drm/msm/dp/dp_catalog.c
+index ffc46dda916f..dfd46e1f630e 100644
+--- a/drivers/gpu/drm/msm/dp/dp_catalog.c
++++ b/drivers/gpu/drm/msm/dp/dp_catalog.c
+@@ -383,10 +383,15 @@ void msm_dp_catalog_ctrl_config_ctrl(struct msm_dp_catalog *msm_dp_catalog, u32
+ {
+ 	struct msm_dp_catalog_private *catalog = container_of(msm_dp_catalog,
+ 				struct msm_dp_catalog_private, msm_dp_catalog);
++	u32 reg_offset = 0;
++
++	if (msm_dp_catalog->stream_id == DP_STREAM_1)
++		reg_offset = REG_DP1_CONFIGURATION_CTRL - REG_DP_CONFIGURATION_CTRL;
+ 
+-	drm_dbg_dp(catalog->drm_dev, "DP_CONFIGURATION_CTRL=0x%x\n", cfg);
++	drm_dbg_dp(catalog->drm_dev, "stream_id:%d DP_CONFIGURATION_CTRL=0x%x\n",
++		msm_dp_catalog->stream_id, cfg);
+ 
+-	msm_dp_write_link(catalog, REG_DP_CONFIGURATION_CTRL, cfg);
++	msm_dp_write_link(catalog, REG_DP_CONFIGURATION_CTRL + reg_offset, cfg);
+ }
+ 
+ void msm_dp_catalog_ctrl_lane_mapping(struct msm_dp_catalog *msm_dp_catalog, u32 *l_map)
+diff --git a/drivers/gpu/drm/msm/dp/dp_reg.h b/drivers/gpu/drm/msm/dp/dp_reg.h
+index 53bba54791ff..df0963f9ec7b 100644
+--- a/drivers/gpu/drm/msm/dp/dp_reg.h
++++ b/drivers/gpu/drm/msm/dp/dp_reg.h
+@@ -123,6 +123,7 @@
+ #define DP_STATE_CTRL_PUSH_IDLE			(0x00000100)
+ 
+ #define REG_DP_CONFIGURATION_CTRL		(0x00000008)
++#define REG_DP1_CONFIGURATION_CTRL		(0x00000400)
+ #define DP_CONFIGURATION_CTRL_SYNC_ASYNC_CLK	(0x00000001)
+ #define DP_CONFIGURATION_CTRL_STATIC_DYNAMIC_CN (0x00000002)
+ #define DP_CONFIGURATION_CTRL_P_INTERLACED	(0x00000004)
+-- 
+2.34.1
+

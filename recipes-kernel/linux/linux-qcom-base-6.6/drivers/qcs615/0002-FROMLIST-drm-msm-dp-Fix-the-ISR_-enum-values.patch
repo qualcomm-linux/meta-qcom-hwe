@@ -1,0 +1,38 @@
+From 77e618b2c297e48cd71022698be1ba861c03b5da Mon Sep 17 00:00:00 2001
+From: bowehan <bowehan@qti.qualcomm.com>
+Date: Mon, 25 Aug 2025 17:13:57 +0800
+Subject: [PATCH 02/12] FROMLIST: drm/msm/dp: Fix the ISR_* enum values
+
+ISR_HPD_IO_GLITCH_COUNT and ISR_HPD_REPLUG_COUNT are not in the correct
+order. Swap them so that the ISR_* enum will have the correct values.
+
+Also, correct the spelling for ISR_HPD_REPLUG_COUNT.
+
+Fixes: 8ede2ecc3e5e ("drm/msm/dp: Add DP compliance tests on Snapdragon Chipsets")
+Signed-off-by: Jessica Zhang <jessica.zhang@oss.qualcomm.com>
+Signed-off-by: bowehan <bowehan@qti.qualcomm.com>
+Link: https://lore.kernel.org/all/20250808-hpd-refactor-v2-2-7f4e1e741aa3@oss.qualcomm.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250808-hpd-refactor-v2-2-7f4e1e741aa3@oss.qualcomm.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_display.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index 528c0a1e9b4a..825efa964b3a 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -40,9 +40,9 @@ enum {
+ 	ISR_DISCONNECTED,
+ 	ISR_CONNECT_PENDING,
+ 	ISR_CONNECTED,
+-	ISR_HPD_REPLUG_COUNT,
++	ISR_HPD_IO_GLITCH_COUNT,
+ 	ISR_IRQ_HPD_PULSE_COUNT,
+-	ISR_HPD_LO_GLITH_COUNT,
++	ISR_HPD_REPLUG_COUNT,
+ };
+ 
+ /* event thread connection state */
+-- 
+2.34.1
+

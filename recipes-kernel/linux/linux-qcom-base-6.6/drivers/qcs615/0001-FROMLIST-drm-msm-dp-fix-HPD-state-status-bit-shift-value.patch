@@ -1,0 +1,34 @@
+From 5c7987ffafa39e57c6f186dee76033f11b21b768 Mon Sep 17 00:00:00 2001
+From: bowehan <bowehan@qti.qualcomm.com>
+Date: Mon, 11 Aug 2025 14:17:07 +0800
+Subject: [PATCH 01/12] FROMLIST: drm/msm/dp: fix HPD state status bit shift value
+
+The HPD state status is the last 3 bits, not 4 bits of the HPD_INT_STATUS register.
+
+Fix the bit shift macro so that the correct bits are returned in
+msm_dp_aux_is_link_connected().
+
+Signed-off-by: Jessica Zhang <jessica.zhang@oss.qualcomm.com>
+Signed-off-by: bowehan <bowehan@qti.qualcomm.com>
+Link: https://lore.kernel.org/all/20250808-hpd-refactor-v2-1-7f4e1e741aa3@oss.qualcomm.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250808-hpd-refactor-v2-1-7f4e1e741aa3@oss.qualcomm.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_reg.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_reg.h b/drivers/gpu/drm/msm/dp/dp_reg.h
+index c7532217b369..53bba54791ff 100644
+--- a/drivers/gpu/drm/msm/dp/dp_reg.h
++++ b/drivers/gpu/drm/msm/dp/dp_reg.h
+@@ -51,7 +51,7 @@
+ #define DP_DP_HPD_REPLUG_INT_ACK		(0x00000004)
+ #define DP_DP_HPD_UNPLUG_INT_ACK		(0x00000008)
+ #define DP_DP_HPD_STATE_STATUS_BITS_MASK	(0x0000000F)
+-#define DP_DP_HPD_STATE_STATUS_BITS_SHIFT	(0x1C)
++#define DP_DP_HPD_STATE_STATUS_BITS_SHIFT	(0x1D)
+ 
+ #define REG_DP_DP_HPD_INT_MASK			(0x0000000C)
+ #define DP_DP_HPD_PLUG_INT_MASK			(0x00000001)
+-- 
+2.34.1
+

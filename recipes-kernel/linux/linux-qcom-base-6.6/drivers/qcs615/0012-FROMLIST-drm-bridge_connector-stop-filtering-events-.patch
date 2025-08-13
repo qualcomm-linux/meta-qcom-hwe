@@ -1,0 +1,45 @@
+From 24efd1705a3e377f6a041cfebddc99f467559977 Mon Sep 17 00:00:00 2001
+From: bowehan <bowehan@qti.qualcomm.com>
+Date: Mon, 25 Aug 2025 20:42:36 +0800
+Subject: [PATCH 12/12] FROMLIST: drm/bridge_connector: stop filtering events
+ in drm_bridge_connector_hpd_cb()
+
+In some cases the bridge drivers would like to receive hotplug events
+even in the case new status is equal to the old status. In the DP case
+this is used to deliver attention messages to the DP host. Stop
+filtering the events in the drm_bridge_connector_hpd_cb() and let
+drivers decide whether they would like to receive the event or not.
+
+Reviewed-by: Janne Grunau <j@jannau.net>
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Signed-off-by: bowehan <bowehan@qti.qualcomm.com>
+Link: https://lore.kernel.org/all/20231009174048.2695981-3-dmitry.baryshkov@linaro.org/
+Upstream-Status: Backport [https://lore.kernel.org/all/20231009174048.2695981-3-dmitry.baryshkov@linaro.org/]
+---
+ drivers/gpu/drm/drm_bridge_connector.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_bridge_connector.c b/drivers/gpu/drm/drm_bridge_connector.c
+index 6781c9508e13..cce721ecc63b 100644
+--- a/drivers/gpu/drm/drm_bridge_connector.c
++++ b/drivers/gpu/drm/drm_bridge_connector.c
+@@ -113,16 +113,11 @@ static void drm_bridge_connector_hpd_cb(void *cb_data,
+ 	struct drm_bridge_connector *drm_bridge_connector = cb_data;
+ 	struct drm_connector *connector = &drm_bridge_connector->base;
+ 	struct drm_device *dev = connector->dev;
+-	enum drm_connector_status old_status;
+ 
+ 	mutex_lock(&dev->mode_config.mutex);
+-	old_status = connector->status;
+ 	connector->status = status;
+ 	mutex_unlock(&dev->mode_config.mutex);
+ 
+-	if (old_status == status)
+-		return;
+-
+ 	drm_bridge_connector_hpd_notify(connector, status);
+ 
+ 	drm_kms_helper_connector_hotplug_event(connector);
+-- 
+2.34.1
+

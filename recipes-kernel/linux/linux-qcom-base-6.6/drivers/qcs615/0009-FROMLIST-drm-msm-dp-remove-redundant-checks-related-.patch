@@ -1,0 +1,41 @@
+From 73068eb3a41e8bbae9d34bea0365076baa6b95bb Mon Sep 17 00:00:00 2001
+From: bowehan <bowehan@qti.qualcomm.com>
+Date: Tue, 12 Aug 2025 09:54:42 +0800
+Subject: [PATCH 09/12] FROMLIST: drm/msm/dp: remove redundant checks related
+ to ST_DISPLAY_OFF in plug handler
+
+Even if we do get hpd events, after the bridge was disabled, it should get handled. Moreover, its unclear under what circumstances these events will fire because ST_DISPLAY_OFF means that the link was still connected but only the bridge was disabled. If the link was untouched, then interrupts shouldn't fire.
+
+Even in the case of the DP compliance equipment, it should be raising these
+interrupts during the start of the test which is usually accompanied with
+either a HPD pulse or a IRQ HPD but after the bridge is disabled it should
+be fine to handle these anyway. In the absence of a better reason to keep
+these checks, drop these and if any other issues do arise, it should be
+handled in a different way.
+
+Signed-off-by: Abhinav Kumar <quic_abhinavk@quicinc.com>
+Signed-off-by: Jessica Zhang <jessica.zhang@oss.qualcomm.com>
+Signed-off-by: bowehan <bowehan@qti.qualcomm.com>
+Link: https://lore.kernel.org/all/20250808-hpd-refactor-v2-9-7f4e1e741aa3@oss.qualcomm.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250808-hpd-refactor-v2-9-7f4e1e741aa3@oss.qualcomm.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_display.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index 017ffea9f2e4..0a13e12ce2d0 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -590,9 +590,6 @@ static int msm_dp_hpd_plug_handle(struct msm_dp_display_private *dp, u32 data)
+ 	drm_dbg_dp(dp->drm_dev, "Before, type=%d hpd_state=%d\n",
+ 			dp->msm_dp_display.connector_type, state);
+ 
+-	if (state == ST_DISPLAY_OFF)
+- 		return 0;
+-
+ 	if (state == ST_MAINLINK_READY || state == ST_CONNECTED) 
+ 		return 0;
+ 
+-- 
+2.34.1
+
