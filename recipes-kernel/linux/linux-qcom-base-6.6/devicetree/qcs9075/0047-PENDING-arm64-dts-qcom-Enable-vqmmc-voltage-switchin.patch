@@ -1,0 +1,74 @@
+From e40974407661b09eeb7e929539ce3a47370d80bd Mon Sep 17 00:00:00 2001
+From: Monish Chunara <quic_mchunara@quicinc.com>
+Date: Wed, 28 May 2025 17:44:32 +0530
+Subject: [PATCH 2/2] PENDING: arm64: dts: qcom: Enable vqmmc voltage switching
+ for qcs9075 rb8
+
+Add support for UHS mode for sd card on qcs9075 rb8 board by enabling
+gpio-regulator as per the rb8 hardware.
+
+Change-Id: Id7a9ad962397c7ef8a94f5d4f8a06dc985b17151
+Signed-off-by: Monish Chunara <quic_mchunara@quicinc.com>
+Upstream-Status: pending
+---
+ .../boot/dts/qcom/qcs9075-iq-9075-evk.dts     | 25 +++++++++++++------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index de72e7352039..833d29c5e8bb 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -157,11 +157,6 @@ vreg_pmu_pcie_1p8: ldo9 {
+ 	dummy_reg: regulator-dummy {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "dummy-supply";
+-	};
+-
+-	dummy_s4a: regulator-dummy-s4a {
+-		compatible = "regulator-fixed";
+-		regulator-name = "dummy-supply-s4a";
+ 
+ 		regulator-min-microvolt = <2950000>;
+ 		regulator-max-microvolt = <2950000>;
+@@ -855,14 +850,12 @@ &remoteproc_gpdsp1 {
+ 
+ &sdhc_1 {
+ 	vmmc-supply = <&dummy_reg>;
+-	vqmmc-supply = <&dummy_s4a>;
++	vqmmc-supply = <&vreg_sdc>;
+ 
+ 	pinctrl-names = "default", "sleep";
+ 	pinctrl-0 = <&sdc1_clk>, <&sdc1_cmd>, <&sdc1_data>, <&sd_cd>;
+ 	pinctrl-1 = <&sdc1_clk_sleep>, <&sdc1_cmd_sleep>, <&sdc1_data_sleep>, <&sd_cd>;
+ 
+-	cap-sd-highspeed;
+-
+ 	cd-gpios = <&tlmm 36 GPIO_ACTIVE_LOW>;
+ 
+ 	iommus = <&apps_smmu 0x0 0x0>;
+@@ -880,6 +873,22 @@ &sleep_clk {
+ };
+ 
+ &soc {
++	vreg_sdc: regulator-sdc {
++		compatible = "regulator-gpio";
++
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <2950000>;
++		regulator-name = "vreg_sdc";
++		regulator-type = "voltage";
++
++		startup-delay-us = <100>;
++
++		gpios = <&expander1 7 GPIO_ACTIVE_HIGH>;
++
++		states = <1800000 0x1
++			  2950000 0x0>;
++	};
++
+ 	vbus_supply_regulator_0: vbus_supply_regulator_0 {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vbus_supply_0";
+-- 
+2.34.1
+
