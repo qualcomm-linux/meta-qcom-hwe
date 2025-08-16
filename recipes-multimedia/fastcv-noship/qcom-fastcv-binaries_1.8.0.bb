@@ -18,6 +18,7 @@ SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT
 
 FILES:${PN}-cpu = "${libdir}/libfastcvopt.so* ${libdir}/libfastcvdsp_stub.so*"
 FILES:${PN}-cpu += "/usr/include/*"
+FILES:${PN}-cpu += "${libdir}/pkgconfig/"
 FILES:${PN}-dsp += "${libdir}/dsp/cdsp/cv/*"
 
 
