@@ -15,6 +15,7 @@ VULKAN_LOADER:qcs8550 = "True"
 VULKAN_LOADER:qcs8650 = "True"
 VULKAN_LOADER:qcs9100 = "True"
 VULKAN_LOADER:qcs8300 = "True"
+VULKAN_LOADER:qcs615  = "True"
 
 RDEPENDS:${PN} = " \
     ${GL_PROVIDER} \
