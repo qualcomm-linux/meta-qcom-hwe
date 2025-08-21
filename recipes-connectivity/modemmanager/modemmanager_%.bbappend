@@ -10,7 +10,7 @@ SRC_URI:append:qcom = " \
              file://0003-Add-MT-SMS-storage-support.patch \
              file://0004-Fix-compilation-error.patch \
              file://0005-Avoid-updation-of-mtu-of-master-interface.patch \
-	     "
+             file://0006-PENDING-Patch-to-enable-MHI-support.patch "
 
 EXTRA_OECONF:append:qcom = " --enable-plugin-qcom-soc"
 
