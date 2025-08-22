@@ -100,3 +100,5 @@ dev_search_sysfs(qcom_bluetooth_t)
 dev_getattr_sysfs(qcom_bluetooth_t)
 kernel_search_vm_sysctl(qcom_bluetooth_t)
 userdom_manage_user_tmp_sockets(qcom_bluetooth_t)
+
+kernel_read_vm_overcommit_sysctl(qcom_bluetooth_t)
