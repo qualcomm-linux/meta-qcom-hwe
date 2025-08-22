@@ -1,0 +1,120 @@
+From 91ce2875822441f66bc8be1123de81b2142f00da Mon Sep 17 00:00:00 2001
+From: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Date: Fri, 20 Jun 2025 16:59:07 +0530
+Subject: [PATCH 25/27] PENDING: dts: qcs615-ride-u-boot.dtsi: Add support for
+ UFS boot
+
+This patch updates the UFS node to enable boot support from UFS.
+It also removes the idle-states and domain-idle-states nodes.
+This change is introduced on top of the [1] patch
+
+[1]
+https://lore.kernel.org/u-boot/20250513110213.330495-2-aswin.murugan@oss.qualcomm.com/
+
+Signed-off-by: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ arch/arm/dts/qcs615-ride-u-boot.dtsi | 82 ++++++++++++++++++++++++++++
+ 1 file changed, 82 insertions(+)
+
+diff --git a/arch/arm/dts/qcs615-ride-u-boot.dtsi b/arch/arm/dts/qcs615-ride-u-boot.dtsi
+index 68fffc70fcb..78a6add4b8c 100644
+--- a/arch/arm/dts/qcs615-ride-u-boot.dtsi
++++ b/arch/arm/dts/qcs615-ride-u-boot.dtsi
+@@ -4,6 +4,47 @@
+  */
+ 
+ / {
++	/delete-node/ idle-states;
++	/delete-node/ domain-idle-states;
++
++	psci {
++		cpu_pd0: power-domain-cpu0 {
++			/delete-property/ domain-idle-states;
++		};
++
++		cpu_pd1: power-domain-cpu1 {
++			/delete-property/ domain-idle-states;
++		};
++
++		cpu_pd2: power-domain-cpu2 {
++			/delete-property/ domain-idle-states;
++		};
++
++		cpu_pd3: power-domain-cpu3 {
++			/delete-property/ domain-idle-states;
++		};
++
++		cpu_pd4: power-domain-cpu4 {
++			/delete-property/ domain-idle-states;
++		};
++
++		cpu_pd5: power-domain-cpu5 {
++			/delete-property/ domain-idle-states;
++		};
++
++		cpu_pd6: power-domain-cpu6 {
++			/delete-property/ domain-idle-states;
++		};
++
++		cpu_pd7: power-domain-cpu7 {
++			/delete-property/ domain-idle-states;
++		};
++
++		cluster_pd: power-domain-cluster {
++			/delete-property/ domain-idle-states;
++		};
++	};
++
+ 	memory@80000000 {
+ 		device_type = "memory";
+ 		reg = <0x0 0x80000000 0x0 0x7a00000>,
+@@ -11,4 +52,45 @@
+ 		      <0x0 0xc0000000 0x0 0xc0000000>,
+ 		      <0x1 0x80000000 0x1 0x00000000>;
+ 	};
++
++	reserved-memory {
++		aop_cmd_db_mem: aop-cmd-db@85f20000 {
++			compatible = "qcom,cmd-db";
++			reg = <0x00 0x85f20000 0x00 0x20000>;
++			no-map;
++		};
++	};
++
++
++	soc@0 {
++		ufs_mem_hc: ufshc@1d84000 {
++			/delete-property/ operating-points-v2;
++			phys = <&ufs_mem_phy_lanes>;
++			freq-table-hz = <50000000 200000000>,
++					<0 0>,
++					<0 0>,
++					<37500000 150000000>,
++					<0 0>,
++					<0 0>,
++					<0 0>,
++					<75000000 300000000>;
++
++		};
++
++		ufs_mem_phy: phy@1d87000 {
++			reg = <0x0 0x01d87000 0x0 0x1c4>;
++                        ranges;
++			clock-names = "ref", "ref_aux";
++			clocks = <&gcc GCC_UFS_MEM_CLKREF_CLK>,
++				<&gcc GCC_UFS_PHY_PHY_AUX_CLK>;
++                        ufs_mem_phy_lanes: phy@1d87400 {
++                                reg = <0x0 0x1d87400 0x0 0x12c>,
++                                      <0x0 0x1d87600 0x0 0x200>,
++                                      <0x0 0x1d87c00 0x0 0x1b8>;
++                                #phy-cells = <0>;
++                        };
++                };
++
++
++	};
+ };
+-- 
+2.34.1
+

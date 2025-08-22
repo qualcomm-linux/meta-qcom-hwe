@@ -1,0 +1,30 @@
+From 41733806ded7282bbf3acad605951eb45dc5b0e7 Mon Sep 17 00:00:00 2001
+From: Aswin Murugan <quic_aswinm@quicinc.com>
+Date: Thu, 30 Jan 2025 17:01:34 +0530
+Subject: [PATCH 06/27] PENDING: qcom_defconfig: Enable
+ CONFIG_OF_LIBFDT_OVERLAY and CONFIG_OF_LIVE_SA8775P
+
+Enable CONFIG_OF_LIBFDT_OVERLAY and CONFIG_OF_LIVE_SA8775P for run time fdt fixup
+
+Signed-off-by: Aswin Murugan <quic_aswinm@quicinc.com>
+Upstream-Status: Pending
+---
+ configs/qcom_defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/configs/qcom_defconfig b/configs/qcom_defconfig
+index b9ba7a677d9..92085d2f026 100644
+--- a/configs/qcom_defconfig
++++ b/configs/qcom_defconfig
+@@ -45,6 +45,8 @@ CONFIG_CMD_RNG=y
+ CONFIG_CMD_REGULATOR=y
+ CONFIG_CMD_LOG=y
+ CONFIG_OF_LIVE=y
++CONFIG_OF_LIVE_SA8775P=y
++CONFIG_OF_LIBFDT_OVERLAY=y
+ CONFIG_OF_UPSTREAM_BUILD_VENDOR=y
+ CONFIG_ENV_USE_DEFAULT_ENV_TEXT_FILE=y
+ CONFIG_ENV_DEFAULT_ENV_TEXT_FILE="board/qualcomm/default.env"
+-- 
+2.34.1
+

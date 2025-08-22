@@ -1,0 +1,28 @@
+From 01da6ae4066922fe949e959b59270a7ff1cbfb08 Mon Sep 17 00:00:00 2001
+From: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Date: Mon, 2 Jun 2025 12:52:30 +0530
+Subject: [PATCH 19/27] SUBMITTED: configs: qcom: Add QCOM_POWER_DOMAIN config
+
+Enable QCOM_POWER_DOMAIN config for qualcomm devices
+
+Signed-off-by: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Upstream-Status: Submitted
+---
+ configs/qcom_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/configs/qcom_defconfig b/configs/qcom_defconfig
+index 880e71ce1c9..cb27602bd39 100644
+--- a/configs/qcom_defconfig
++++ b/configs/qcom_defconfig
+@@ -131,6 +131,7 @@ CONFIG_MSM_SERIAL=y
+ CONFIG_MSM_GENI_SERIAL=y
+ CONFIG_SOC_QCOM=y
+ CONFIG_QCOM_COMMAND_DB=y
++CONFIG_QCOM_POWER_DOMAIN=y
+ CONFIG_QCOM_RPMH=y
+ CONFIG_SPMI_MSM=y
+ CONFIG_SYSINFO=y
+-- 
+2.34.1
+
