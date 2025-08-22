@@ -1,0 +1,88 @@
+From cce75131c3f4d4b7905b65c3e3b12d58a604898f Mon Sep 17 00:00:00 2001
+From: Puranam V G Tejaswi <pvgtejas@qti.qualcomm.com>
+Date: Wed, 20 Aug 2025 16:08:32 +0530
+Subject: [PATCH] kgsl: Remove support for standard compatible strings
+
+Currently, standard bindings are not fully supported. Until full
+support for standard bindings is available, remove support for
+standard compatible strings.
+
+Change-Id: I9bf55eac1a6ffa86c244b55573e53316d395ed6d
+Upstream-Status: Pending
+Signed-off-by: Puranam V G Tejaswi <pvgtejas@qti.qualcomm.com>
+
+diff --git a/adreno.c b/adreno.c
+index 08733c7..7b26ff4 100644
+--- a/adreno.c
++++ b/adreno.c
+@@ -721,7 +721,6 @@ adreno_identify_gpu(struct platform_device *pdev, u32 *chipid)
+ static const struct of_device_id adreno_match_table[] = {
+ 	{ .compatible = "qcom,kgsl-3d0", .data = &device_3d0 },
+ 	{ .compatible = "qcom,kgsl", .data = &device_3d0 },
+-	{ .compatible = "qcom,adreno", .data = &device_3d0 },
+ 	{ },
+ };
+ 
+@@ -1498,8 +1497,6 @@ static const struct of_device_id adreno_component_match[] = {
+ 	{ .compatible = "qcom,gen7-gmu" },
+ 	{ .compatible = "qcom,gpu-gmu" },
+ 	{ .compatible = "qcom,gpu-rgmu" },
+-	{ .compatible = "qcom,adreno-gmu" },
+-	{ .compatible = "qcom,adreno-rgmu" },
+ 	/* Legacy components for kgsl-smmu */
+ 	{ .compatible = "qcom,kgsl-smmu-v2" },
+ 	{ .compatible = "qcom,smmu-kgsl-cb" },
+diff --git a/adreno_a6xx_gmu.c b/adreno_a6xx_gmu.c
+index 2710de6..e5957ce 100644
+--- a/adreno_a6xx_gmu.c
++++ b/adreno_a6xx_gmu.c
+@@ -3874,7 +3874,6 @@ static int a6xx_gmu_remove_dev(struct platform_device *pdev)
+ 
+ static const struct of_device_id a6xx_gmu_match_table[] = {
+ 	{ .compatible = "qcom,gpu-gmu" },
+-	{ .compatible = "qcom,adreno-gmu" },
+ 	{ },
+ };
+ 
+diff --git a/adreno_a6xx_rgmu.c b/adreno_a6xx_rgmu.c
+index 396c437..511935b 100644
+--- a/adreno_a6xx_rgmu.c
++++ b/adreno_a6xx_rgmu.c
+@@ -1418,7 +1418,6 @@ static int a6xx_rgmu_remove_dev(struct platform_device *pdev)
+ 
+ static const struct of_device_id a6xx_rgmu_match_table[] = {
+ 	{ .compatible = "qcom,gpu-rgmu" },
+-	{ .compatible = "qcom,adrneo-rgmu" },
+ 	{ },
+ };
+ 
+diff --git a/adreno_gen7_gmu.c b/adreno_gen7_gmu.c
+index 3c4788b..a35d4a0 100644
+--- a/adreno_gen7_gmu.c
++++ b/adreno_gen7_gmu.c
+@@ -3415,7 +3415,6 @@ static int gen7_gmu_remove_dev(struct platform_device *pdev)
+ 
+ static const struct of_device_id gen7_gmu_match_table[] = {
+ 	{ .compatible = "qcom,gen7-gmu" },
+-	{ .compatible = "qcom,adreno-gmu" },
+ 	{ },
+ };
+ 
+diff --git a/kgsl_gmu_core.c b/kgsl_gmu_core.c
+index bf50a8a..696b9de 100644
+--- a/kgsl_gmu_core.c
++++ b/kgsl_gmu_core.c
+@@ -19,10 +19,6 @@ static const struct of_device_id gmu_match_table[] = {
+ 	{ .compatible = "qcom,gpu-gmu", .data = &a6xx_gmu_driver },
+ 	{ .compatible = "qcom,gpu-rgmu", .data = &a6xx_rgmu_driver },
+ 	{ .compatible = "qcom,gen7-gmu", .data = &gen7_gmu_driver },
+-	{ .compatible = "qcom,adreno-gmu-623.0", .data = &a6xx_gmu_driver },
+-	{ .compatible = "qcom,adreno-gmu-663.0", .data = &a6xx_gmu_driver },
+-	{ .compatible = "qcom,adreno-gmu-635.0", .data = &a6xx_gmu_driver },
+-	{ .compatible = "qcom,adreno-rgmu", .data = &a6xx_rgmu_driver },
+ 	{},
+ };
+ 
+-- 
+2.34.1
+

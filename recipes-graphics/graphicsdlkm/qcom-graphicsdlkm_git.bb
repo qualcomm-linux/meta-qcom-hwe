@@ -8,7 +8,8 @@ SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom/opensource/gr
 SRCBRANCH  = "gfx-kernel.le.0.0.r1-rel"
 SRCREV     = "d53dbc9d2ef30f7dac10f5f7849844eb33d62743"
 
-SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=graphics-kernel"
+SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=graphics-kernel \
+		file://0001-kgsl-Remove-support-for-standard-compatible-strings.patch "
 
 S = "${WORKDIR}/graphics-kernel"
 
