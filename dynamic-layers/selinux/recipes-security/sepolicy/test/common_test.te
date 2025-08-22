@@ -35,10 +35,6 @@ gen_require(`
         type  pulseaudio_t;
 ')
 
-#TODO : need to remove this from permissive list
-permissive pulseaudio_t;
-
-
 # Systemd_analyze will read each services
 # system_units and status much of privilege
 # Needed for the  systemd-plot.svg
