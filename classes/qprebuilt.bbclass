@@ -36,6 +36,10 @@ python qprebuilt_do_install() {
     if retval:
        bb.fatal("Errors in extracting prebuilt (%s)" % output)
 
+    # Stop change log from getting packaged
+    if os.path.exists("%s/CHANGES" % dest):
+        os.remove("%s/CHANGES" % dest)
+
     # Install license
     licensedir = d.getVar('LICENSE_DIRECTORY')
     pn = d.getVar("PN")
