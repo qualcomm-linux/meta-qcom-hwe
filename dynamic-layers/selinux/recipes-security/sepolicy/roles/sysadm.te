@@ -84,3 +84,7 @@ qcom_loc_locclient_generic_rules(sysadm_t)
 domtrans_ostree(sysadm_t, sysadm_r)
 
 qcom_allow_initrc_rw(sysadm_t)
+
+# Execute Weston Apps over uart shell
+qcom_weston_connect_socket(sysadm_t)
+qcom_weston_use_fd(sysadm_t)
