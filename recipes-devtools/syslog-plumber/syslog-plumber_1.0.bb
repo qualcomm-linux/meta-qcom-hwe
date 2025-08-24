@@ -10,7 +10,7 @@ DEPENDS = "logrotate"
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/le-utils.git;protocol=https"
 SRCBRANCH  = "le-utils.qclinux.1.0.r2-rel"
-SRCREV     = "ffa247efb98ea7cb5182451132d0756b28a1697b"
+SRCREV     = "7d67737c7d8ced20c51d82ad4f15f1686afd3524"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=le-utils"
 

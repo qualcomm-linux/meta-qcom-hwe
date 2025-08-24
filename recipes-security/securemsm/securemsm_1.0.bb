@@ -7,9 +7,9 @@ DESCRIPTION = "Securemsm library with sampleclient used to test sampleapp with q
 
 DEPENDS += "minkipc securemsm-features glib-2.0 glibc linux-kernel-qcom-headers qcom-libdmabufheap"
 
-QCM6490_SHA256SUM = "526d3fc82ca7fe1d9fb1cf165d1e5a744de532b0cdfeab9cea7d6ece952ae7d1"
-QCS9100_SHA256SUM = "b4c14cab24e20925bafb0c6161b2d80762b0d731ee13fe62d8c579b7b5e0a203"
-QCS8300_SHA256SUM = "3c50b15bfcb2b8e052c5ec350ed1aa1d0aedb93eb6a638b2dc50672957c82ff7"
+QCM6490_SHA256SUM = "b6dd2f748e26b7c5ec79e00070c442c81ddb9fae4862ced61116f375a73da803"
+QCS9100_SHA256SUM = "e29e05e02fc5d7b9d8c043e692311b6cda1fb526e8c29fe072b790a33a5c2f6b"
+QCS8300_SHA256SUM = "e7bd397d7b5082fd84dceb1734fef5d47c2caec1787e988276ccf26811399268"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"

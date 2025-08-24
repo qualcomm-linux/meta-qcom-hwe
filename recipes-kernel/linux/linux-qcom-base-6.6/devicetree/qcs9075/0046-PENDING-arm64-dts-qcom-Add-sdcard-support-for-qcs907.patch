@@ -1,0 +1,195 @@
+From 9a774116758aefdda05b4f235c50716c6f1e511d Mon Sep 17 00:00:00 2001
+From: Monish Chunara <quic_mchunara@quicinc.com>
+Date: Mon, 7 Apr 2025 16:23:18 +0530
+Subject: [PATCH 1/2] PENDING: arm64: dts: qcom: Add sdcard support for qcs9075
+ rb8
+
+Add sdcard support for qcs9075 rb8 board.
+
+Use dummy regulators for vmmc and vqmmc supply as rb8 hardware has
+direct supplies for sd card circuitry instead of via votable regulators.
+This ensures driver probe is not deferred or failed in absence of supply
+properties.
+
+Change-Id: Iec38bbff4f368212dd490aa65eb5fd720a05f875
+Signed-off-by: Sushmitha Macharla(Temp) <quic_smacharl@quicinc.com>
+Signed-off-by: Monish Chunara <quic_mchunara@quicinc.com>
+Upstream-Status: pending
+---
+ .../boot/dts/qcom/qcs9075-iq-9075-evk.dts     | 73 +++++++++++++++++++
+ arch/arm64/boot/dts/qcom/sa8775p.dtsi         | 54 ++++++++++++++
+ 2 files changed, 127 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index b36a92a5f681..de72e7352039 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -22,6 +22,7 @@ / {
+ 
+ 	aliases {
+ 		ethernet0 = &ethernet0;
++		mmc0 = &sdhc_1; /* SDC1 SD card slot */
+ 		serial0 = &uart10;
+ 		serial1 = &uart17;
+ 		ufshc1 = &ufs_mem_hc;
+@@ -152,6 +153,19 @@ vreg_pmu_pcie_1p8: ldo9 {
+ 			};
+ 		};
+ 	};
++
++	dummy_reg: regulator-dummy {
++		compatible = "regulator-fixed";
++		regulator-name = "dummy-supply";
++	};
++
++	dummy_s4a: regulator-dummy-s4a {
++		compatible = "regulator-fixed";
++		regulator-name = "dummy-supply-s4a";
++
++		regulator-min-microvolt = <2950000>;
++		regulator-max-microvolt = <2950000>;
++	};
+ };
+ 
+ &apps_rsc {
+@@ -839,6 +853,23 @@ &remoteproc_gpdsp1 {
+ 	status = "okay";
+ };
+ 
++&sdhc_1 {
++	vmmc-supply = <&dummy_reg>;
++	vqmmc-supply = <&dummy_s4a>;
++
++	pinctrl-names = "default", "sleep";
++	pinctrl-0 = <&sdc1_clk>, <&sdc1_cmd>, <&sdc1_data>, <&sd_cd>;
++	pinctrl-1 = <&sdc1_clk_sleep>, <&sdc1_cmd_sleep>, <&sdc1_data_sleep>, <&sd_cd>;
++
++	cap-sd-highspeed;
++
++	cd-gpios = <&tlmm 36 GPIO_ACTIVE_LOW>;
++
++	iommus = <&apps_smmu 0x0 0x0>;
++
++	status = "okay";
++};
++
+ &serdes0 {
+ 	phy-supply = <&vreg_l5a>;
+ 	status = "okay";
+@@ -1281,6 +1312,48 @@ qup_i2c11_default: qup-i2c11-state {
+ 		drive-strength = <2>;
+ 		bias-pull-up;
+ 	};
++
++	sdc1_clk: sdc1-clk-state {
++		pins = "sdc1_clk";
++		bias-disable;
++		drive-strength = <16>;
++	};
++
++	sdc1_cmd: sdc1-cmd-state {
++		pins = "sdc1_cmd";
++		bias-pull-up;
++		drive-strength = <10>;
++	};
++
++	sdc1_data: sdc1-data-state {
++		pins = "sdc1_data";
++		bias-pull-up;
++		drive-strength = <10>;
++	};
++
++	sdc1_clk_sleep: sdc1-clk-sleep-state {
++		pins = "sdc1_clk";
++		drive-strength = <2>;
++		bias-bus-hold;
++	};
++
++	sdc1_cmd_sleep: sdc1-cmd-sleep-state {
++		pins = "sdc1_cmd";
++		drive-strength = <2>;
++		bias-bus-hold;
++	};
++
++	sdc1_data_sleep: sdc1-data-sleep-state {
++		pins = "sdc1_data";
++		drive-strength = <2>;
++		bias-bus-hold;
++	};
++
++	sd_cd: sd-cd-state {
++		pins = "gpio36";
++		function = "gpio";
++		bias-pull-up;
++	};
+ };
+ 
+ &uart0 {
+diff --git a/arch/arm64/boot/dts/qcom/sa8775p.dtsi b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+index 5b1d51a34ef6..93e3f21037a0 100644
+--- a/arch/arm64/boot/dts/qcom/sa8775p.dtsi
++++ b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+@@ -3313,6 +3313,60 @@ apss_tpdm2_out: endpoint {
+ 			};
+ 		};
+ 
++		sdhc_1: sdhci@0x87c4000 {
++			compatible = "qcom,sdhci-msm-v5";
++			status = "disabled";
++
++			reg = <0x0 0x087C4000 0x0 0x1000>;
++
++			interrupts = <GIC_SPI 383 IRQ_TYPE_LEVEL_HIGH>,
++				<GIC_SPI 521 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "hc_irq", "pwr_irq";
++
++			clocks = <&gcc GCC_SDCC1_AHB_CLK>,
++				<&gcc GCC_SDCC1_APPS_CLK>;
++			clock-names = "iface", "core";
++
++			interconnects = <&aggre1_noc MASTER_SDC 0 &mc_virt SLAVE_EBI1 0>,
++					<&gem_noc MASTER_APPSS_PROC 0 &config_noc SLAVE_SDC1 0>;
++			interconnect-names = "sdhc-ddr","cpu-sdhc";
++
++			power-domains = <&rpmhpd RPMHPD_CX>;
++			operating-points-v2 = <&sdhc1_opp_table>;
++
++			qcom,iommu-dma = "fastmap";
++
++			qcom,iommu-dma-addr-pool = <0x40000000 0x10000000>;
++			qcom,iommu-geometry = <0x40000000 0x10000000>;
++
++			no-sdio;
++			no-mmc;
++
++			bus-width = <4>;
++			dma-coherent;
++			qcom,dll-config = <0x0007642C>;
++
++			resets = <&gcc GCC_SDCC1_BCR>;
++
++			sdhc1_opp_table: opp-table {
++				compatible = "operating-points-v2";
++
++				opp-100000000 {
++					opp-hz = /bits/ 64 <100000000>;
++					required-opps = <&rpmhpd_opp_low_svs>;
++					opp-peak-kBps = <1800000 400000>;
++					opp-avg-kBps = <100000 0>;
++				};
++
++				opp-384000000 {
++					opp-hz = /bits/ 64 <384000000>;
++					required-opps = <&rpmhpd_opp_nom>;
++					opp-peak-kBps = <5400000 1600000>;
++					opp-avg-kBps = <390000 0>;
++				};
++			};
++		};
++
+ 		usb_0_hsphy: phy@88e4000 {
+ 			compatible = "qcom,sa8775p-usb-hs-phy",
+ 				     "qcom,usb-snps-hs-5nm-phy";
+-- 
+2.34.1
+

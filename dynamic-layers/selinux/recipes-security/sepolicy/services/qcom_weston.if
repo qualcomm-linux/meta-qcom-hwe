@@ -79,3 +79,36 @@ interface(`qcom_weston_script_execute',`
      allow $1 qcom_weston_exec_t:file { getattr open read execute execute_no_trans ioctl };
 ')
 
+############################################################
+## <summary>
+##   Allow domain to connect to the qcom_weston UNIX socket.
+## </summary>
+## <param name="domain">
+##   <summary>
+##   Domain allowed access.
+##   </summary>
+## </param>
+#
+interface(`qcom_weston_connect_socket', `
+    gen_require(`
+        type qcom_weston_t;
+    ')
+    allow $1 qcom_weston_t:unix_stream_socket connectto;
+')
+
+######################################################
+## <summary>
+##   Allow domain to use file descriptors from Weston.
+## </summary>
+## <param name="domain">
+##   <summary>
+##   Domain allowed access.
+##   </summary>
+## </param>
+#
+interface(`qcom_weston_use_fd', `
+    gen_require(`
+        type qcom_weston_t;
+    ')
+    allow $1 qcom_weston_t:fd use;
+')

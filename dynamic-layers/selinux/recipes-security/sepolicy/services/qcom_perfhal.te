@@ -47,3 +47,5 @@ allow qcom_perfhal_t self:unix_stream_socket { connectto };
 allow qcom_perfhal_t self:process { getsched setsched signal };
 allow qcom_perfhal_t self:capability sys_nice;
 
+fs_manage_cgroup_files(qcom_perfhal_t)
+fs_manage_cgroup_dirs(qcom_perfhal_t)

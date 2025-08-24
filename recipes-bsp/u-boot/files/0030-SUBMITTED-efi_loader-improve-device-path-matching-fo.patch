@@ -1,0 +1,148 @@
+From d4bbf2ec813711ead7c9ae66e6a565dda8bbda1d Mon Sep 17 00:00:00 2001
+From: Balaji Selvanathan <balaji.selvanathan@oss.qualcomm.com>
+Date: Thu, 24 Jul 2025 11:56:36 +0530
+Subject: [PATCH 3/4] SUBMITTED: efi_loader: improve device path matching for
+ partition lookup
+
+- Refactor find_handle() to improve device path comparison logic.
+- Original logic only compared paths when len_current <= len.
+- This fails when searching for ESP inside a larger boot device.
+- ESP partition path is longer than boot device path by design.
+- New logic allows matching when dp is a prefix of dp_current.
+- Without this change, it was not able to find ESP and capsule
+  update fails to start.
+
+- Also update efi_fs_from_path() to use system partition GUID.
+- Above ensures ESP's EFI handle is returned which contains
+  file system protocol.
+- Without this change, it was returning a wrong EFI handle
+  that was not ESP handle.
+
+- These changes improves reliability for capsule updates.
+
+Signed-off-by: Balaji Selvanathan <balaji.selvanathan@oss.qualcomm.com>
+Upstream-Status: Submitted
+---
+ lib/efi_loader/efi_device_path.c | 62 ++++++++++++++++++++++----------
+ lib/efi_loader/efi_disk.c        |  2 +-
+ 2 files changed, 45 insertions(+), 19 deletions(-)
+
+diff --git a/lib/efi_loader/efi_device_path.c b/lib/efi_loader/efi_device_path.c
+index b3fb20b2501..3716165e963 100644
+--- a/lib/efi_loader/efi_device_path.c
++++ b/lib/efi_loader/efi_device_path.c
+@@ -107,54 +107,80 @@ struct efi_device_path *efi_dp_shorten(struct efi_device_path *dp)
+  * @rem:	pointer to receive remaining device path
+  * Return:	matching handle
+  */
++
+ static efi_handle_t find_handle(struct efi_device_path *dp,
+ 				const efi_guid_t *guid, bool short_path,
+ 				struct efi_device_path **rem)
+ {
+ 	efi_handle_t handle, best_handle = NULL;
+-	efi_uintn_t len, best_len = 0;
++	efi_uintn_t len, len_current, best_len = 0;
++	efi_status_t ret;
++	struct efi_device_path *dp_current;
++	struct efi_handler *handler;
+ 
+ 	len = efi_dp_instance_size(dp);
+ 
+ 	list_for_each_entry(handle, &efi_obj_list, link) {
+-		struct efi_handler *handler;
+-		struct efi_device_path *dp_current;
+-		efi_uintn_t len_current;
+-		efi_status_t ret;
+-
+ 		if (guid) {
+ 			ret = efi_search_protocol(handle, guid, &handler);
+ 			if (ret != EFI_SUCCESS)
+ 				continue;
+ 		}
+-		ret = efi_search_protocol(handle, &efi_guid_device_path,
+-					  &handler);
++
++		ret = efi_search_protocol(handle, &efi_guid_device_path, &handler);
+ 		if (ret != EFI_SUCCESS)
+ 			continue;
++
+ 		dp_current = handler->protocol_interface;
+ 		if (short_path) {
+ 			dp_current = efi_dp_shorten(dp_current);
+ 			if (!dp_current)
+ 				continue;
+ 		}
++
+ 		len_current = efi_dp_instance_size(dp_current);
++
+ 		if (rem) {
+-			if (len_current > len)
++			/* If current path is shorter than or equal to input path */
++			if (len_current <= len) {
++				if (memcmp(dp_current, dp, len_current))
++					continue;
++				if (!rem)
++					return handle;
++				if (len_current > best_len) {
++					best_len = len_current;
++					best_handle = handle;
++					*rem = (void *)((u8 *)dp + len_current);
++				}
++			}
++			/* If current path is greater than input path */
++			else if (len_current > len) {
++				if (memcmp(dp, dp_current, len))
++					continue;
++				if (len > best_len) {
++					best_len = len;
++					best_handle = handle;
++					*rem = (struct efi_device_path *)((u8 *)dp_current + len);
++				}
++			} else {
+ 				continue;
++			}
+ 		} else {
+-			if (len_current != len)
++			if (len_current == len) {
++				if (memcmp(dp_current, dp, len_current))
++					continue;
++			}
++			/* If current path is greater than input path */
++			else if (len_current > len) {
++				if (memcmp(dp, dp_current, len))
++					continue;
++			} else {
+ 				continue;
+-		}
+-		if (memcmp(dp_current, dp, len_current))
+-			continue;
+-		if (!rem)
++			}
+ 			return handle;
+-		if (len_current > best_len) {
+-			best_len = len_current;
+-			best_handle = handle;
+-			*rem = (void*)((u8 *)dp + len_current);
+ 		}
+ 	}
++
+ 	return best_handle;
+ }
+ 
+diff --git a/lib/efi_loader/efi_disk.c b/lib/efi_loader/efi_disk.c
+index 130c4db9606..49f8b5935f4 100644
+--- a/lib/efi_loader/efi_disk.c
++++ b/lib/efi_loader/efi_disk.c
+@@ -339,7 +339,7 @@ efi_fs_from_path(struct efi_device_path *full_path)
+ 	efi_free_pool(file_path);
+ 
+ 	/* Get the EFI object for the partition */
+-	efiobj = efi_dp_find_obj(device_path, NULL, NULL);
++	efiobj = efi_dp_find_obj(device_path, &efi_system_partition_guid, NULL);
+ 	efi_free_pool(device_path);
+ 	if (!efiobj)
+ 		return NULL;
+-- 
+2.34.1
+

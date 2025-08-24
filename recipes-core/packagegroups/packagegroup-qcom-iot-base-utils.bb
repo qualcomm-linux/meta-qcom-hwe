@@ -11,6 +11,5 @@ PACKAGES = " \
     "
 
 RDEPENDS:packagegroup-qcom-iot-base-utils:qcom-custom-bsp = " \
-      qcom-ib2c \
       qcom-video-ctrl \
     "

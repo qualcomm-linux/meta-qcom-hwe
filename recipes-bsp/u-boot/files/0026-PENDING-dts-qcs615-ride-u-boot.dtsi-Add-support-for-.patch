@@ -1,0 +1,45 @@
+From cd0b98c6d85e4d81fd21772b5436a875ce479039 Mon Sep 17 00:00:00 2001
+From: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Date: Fri, 4 Jul 2025 20:27:16 +0530
+Subject: [PATCH 26/27] PENDING: dts: qcs615-ride-u-boot.dtsi: Add support for
+ smem
+
+This patch updates the smem node to make it support
+
+Signed-off-by: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ arch/arm/dts/qcs615-ride-u-boot.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm/dts/qcs615-ride-u-boot.dtsi b/arch/arm/dts/qcs615-ride-u-boot.dtsi
+index 78a6add4b8c..cd03a16f1a8 100644
+--- a/arch/arm/dts/qcs615-ride-u-boot.dtsi
++++ b/arch/arm/dts/qcs615-ride-u-boot.dtsi
+@@ -4,6 +4,12 @@
+  */
+ 
+ / {
++	smem {
++		compatible = "qcom,smem";
++		memory-region = <&smem_region>;
++		hwlocks = <&tcsr_mutex 3>;
++	};
++
+ 	/delete-node/ idle-states;
+ 	/delete-node/ domain-idle-states;
+ 
+@@ -59,6 +65,10 @@
+ 			reg = <0x00 0x85f20000 0x00 0x20000>;
+ 			no-map;
+ 		};
++		smem_region: smem@86000000 {
++			/delete-property/ compatible;
++			/delete-property/ hwlocks;
++		};
+ 	};
+ 
+ 
+-- 
+2.34.1
+

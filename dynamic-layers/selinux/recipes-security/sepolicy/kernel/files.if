@@ -74,3 +74,40 @@ interface(`files_read_etc_runtime',`
     ')
     allow $1 etc_runtime_t:file { open read getattr };
 ')
+
+#######################################
+## <summary>
+##       Allow domain to manage var runtime files and dir
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+
+interface(`files_manage_var_run',`
+    gen_require(`
+        type var_run_t;
+    ')
+    manage_dirs_pattern($1, var_run_t, var_run_t)
+    manage_files_pattern($1, var_run_t, var_run_t)
+')
+
+#######################################
+## <summary>
+##       Allow domain to load boot module
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+
+interface(`system_boot_module_load',`
+    gen_require(`
+        type boot_t;
+    ')
+    allow $1 boot_t:system module_load ;
+')

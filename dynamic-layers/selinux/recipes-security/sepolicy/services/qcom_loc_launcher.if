@@ -332,7 +332,7 @@ interface(`qcom_loc_launcher_service_get_status',`
 
 interface(`qcom_read_loc_sock_dir',`
     gen_require(`
-        type qcom_loc_launcher_t;
+        type qcom_loc_sock_t;
     ')
 
     allow $1 qcom_loc_sock_t:dir read;

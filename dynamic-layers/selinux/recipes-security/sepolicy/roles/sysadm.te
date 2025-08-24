@@ -21,15 +21,19 @@ qcom_weston_script_execute(sysadm_t)
 qcom_connect_perf_hal_socket(sysadm_t)
 qcom_allow_ssgtzd_sock_write(sysadm_t)
 qcom_ssgtzd_socket_connect(sysadm_t)
+qcom_allow_smcinvoke_rw(sysadm_t)
+qcom_qseecom_alloc_buf_rw(sysadm_t)
 
 qcom_unlink_bt_src_socket_file(sysadm_t)
 qcom_read_loc_sock_dir(sysadm_t)
 corecmd_exec_all_executables(sysadm_t)
+bluetooth_use(sysadm_t)
 allow sysadm_t self:bluetooth_socket { create bind read write };
 allow sysadm_t self:capability2 wake_alarm;
 corenet_tcp_bind_all_unreserved_ports(sysadm_t)
 init_use_script_fds(sysadm_t)
 qcom_weston_etc_execute(sysadm_t)
+init_dbus_chat_script(sysadm_t)
 
 # Required for ostree
 kernel_manage_unlabeled_files(sysadm_t)
@@ -63,3 +67,27 @@ allow sysadm_t self:netlink_route_socket create_netlink_socket_perms;
 allow sysadm_t self:packet_socket create_socket_perms;
 allow sysadm_t self:unix_dgram_socket create_socket_perms;
 kernel_request_load_module(sysadm_t)
+
+# Required for udhcpc
+allow sysadm_t self:rawip_socket create_socket_perms;
+files_exec_usr_files(sysadm_t)
+
+# Required for dhcp server
+corenet_udp_bind_all_ports(sysadm_t)
+
+##LCA test app rules
+qcom_loc_read_loc_sock_files(sysadm_t)
+
+qcom_loc_locclient_generic_rules(sysadm_t)
+
+# Execute ostree commands in its own domain
+domtrans_ostree(sysadm_t, sysadm_r)
+
+qcom_allow_initrc_rw(sysadm_t)
+
+# Execute Weston Apps over uart shell
+qcom_weston_connect_socket(sysadm_t)
+qcom_weston_use_fd(sysadm_t)
+
+init_stream_connect_script(sysadm_t)
+allow sysadm_t self:capability2 block_suspend;

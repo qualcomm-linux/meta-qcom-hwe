@@ -7,4 +7,21 @@
 ##      resources 
 ## </summary>
 #
+########################################
+## <summary>
+##      Allow role transition for ostree
+## </summary>
+## <param name="domain">
+##      <summary>
+##          Domain Allowed transition
+##      </summary>
+## </param>
 #
+interface(`domtrans_ostree',`
+        gen_require(`
+                type ostree_exec_t, ostree_t;
+        ')
+        role_transition $2 ostree_exec_t:process system_r;
+        domtrans_pattern($1, ostree_exec_t, ostree_t)
+        neverallow { domain -$1 } ostree_exec_t:process transition;
+')

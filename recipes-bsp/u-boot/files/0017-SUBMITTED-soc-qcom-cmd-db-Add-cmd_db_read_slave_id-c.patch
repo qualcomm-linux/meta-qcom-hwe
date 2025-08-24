@@ -1,0 +1,92 @@
+From b1d8ff57409397ddc897db278abbabaeccbc7d0d Mon Sep 17 00:00:00 2001
+From: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Date: Mon, 2 Jun 2025 12:04:41 +0530
+Subject: [PATCH 17/27] SUBMITTED: soc: qcom: cmd-db: Add
+ cmd_db_read_slave_id() & cmd_db_read_aux_data() functions
+
+Partially reverted commit "soc: qcom: cmd-db: drop unused
+functions" by restoring only the cmd_db_read_slave_id() and
+cmd_db_read_aux_data() functions, which were removed in that
+commit. These functions are required for the RPMH Power Domain
+Driver.
+
+Signed-off-by: Balaji Selvanathan <balaji.selvanathan@oss.qualcomm.com>
+Signed-off-by: Aswin Murugan <aswin.murugan@oss.qualcomm.com>
+Upstream-Status: Submitted
+---
+ drivers/soc/qcom/cmd-db.c | 45 +++++++++++++++++++++++++++++++++++++++
+ include/soc/qcom/cmd-db.h |  2 ++
+ 2 files changed, 47 insertions(+)
+
+diff --git a/drivers/soc/qcom/cmd-db.c b/drivers/soc/qcom/cmd-db.c
+index 67be18e89f4..d0a6047b8a6 100644
+--- a/drivers/soc/qcom/cmd-db.c
++++ b/drivers/soc/qcom/cmd-db.c
+@@ -183,6 +183,51 @@ u32 cmd_db_read_addr(const char *id)
+ }
+ EXPORT_SYMBOL_GPL(cmd_db_read_addr);
+ 
++/**
++ * cmd_db_read_slave_id - Get the slave ID for a given resource address
++ *
++ * @id: Resource id to query the DB for version
++ *
++ * Return: cmd_db_hw_type enum on success, CMD_DB_HW_INVALID on error
++ */
++enum cmd_db_hw_type cmd_db_read_slave_id(const char *id)
++{
++	int ret;
++	const struct entry_header *ent;
++	u32 addr;
++
++	ret = cmd_db_get_header(id, &ent, NULL);
++	if (ret < 0)
++		return CMD_DB_HW_INVALID;
++
++	addr = le32_to_cpu(ent->addr);
++	return (addr >> SLAVE_ID_SHIFT) & SLAVE_ID_MASK;
++}
++
++/**
++ * cmd_db_read_aux_data() - Query command db for aux data.
++ *
++ *  @id: Resource to retrieve AUX Data on
++ *  @len: size of data buffer returned
++ *
++ *  Return: pointer to data on success, error pointer otherwise
++ */
++const void *cmd_db_read_aux_data(const char *id, size_t *len)
++{
++	int ret;
++	const struct entry_header *ent;
++	const struct rsc_hdr *rsc_hdr;
++
++	ret = cmd_db_get_header(id, &ent, &rsc_hdr);
++	if (ret)
++		return ERR_PTR(ret);
++
++	if (len)
++		*len = le16_to_cpu(ent->len);
++
++	return rsc_offset(rsc_hdr, ent);
++}
++
+ static int cmd_db_bind(struct udevice *dev)
+ {
+ 	void __iomem *base;
+diff --git a/include/soc/qcom/cmd-db.h b/include/soc/qcom/cmd-db.h
+index 1190f2c22ca..16609ac9d78 100644
+--- a/include/soc/qcom/cmd-db.h
++++ b/include/soc/qcom/cmd-db.h
+@@ -21,6 +21,8 @@ enum cmd_db_hw_type {
+ 
+ #if IS_ENABLED(CONFIG_QCOM_COMMAND_DB)
+ u32 cmd_db_read_addr(const char *resource_id);
++enum cmd_db_hw_type cmd_db_read_slave_id(const char *resource_id);
++const void *cmd_db_read_aux_data(const char *resource_id, size_t *len);
+ 
+ #else
+ static inline u32 cmd_db_read_addr(const char *resource_id)
+-- 
+2.34.1
+

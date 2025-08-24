@@ -1,0 +1,431 @@
+From bb75e12aeba36965924aefdd0fd1edcbd3706008 Mon Sep 17 00:00:00 2001
+From: Aswin Murugan <quic_aswinm@quicinc.com>
+Date: Mon, 24 Feb 2025 19:52:12 +0530
+Subject: [PATCH 07/27] PENDING: Update memory partition info in dtb from smem
+
+Added support to update memory partition info in dtb from smem.
+
+Signed-off-by: Aswin Murugan <quic_aswinm@quicinc.com>
+Upstream-Status: Pending
+---
+ arch/arm/mach-snapdragon/qcom_fixup_ddrinfo.c |  82 +++++-
+ .../mach-snapdragon/qcom_fixup_hypervisor.c   |   4 +-
+ .../mach-snapdragon/qcom_fixup_subsetparts.c  |  12 +-
+ arch/arm/mach-snapdragon/rampart.h            | 236 ++++++++++++++++++
+ 4 files changed, 324 insertions(+), 10 deletions(-)
+ create mode 100644 arch/arm/mach-snapdragon/rampart.h
+
+diff --git a/arch/arm/mach-snapdragon/qcom_fixup_ddrinfo.c b/arch/arm/mach-snapdragon/qcom_fixup_ddrinfo.c
+index e04de1bc24a..18437192860 100644
+--- a/arch/arm/mach-snapdragon/qcom_fixup_ddrinfo.c
++++ b/arch/arm/mach-snapdragon/qcom_fixup_ddrinfo.c
+@@ -16,6 +16,7 @@
+ #include <string.h>
+ #include <linux/libfdt.h>
+ #include "qcom_fixup_handlers.h"
++#include "rampart.h"
+ 
+ /* With the new SMEM architecture, SMEM IDs need to be defined in individual
+  * driver files
+@@ -81,6 +82,79 @@ static int get_ddr_details(struct ddr_details_entry *ddr_detail)
+ 	return 0;
+ }
+ 
++/**
++ * set_mem_reg_node() - Sets the ram partition info to memory node
++ * @fdt_ptr: Pointer to the device tree
++ * @path_offset: Offset to the memory node
++ * @start_addr: Start address of the mem partition
++ * @mem_size: Size of the mem partition
++ *
++ * This function is responsible for setting the reg property of memory node
++ * in the device tree
++ *
++ * Return: 0 on success, -1 on failure
++ */
++static int set_mem_reg_node(struct fdt_header *fdt_ptr, u32 path_offset,
++			    u64 start_addr, u64 mem_size)
++{
++	int ret;
++
++	log_debug("Mem info start addr: %llx ,size %llx\n", start_addr, mem_size);
++	ret = fixup_dt_node(fdt_ptr, path_offset, "reg",
++			    (void *)(&start_addr), APPEND_PROP_U64);
++	if (ret)
++		return log_msg_ret("Failed to append start_addr details in Reg prop\n", -1);
++
++	ret = fixup_dt_node(fdt_ptr, path_offset, "reg",
++			    (void *)(&mem_size), APPEND_PROP_U64);
++	if (ret)
++		return log_msg_ret("Failed to append mem_size details in Reg prop\n", -1);
++
++	return 0;
++}
++
++/**
++ * set_ram_part_info() - Gets the ram partition info from smem and sets
++ * it to memory node
++ * @fdt_ptr: Pointer to the device tree
++ * @path_offset: Offset to the memory node
++ *
++ * This function is responsible for obtaining ram partition information info
++ * from smem and sets it to the device tree
++ * tree.
++ *
++ * Return: 0 on success, -1 on failure
++ */
++static int set_ram_part_info(struct fdt_header *fdt_ptr, u32 path_offset)
++{
++	int ret = 0, res, part;
++	size_t size;
++	struct udevice *dev;
++	struct usable_ram_partition_table *rpt;
++	struct ram_partition_entry *rpe;
++
++	uclass_get_device(UCLASS_SMEM, 0, &dev);
++	rpt = smem_get(dev, 0, SMEM_USABLE_RAM_PARTITION_TABLE, &size);
++	if (!rpt)
++		return -1;
++	rpe = &rpt->ram_part_entry[0];
++
++	for (part = 0; part < rpt->num_partitions; part++, rpe++)
++		if (rpe->partition_category == RAM_PARTITION_SDRAM &&
++		    rpe->partition_type == RAM_PARTITION_SYS_MEMORY) {
++			res = set_mem_reg_node(fdt_ptr, path_offset,
++					       rpe->start_address,
++					       rpe->available_length);
++			if (res) {
++				log_err("Failed to set Mem info start addr: %llx ,size %llx\n",
++					rpe->start_address, rpe->available_length);
++				ret = -1;
++			}
++		}
++
++	return ret;
++}
++
+ /**
+  * ddrinfo_fixup_handler() - DDRInfo Fixup handler function
+  * @fdt_ptr: Pointer to the device tree
+@@ -91,7 +165,6 @@ static int get_ddr_details(struct ddr_details_entry *ddr_detail)
+ void ddrinfo_fixup_handler(struct fdt_header *fdt_ptr)
+ {
+ 	u32 path_offset, chan, ret;
+-	u32 value[] = { 0x00, 0x90000000, 0x00, 0x00 };
+ 	u64 prop_value;
+ 	char fdt_rank_prop[] = "ddr_device_rank_ch ";
+ 	struct ddr_details_entry ddr_details;
+@@ -130,7 +203,12 @@ void ddrinfo_fixup_handler(struct fdt_header *fdt_ptr)
+ 		if (ret)
+ 			log_err("Failed to append DDR ranks data : %d\n", ret);
+ 	}
+-	fdt_setprop_inplace(fdt_ptr, path_offset, "reg", value, 16);
++	ret = fdt_delprop(fdt_ptr, path_offset, "reg");
++	if (!ret) {
++		ret = set_ram_part_info(fdt_ptr, path_offset);
++		if (ret)
++			log_err("set_ram_part_info failed");
++	}
+ }
+ 
+ /* End of File */
+diff --git a/arch/arm/mach-snapdragon/qcom_fixup_hypervisor.c b/arch/arm/mach-snapdragon/qcom_fixup_hypervisor.c
+index a8948546c1c..8a02d175bd5 100644
+--- a/arch/arm/mach-snapdragon/qcom_fixup_hypervisor.c
++++ b/arch/arm/mach-snapdragon/qcom_fixup_hypervisor.c
+@@ -208,7 +208,7 @@ static bool add_overlay_fdt(struct fdt_header *fdt_ptr, void *dtbo_base_addr_ptr
+ 
+ 	log_debug("%s: Hyp fdt offset- %d\n", __func__, hyp_offset);
+ 
+-	log_debug("%s: Before Overlay Fdt@0x%p | %lu - 0x%lx\n", __func__,
++	log_debug("%s: Before Overlay Fdt@0x%p | %u - 0x%x\n", __func__,
+ 		  fdt_ptr, fdt_totalsize(fdt_ptr), fdt_totalsize(fdt_ptr));
+ 
+ 	ret = fdt_overlay_apply_node(fdt_ptr, 0, dtbo_base_addr_ptr,
+@@ -232,7 +232,7 @@ static bool add_overlay_fdt(struct fdt_header *fdt_ptr, void *dtbo_base_addr_ptr
+ void hypervisor_fixup_handler(struct fdt_header *fdt_ptr)
+ {
+ 	struct boot_param_list boot_params_list;
+-	int ret, idx;
++	int idx;
+ 	int status = check_and_set_vm_data(&boot_params_list);
+ 
+ 	if (status != 0) {
+diff --git a/arch/arm/mach-snapdragon/qcom_fixup_subsetparts.c b/arch/arm/mach-snapdragon/qcom_fixup_subsetparts.c
+index 1674c93d1a8..fa20e9b8861 100644
+--- a/arch/arm/mach-snapdragon/qcom_fixup_subsetparts.c
++++ b/arch/arm/mach-snapdragon/qcom_fixup_subsetparts.c
+@@ -268,22 +268,22 @@ void subsetparts_fixup_handler(struct fdt_header *fdt_ptr)
+ 		return;
+ 	}
+ 	ret = read_mm_subset_parts(&subset_parts_mm_value);
+-	if (ret)
++	if (ret) {
+ 		log_err("No mm Subset parts found\n");
+-	else
++	} else {
+ 		ret = fixup_dt_node(fdt_ptr, offset, "subset-parts",
+ 				    (void *)&subset_parts_mm_value, SET_PROP_U32);
+ 		if (ret)
+ 			log_err("ERROR: Cannot update subset-parts prop\n");
+-
++	}
+ 	ret = read_cpu_subset_parts(&subset_parts_cpu_value);
+-	if (ret)
++	if (ret) {
+ 		log_err("No Subset parts for cpu ss found\n");
+-	else
++	} else {
+ 		ret = fixup_dt_node(fdt_ptr, offset, "subset-cores",
+ 				    (void *)&subset_parts_cpu_value, SET_PROP_U32);
+ 		if (ret)
+ 			log_err("ERROR: Cannot update subset-cores prop\n");
+-
++	}
+ 	read_and_export_parts_disabled_features(fdt_ptr, offset);
+ }
+diff --git a/arch/arm/mach-snapdragon/rampart.h b/arch/arm/mach-snapdragon/rampart.h
+new file mode 100644
+index 00000000000..772b7790b19
+--- /dev/null
++++ b/arch/arm/mach-snapdragon/rampart.h
+@@ -0,0 +1,236 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * RAM partition table definitions
++ *
++ * Copyright (c) 2025, The Linux Foundation. All rights reserved.
++ *
++ */
++
++#define SMEM_USABLE_RAM_PARTITION_TABLE		402
++
++#define RAM_PARTITION_H_MAJOR  03
++#define RAM_PARTITION_H_MINOR  00
++
++typedef u8 uint8;
++typedef u32 uint32;
++typedef u64 uint64;
++
++/**
++ * Total length of zero filled name string. This is not a C
++ * string, as it can occupy the total number of bytes, and if
++ * it does, it does not require a zero terminator. It cannot
++ * be manipulated with standard string handling library functions.
++ */
++#define RAM_PART_NAME_LENGTH 16
++
++/**
++ * Number of RAM partition entries which are usable by APPS.
++ */
++#define RAM_NUM_PART_ENTRIES 32
++
++/**
++ * @name: Magic numbers
++ * Used in identifying valid RAM partition table.
++ */
++#define RAM_PART_MAGIC1     0x9DA5E0A8
++#define RAM_PART_MAGIC2     0xAF9EC4E2
++
++/**
++ * Must increment this version number whenever RAM structure of
++ * RAM partition table changes.
++ */
++#define RAM_PARTITION_VERSION   0x3
++
++/**
++ * Value which indicates the partition can grow to fill the
++ * rest of RAM. Must only be used on the last partition.
++ */
++#define RAM_PARTITION_GROW  0xFFFFFFFF
++
++/**
++ * RAM partition API return types.
++ */
++enum  ram_partition_return_type {
++	RAM_PART_SUCCESS = 0,             /* Successful return from API */
++	RAM_PART_NULL_PTR_ERR,            /* Partition table/entry null pointer */
++	RAM_PART_OUT_OF_BOUND_PTR_ERR,    /* Partition table pointer is not in SMEM */
++	RAM_PART_TABLE_EMPTY_ERR,         /* Trying to delete entry from empty table */
++	RAM_PART_TABLE_FULL_ERR,          /* Trying to add entry to full table */
++	RAM_PART_CATEGORY_NOT_EXIST_ERR,  /* Partition doesn't belong to any memory category */
++	RAM_PART_OTHER_ERR,               /* Unknown error */
++	RAM_PART_RETURN_MAX_SIZE = 0x7FFFFFFF
++};
++
++/**
++ * RAM partition attributes.
++ */
++enum ram_partition_attribute_t {
++	RAM_PARTITION_DEFAULT_ATTRB = ~0,  /* No specific attribute definition */
++	RAM_PARTITION_READ_ONLY = 0,       /* Read-only RAM partition */
++	RAM_PARTITION_READWRITE,           /* Read/write RAM partition */
++	RAM_PARTITION_ATTRIBUTE_MAX_SIZE = 0x7FFFFFFF
++};
++
++/**
++ * RAM partition categories.
++ */
++enum ram_partition_category_t {
++	RAM_PARTITION_DEFAULT_CATEGORY = ~0,  /* No specific category definition */
++	RAM_PARTITION_IRAM = 4,                   /* IRAM RAM partition */
++	RAM_PARTITION_IMEM = 5,                   /* IMEM RAM partition */
++	RAM_PARTITION_SDRAM = 14,                  /* SDRAM type without specific bus information**/
++	RAM_PARTITION_CATEGORY_MAX_SIZE = 0x7FFFFFFF
++};
++
++/**
++ * RAM Partition domains.
++ * @note: For shared RAM partition, domain value would be 0b11:\n
++ * RAM_PARTITION_APPS_DOMAIN | RAM_PARTITION_MODEM_DOMAIN.
++ */
++enum ram_partition_domain_t {
++	RAM_PARTITION_DEFAULT_DOMAIN = 0,  /* 0b00: No specific domain definition */
++	RAM_PARTITION_APPS_DOMAIN = 1,     /* 0b01: APPS RAM partition */
++	RAM_PARTITION_MODEM_DOMAIN = 2,    /* 0b10: MODEM RAM partition */
++	RAM_PARTITION_DOMAIN_MAX_SIZE = 0x7FFFFFFF
++};
++
++/**
++ * RAM Partition types.
++ * @note: The RAM_PARTITION_SYS_MEMORY type represents DDR rams that are attached
++ * to the current system.
++ */
++enum ram_partition_type_t {
++	RAM_PARTITION_SYS_MEMORY = 1,        /* system memory */
++	RAM_PARTITION_BOOT_REGION_MEMORY1,   /* boot loader memory 1 */
++	RAM_PARTITION_BOOT_REGION_MEMORY2,   /* boot loader memory 2, reserved */
++	RAM_PARTITION_APPSBL_MEMORY,         /* apps boot loader memory */
++	RAM_PARTITION_APPS_MEMORY,           /* apps usage memory */
++	RAM_PARTITION_TOOLS_FV_MEMORY,       /* tools usage memory */
++	RAM_PARTITION_QUANTUM_FV_MEMORY,     /* quantum usage memory */
++	RAM_PARTITION_QUEST_FV_MEMORY,       /* quest usage memory */
++	RAM_PARTITION_TYPE_MAX_SIZE = 0x7FFFFFFF
++};
++
++/**
++ * @brief: Holds information for an entry in the RAM partition table.
++ */
++struct ram_partition_entry {
++	char name[RAM_PART_NAME_LENGTH];  /* Partition name, unused for now */
++	uint64 start_address;             /* Partition start address in RAM */
++	uint64 length;                    /* Partition length in RAM in Bytes */
++	uint32 partition_attribute;       /* Partition attribute */
++	uint32 partition_category;        /* Partition category */
++	uint32 partition_domain;          /* Partition domain */
++	uint32 partition_type;            /* Partition type */
++	uint32 num_partitions;            /* Number of partitions on device */
++	uint32 hw_info;                   /* hw information such as type and frequency */
++	uint8 highest_bank_bit;           /* Highest bit corresponding to a bank */
++	uint8 reserve0;                   /* Reserved for future use */
++	uint8 reserve1;                   /* Reserved for future use */
++	uint8 reserve2;                   /* Reserved for future use */
++	uint32 min_pasr_size;             /* Minimum PASR size in MB */
++	uint64 available_length;          /* Available Partition length in RAM in Bytes */
++};
++
++/**
++ * @brief: Defines the RAM partition table structure
++ * @note: No matter how you change the structure, do not change the placement of the
++ * first four elements so that future compatibility will always be guaranteed
++ * at least for the identifiers.
++ *
++ * @note: The other portion of the structure may be changed as necessary to accommodate
++ * new features. Be sure to increment version number if you change it.
++ */
++struct usable_ram_partition_table {
++	uint32 magic1;          /* Magic number to identify valid RAM partition table */
++	uint32 magic2;          /* Magic number to identify valid RAM partition table */
++	uint32 version;         /* Version number to track structure definition changes */
++	uint32 reserved1;       /* Reserved for future use */
++
++	uint32 num_partitions;  /* Number of RAM partition table entries */
++
++	uint32 reserved2;       /* Added for 8 bytes alignment of header */
++
++	/* RAM partition table entries */
++	struct ram_partition_entry ram_part_entry[RAM_NUM_PART_ENTRIES];
++};
++
++/**
++ * Version 1 structure 32 Bit
++ * @brief: Holds information for an entry in the RAM partition table.
++ */
++struct ram_partition_entry_v1 {
++	char name[RAM_PART_NAME_LENGTH];  /* Partition name, unused for now */
++	uint64 start_address;             /* Partition start address in RAM */
++	uint64 length;                    /* Partition length in RAM in Bytes */
++	uint32 partition_attribute;       /* Partition attribute */
++	uint32 partition_category;        /* Partition category */
++	uint32 partition_domain;          /* Partition domain */
++	uint32 partition_type;            /* Partition type */
++	uint32 num_partitions;            /* Number of partitions on device */
++	uint32 hw_info;                   /* hw information such as type and frequency */
++	uint32 reserved4;                 /* Reserved for future use */
++	uint32 reserved5;                 /* Reserved for future use */
++};
++
++/**
++ * @brief: Defines the RAM partition table structure
++ * @note: No matter how you change the structure, do not change the placement of the
++ * first four elements so that future compatibility will always be guaranteed
++ * at least for the identifiers.
++ *
++ * @note: The other portion of the structure may be changed as necessary to accommodate
++ * new features. Be sure to increment version number if you change it.
++ */
++struct usable_ram_partition_table_v1 {
++	uint32 magic1;          /* Magic number to identify valid RAM partition table */
++	uint32 magic2;          /* Magic number to identify valid RAM partition table */
++	uint32 version;         /* Version number to track structure definition changes */
++	uint32 reserved1;       /* Reserved for future use */
++
++	uint32 num_partitions;  /* Number of RAM partition table entries */
++
++	uint32 reserved2;       /* Added for 8 bytes alignment of header */
++
++	/* RAM partition table entries */
++	struct ram_partition_entry_v1 ram_part_entry_v1[RAM_NUM_PART_ENTRIES];
++};
++
++/**
++ * Version 0 structure 32 Bit
++ * @brief: Holds information for an entry in the RAM partition table.
++ */
++struct ram_partition_entry_v0 {
++	char name[RAM_PART_NAME_LENGTH];  /* Partition name, unused for now */
++	uint32 start_address;             /* Partition start address in RAM */
++	uint32 length;                    /* Partition length in RAM in Bytes */
++	uint32 partition_attribute;       /* Partition attribute */
++	uint32 partition_category;        /* Partition category */
++	uint32 partition_domain;          /* Partition domain */
++	uint32 partition_type;            /* Partition type */
++	uint32 num_partitions;            /* Number of partitions on device */
++	uint32 reserved3;                 /* Reserved for future use */
++	uint32 reserved4;                 /* Reserved for future use */
++	uint32 reserved5;                 /* Reserved for future use */
++};
++
++/**
++ * @brief: Defines the RAM partition table structure
++ * @note: No matter how you change the structure, do not change the placement of the
++ * first four elements so that future compatibility will always be guaranteed
++ * at least for the identifiers.
++ *
++ * @note: The other portion of the structure may be changed as necessary to accommodate
++ * new features. Be sure to increment version number if you change it.
++ */
++struct usable_ram_partition_table_v0 {
++	uint32 magic1;          /* Magic number to identify valid RAM partition table */
++	uint32 magic2;          /* Magic number to identify valid RAM partition table */
++	uint32 version;         /* Version number to track structure definition changes */
++	uint32 reserved1;       /* Reserved for future use */
++
++	uint32 num_partitions;  /* Number of RAM partition table entries */
++
++	/* RAM partition table entries */
++	struct ram_partition_entry_v0 ram_part_entry_v0[RAM_NUM_PART_ENTRIES];
++};
+-- 
+2.34.1
+

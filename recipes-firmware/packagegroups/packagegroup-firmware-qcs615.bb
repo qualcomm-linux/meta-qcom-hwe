@@ -13,4 +13,5 @@ RRECOMMENDS:${PN}:append:qcom-base-bsp = " \
     linux-firmware-qcom-adreno-a630 \
     linux-firmware-qcom-qcs615-adreno \
     linux-firmware-qcom-venus-5.4 \
+    linux-firmware-ath10k-qca9377 \
 "

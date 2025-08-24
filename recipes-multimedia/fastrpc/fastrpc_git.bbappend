@@ -17,6 +17,7 @@ SRC_URI:append:qcom = "\
     git://github.com/quic/fastrpc.git;branch=main;protocol=https \
     file://fastrpc.rules \
     file://0001-Modify-failure-check-after-remotect1-calls.patch \
+    file://0001-rpcmem-Register-rpcmem-allocated-buffers-with-fastrp.patch \
 "
 DEPENDS += "qcom-dmabufheap-udevrules"
 

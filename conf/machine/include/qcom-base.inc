@@ -62,14 +62,16 @@ PREFERRED_VERSION_fastrpc:qcom-custom-bsp ?= "15.0.qcom"
 #Use upstream fastrpc in base-bsp
 PREFERRED_VERSION_fastrpc:qcom-base-bsp ?= "0.0+"
 
+#Use qcom specific version of OpenCV
+PREFERRED_VERSION_opencv = "4.11.0.qcom"
+
 #Use version of libvirt from meta-qcom-hwe
 PREFERRED_VERSION_libvirt = "9.2.0"
 
 #Use version of android-tools from meta-openembedded
 PREFERRED_VERSION_android-tools ?= "5.1.1.r37"
 
-# For module signing
-INHERIT += " qmodule"
+PREFERRED_PROVIDER_android-tools-conf = "android-tools-conf-configfs"
 
 # QDL expects 4096 aligned ext4 image for flashing
 IMAGE_FSTYPES = "ext4"

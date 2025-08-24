@@ -5,10 +5,10 @@ LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f2
 
 DESCRIPTION = "Camx"
 
-DEPENDS += "syslog-plumber glib-2.0 property-vault camx qcom-fastcv-binaries"
+DEPENDS += "syslog-plumber glib-2.0 property-vault camx qcom-fastcv-binaries protobuf-native protobuf"
 
-QCS9100_SHA256SUM = "e9749cc403fb91e493e54ef0d5a8051cac503f4d3a9157da5055c355a5e65eed"
-QCS8300_SHA256SUM = "2d5be1e7414f919d7fb372b1490e1300cc55e54cba25a59a27126490331fc5ae"
+QCS9100_SHA256SUM = "8b1c68edc69552edee8dde65b0a55178c88bb3e1735628645ce1f34495b5e1cc"
+QCS8300_SHA256SUM = "9671e70905038c82a49cb1fec60002dd400b84c4cf0d417922af7c369964b0ae"
 
 SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"
 SRC_URI[qcs8300.sha256sum] = "${QCS8300_SHA256SUM}"

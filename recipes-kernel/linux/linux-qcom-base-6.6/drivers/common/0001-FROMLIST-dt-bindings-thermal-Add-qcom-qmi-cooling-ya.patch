@@ -1,0 +1,249 @@
+From 0ea3c6f8a10e49a8b79364fd51711515bdd71498 Mon Sep 17 00:00:00 2001
+From: Caleb Connolly <caleb.connolly@linaro.org>
+Date: Fri, 29 Sep 2023 17:16:18 +0100
+Subject: [PATCH 1/3] FROMLIST: dt-bindings: thermal: Add qcom,qmi-cooling yaml
+ bindings
+
+The cooling subnode of a remoteproc represents a client of the Thermal
+Mitigation Device QMI service running on it. Each subnode of the cooling
+node represents a single control exposed by the service.
+
+Signed-off-by: Caleb Connolly <caleb.connolly@linaro.org>
+Change-Id: I2b77a196b0933e88925fb36d9be89cb47160db3d
+Signed-off-by: Manaf Meethalavalappu Pallikunhi <quic_manafm@quicinc.com>
+Signed-off-by: Gaurav Kohli <quic_gkohli@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20230905-caleb-qmi_cooling-v1-2-5aa39d4164a7@linaro.org/]
+---
+ .../remoteproc/qcom,msm8996-mss-pil.yaml      |  15 ++
+ .../bindings/remoteproc/qcom,pas-common.yaml  |   6 +
+ .../bindings/thermal/qcom,qmi-cooling.yaml    | 168 ++++++++++++++++++
+ 3 files changed, 189 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/thermal/qcom,qmi-cooling.yaml
+
+diff --git a/Documentation/devicetree/bindings/remoteproc/qcom,msm8996-mss-pil.yaml b/Documentation/devicetree/bindings/remoteproc/qcom,msm8996-mss-pil.yaml
+index 0643faae2c39..750eb6f9c2cc 100644
+--- a/Documentation/devicetree/bindings/remoteproc/qcom,msm8996-mss-pil.yaml
++++ b/Documentation/devicetree/bindings/remoteproc/qcom,msm8996-mss-pil.yaml
+@@ -145,6 +145,12 @@ properties:
+       and devices related to the Modem.
+     unevaluatedProperties: false
+ 
++  cooling:
++    $ref: /schemas/thermal/qcom,qmi-cooling.yaml#
++    description:
++      Cooling subnode which represents the cooling devices exposed by the Modem.
++    unevaluatedProperties: false
++
+   # Deprecated properties
+   mba:
+     type: object
+@@ -386,6 +392,15 @@ examples:
+         qcom,smem-states = <&modem_smp2p_out 0>;
+         qcom,smem-state-names = "stop";
+ 
++        cooling {
++            compatible = "qcom,qmi-cooling-modem";
++
++            vdd {
++                label = "cpuv_restriction_cold";
++                #cooling-cells = <2>;
++            };
++        };
++
+         glink-edge {
+             interrupts = <GIC_SPI 449 IRQ_TYPE_EDGE_RISING>;
+             label = "modem";
+diff --git a/Documentation/devicetree/bindings/remoteproc/qcom,pas-common.yaml b/Documentation/devicetree/bindings/remoteproc/qcom,pas-common.yaml
+index 068e177ad934..82dcf61db1ff 100644
+--- a/Documentation/devicetree/bindings/remoteproc/qcom,pas-common.yaml
++++ b/Documentation/devicetree/bindings/remoteproc/qcom,pas-common.yaml
+@@ -119,6 +119,12 @@ properties:
+       and devices related to the ADSP.
+     unevaluatedProperties: false
+ 
++  cooling:
++    $ref: /schemas/thermal/qcom,qmi-cooling.yaml#
++    description:
++      Cooling subnode which represents the cooling devices exposed by the Modem.
++    unevaluatedProperties: false
++
+ required:
+   - clocks
+   - clock-names
+diff --git a/Documentation/devicetree/bindings/thermal/qcom,qmi-cooling.yaml b/Documentation/devicetree/bindings/thermal/qcom,qmi-cooling.yaml
+new file mode 100644
+index 000000000000..65b1c7b40c1d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/thermal/qcom,qmi-cooling.yaml
+@@ -0,0 +1,168 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++# Copyright 2023 (c), Linaro Limited
++
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/thermal/qcom,qmi-cooling.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Qualcomm QMI based thermal mitigation (TMD) cooling devices.
++
++maintainers:
++  - Caleb Connolly <caleb.connolly@linaro.org>
++
++description:
++  Qualcomm QMI based TMD cooling device(s) are used for various mitigations for
++  remote subsystem(s) including remote processor mitigation, rail voltage
++  restriction etc. Some devices such as "cpuv_restriction_cold" are for warming,
++  (e.g. by raising minimum voltage on core system rails).
++
++  Each subnode represents a control for a single instance of the TMD service running
++  on a remote subsystem.
++
++definitions:
++  tmd:
++    type: object
++    description: |
++      A single Thermal Mitigation Device exposed by a remote subsystem.
++    properties:
++      label:
++        maxItems: 1
++      "#cooling-cells":
++        $ref: /schemas/thermal/thermal-cooling-devices.yaml#/properties/#cooling-cells
++
++    required:
++      - label
++      - "#cooling-cells"
++
++    additionalProperties: false
++
++properties:
++  compatible:
++    enum:
++      - qcom,qmi-cooling-modem
++      - qcom,qmi-cooling-adsp
++      - qcom,qmi-cooling-cdsp
++      - qcom,qmi-cooling-slpi
++
++  vdd:
++    $ref: "#/definitions/tmd"
++    description:
++      Restrict primary rail minimum voltage to "nominal" setting.
++    properties:
++      label:
++        const: cpuv_restriction_cold
++
++required:
++  - compatible
++  - vdd
++
++# Modem has additional TMDs
++allOf:
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: qcom,qmi-cooling-modem
++    then:
++      properties:
++        pa:
++          $ref: "#/definitions/tmd"
++          description:
++            Power Amplifier TMD
++          properties:
++            label:
++              const: pa
++
++        proc:
++          $ref: "#/definitions/tmd"
++          description:
++            Modem processor temperature TMD
++          properties:
++            label:
++              const: modem
++
++        current:
++          $ref: "#/definitions/tmd"
++          description:
++            Modem peak current TMD
++          properties:
++            label:
++              const: modem_current
++
++        skin:
++          $ref: "#/definitions/tmd"
++          description:
++            Modem skin temperature TMD
++          properties:
++            label:
++              const: modem_skin
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    remoteproc-modem {
++        cooling {
++            compatible = "qcom,qmi-cooling-modem";
++
++            modem_pa: pa {
++              label = "pa";
++              #cooling-cells = <2>;
++            };
++
++            modem_proc: proc {
++              label = "modem";
++              #cooling-cells = <2>;
++            };
++
++            modem_current: current {
++              label = "modem_current";
++              #cooling-cells = <2>;
++            };
++
++            modem_skin: skin {
++              label = "modem_skin";
++              #cooling-cells = <2>;
++            };
++
++            modem_vdd: vdd {
++              label = "cpuv_restriction_cold";
++              #cooling-cells = <2>;
++            };
++        };
++    };
++
++    remoteproc-adsp {
++        cooling {
++            compatible = "qcom,qmi-cooling-adsp";
++
++            adsp_vdd: vdd {
++              label = "cpuv_restriction_cold";
++              #cooling-cells = <2>;
++            };
++        };
++    };
++
++    remoteproc-cdsp {
++        cooling {
++            compatible = "qcom,qmi-cooling-cdsp";
++
++            cdsp_vdd: vdd {
++              label = "cpuv_restriction_cold";
++              #cooling-cells = <2>;
++            };
++        };
++    };
++
++    remoteproc-slpi {
++        cooling {
++            compatible = "qcom,qmi-cooling-slpi";
++
++            slpi_vdd: vdd {
++              label = "cpuv_restriction_cold";
++              #cooling-cells = <2>;
++            };
++        };
++    };
++...
+-- 
+2.34.1
+

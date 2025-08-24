@@ -1,0 +1,33 @@
+From c97140a840f05342ab6b5e4e8b513f0642fd904a Mon Sep 17 00:00:00 2001
+From: Shuai Zhang <quic_shuaz@quicinc.com>
+Date: Wed, 23 Jul 2025 13:22:37 +0800
+Subject: [PATCH v1] FROMLIST: driver: bluetooth: hci_qca: Multiple triggers of
+ SSR only generate one coredump file
+
+Multiple triggers of SSR only first generate coredump file,
+duo to memcoredump_flag no clear.
+
+add clear coredump flag when ssr completed.
+
+Signed-off-by: Shuai Zhang <quic_shuaz@quicinc.com>
+
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250715051618.724475-4-quic_shuaz@quicinc.com/]
+---
+ drivers/bluetooth/hci_qca.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
+index 43abd8ec88e6..3c246c5ec6a7 100644
+--- a/drivers/bluetooth/hci_qca.c
++++ b/drivers/bluetooth/hci_qca.c
+@@ -1665,6 +1665,7 @@ static void qca_hw_error(struct hci_dev *hdev, u8 code)
+ 		clear_bit(QCA_SSR_TRIGGERED, &qca->flags);
+ 		clear_bit(QCA_IBS_DISABLED, &qca->flags);
+ 		qca->tx_ibs_state = HCI_IBS_TX_AWAKE;
++		qca->memdump_state = QCA_MEMDUMP_IDLE;
+ 		msleep(50);
+ 	}
+ }
+-- 
+2.34.1
+

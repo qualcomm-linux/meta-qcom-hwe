@@ -1,0 +1,185 @@
+From 142bdbfc2304ce3ce6bda3f37cad324ee48bb031 Mon Sep 17 00:00:00 2001
+From: Aswin Murugan <quic_aswinm@quicinc.com>
+Date: Wed, 2 Jul 2025 10:02:43 +0530
+Subject: [PATCH 09/27] PENDING: Changes to enable USB HS mode in Lemans
+
+Changes/additions to support/enable USB High Speed mode in Lemans
+
+Signed-off-by: Balaji Selvanathan <quic_bselvana@quicinc.com>
+Signed-off-by: Aswin Murugan <quic_aswinm@quicinc.com>
+Upstream-Status: Pending
+---
+ board/qualcomm/default.env                    |  2 +-
+ configs/qcom_defconfig                        |  6 +++
+ drivers/clk/qcom/clock-sa8775p.c              | 39 +++++++++++++++++--
+ dts/upstream/src/arm64/qcom/sa8775p-ride.dtsi |  4 +-
+ dts/upstream/src/arm64/qcom/sa8775p.dtsi      | 12 +++---
+ 5 files changed, 51 insertions(+), 12 deletions(-)
+
+diff --git a/board/qualcomm/default.env b/board/qualcomm/default.env
+index 3507f78e13a..e2b10f46d7d 100644
+--- a/board/qualcomm/default.env
++++ b/board/qualcomm/default.env
+@@ -1,7 +1,7 @@
+ stdin=serial,button-kbd
+ stdout=serial,vidconsole
+ stderr=serial,vidconsole
+-preboot=scsi scan; usb start
++preboot=scsi scan
+ bootargs=root=/dev/disk/by-partlabel/system rw rootwait console=ttyMSM0,115200n8 earlycon
+ fastboot=fastboot -l $fastboot_addr_r usb 0
+ do_boot=bootefi bootmgr
+diff --git a/configs/qcom_defconfig b/configs/qcom_defconfig
+index 92085d2f026..880e71ce1c9 100644
+--- a/configs/qcom_defconfig
++++ b/configs/qcom_defconfig
+@@ -153,3 +153,9 @@ CONFIG_NO_FB_CLEAR=y
+ CONFIG_VIDEO_SIMPLE=y
+ CONFIG_WDT=y
+ CONFIG_WDT_QCOM=y
++
++CONFIG_CMD_PMIC=y
++CONFIG_DM_USB_GADGET=y
++CONFIG_USB_GADGET_MANUFACTURER="fastboot"
++CONFIG_USB_GADGET_VENDOR_NUM=0x18d1
++CONFIG_USB_GADGET_PRODUCT_NUM=0xd00d
+diff --git a/drivers/clk/qcom/clock-sa8775p.c b/drivers/clk/qcom/clock-sa8775p.c
+index 527cecf5c82..d7be91aafb4 100644
+--- a/drivers/clk/qcom/clock-sa8775p.c
++++ b/drivers/clk/qcom/clock-sa8775p.c
+@@ -15,8 +15,12 @@
+ #include <dt-bindings/clock/qcom,sa8775p-gcc.h>
+ #include "clock-qcom.h"
+ 
+-#define USB30_PRIM_MOCK_UTMI_CLK_CMD_RCGR 0xf038
+-#define USB30_PRIM_MASTER_CLK_CMD_RCGR 0xf020
++#define USB30_PRIM_MOCK_UTMI_CLK_CMD_RCGR	0x1b040
++#define USB30_PRIM_MASTER_CLK_CMD_RCGR		0x1b028
++#define USB3_PRIM_PHY_AUX_CMD_RCGR		0x1b06c
++#define USB30_SEC_MOCK_UTMI_CMD_RCGR		0x2f024
++#define USB30_SEC_MASTER_CMD_RCGR		0x2f028
++#define USB3_SEC_PHY_AUX_CMD_RCGR		0x2f06c
+ 
+ static ulong sa8775p_set_rate(struct clk *clk, ulong rate)
+ {
+@@ -34,8 +38,8 @@ static ulong sa8775p_set_rate(struct clk *clk, ulong rate)
+ 	case GCC_USB30_PRIM_MASTER_CLK:
+ 		WARN(rate != 200000000, "Unexpected rate for USB30_PRIM_MASTER_CLK: %lu\n", rate);
+ 		clk_rcg_set_rate_mnd(priv->base, USB30_PRIM_MASTER_CLK_CMD_RCGR,
+-				     1, 0, 0, CFG_CLK_SRC_GPLL0_ODD, 8);
+-		clk_rcg_set_rate(priv->base, 0xf064, 0, 0);
++				     5, 0, 0, CFG_CLK_SRC_GPLL0, 8);
++		clk_rcg_set_rate(priv->base, USB3_PRIM_PHY_AUX_CMD_RCGR, 0, 0);
+ 		return rate;
+ 	default:
+ 		return 0;
+@@ -50,6 +54,15 @@ static const struct gate_clk sa8775p_clks[] = {
+ 	GATE_CLK(GCC_USB30_PRIM_MOCK_UTMI_CLK, 0x1b024, 1),
+ 	GATE_CLK(GCC_USB3_PRIM_PHY_AUX_CLK, 0x1b05c, 1),
+ 	GATE_CLK(GCC_USB3_PRIM_PHY_COM_AUX_CLK, 0x1b060, 1),
++	GATE_CLK(GCC_USB30_SEC_MASTER_CLK, 0x2f018, 1),
++	GATE_CLK(GCC_USB30_SEC_MOCK_UTMI_CLK, 0x2f024, 1),
++	GATE_CLK(GCC_USB3_SEC_PHY_AUX_CLK, 0x2f05c, 1),
++	GATE_CLK(GCC_USB3_SEC_PHY_COM_AUX_CLK, 0x2f060, 1),
++	GATE_CLK(GCC_CFG_NOC_USB3_SEC_AXI_CLK, 0x2f084, 1),
++	GATE_CLK(GCC_AGGRE_USB3_SEC_AXI_CLK, 0x2f088, 1),
++	GATE_CLK(GCC_USB30_SEC_SLEEP_CLK, 0x2f020, 1),
++	GATE_CLK(GCC_USB3_SEC_PHY_PIPE_CLK, 0x2f064, 1),
++	GATE_CLK(GCC_USB3_PRIM_PHY_PIPE_CLK, 0x1b064, 1)
+ };
+ 
+ static int sa8775p_enable(struct clk *clk)
+@@ -103,6 +116,24 @@ static const struct qcom_reset_map sa8775p_gcc_resets[] = {
+ 	[GCC_TSCSS_BCR] = { 0x21000 },
+ 	[GCC_UFS_CARD_BCR] = { 0x81000 },
+ 	[GCC_UFS_PHY_BCR] = { 0x83000 },
++	[GCC_USB20_PRIM_BCR] = {0x1c000},
++	[GCC_USB2_PHY_PRIM_BCR] = {0x5c028},
++	[GCC_USB2_PHY_SEC_BCR] = {0x5c02c},
++	[GCC_USB30_PRIM_BCR] = {0x1b000},
++	[GCC_USB30_SEC_BCR] = {0x2f000},
++	[GCC_USB3_DP_PHY_PRIM_BCR] = {0x5c008},
++	[GCC_USB3_DP_PHY_SEC_BCR] = {0x5c014},
++	[GCC_USB3_PHY_PRIM_BCR] = {0x5c000},
++	[GCC_USB3_PHY_SEC_BCR] = {0x5c00c},
++	[GCC_USB3_PHY_TERT_BCR] = {0x5c030},
++	[GCC_USB3_UNIPHY_MP0_BCR] = {0x5c018},
++	[GCC_USB3_UNIPHY_MP1_BCR] = {0x5c01c},
++	[GCC_USB3PHY_PHY_PRIM_BCR] = {0x5c004},
++	[GCC_USB3PHY_PHY_SEC_BCR] = {0x5c010},
++	[GCC_USB3UNIPHY_PHY_MP0_BCR] = {0x5c020},
++	[GCC_USB3UNIPHY_PHY_MP1_BCR] = {0x5c024},
++	[GCC_USB_PHY_CFG_AHB2PHY_BCR] = {0x76000},
++	[GCC_VIDEO_BCR] = {0x34000}
+ };
+ 
+ static const struct qcom_power_map sa8775p_gdscs[] = {
+diff --git a/dts/upstream/src/arm64/qcom/sa8775p-ride.dtsi b/dts/upstream/src/arm64/qcom/sa8775p-ride.dtsi
+index 175f8b1e3b2..56c6cacee78 100644
+--- a/dts/upstream/src/arm64/qcom/sa8775p-ride.dtsi
++++ b/dts/upstream/src/arm64/qcom/sa8775p-ride.dtsi
+@@ -998,7 +998,7 @@
+ };
+ 
+ &usb_1_dwc3 {
+-	dr_mode = "host";
++	dr_mode = "peripheral";
+ };
+ 
+ &usb_1_hsphy {
+@@ -1024,7 +1024,7 @@
+ };
+ 
+ &usb_2_dwc3 {
+-	dr_mode = "host";
++	dr_mode = "peripheral";
+ };
+ 
+ &usb_2_hsphy {
+diff --git a/dts/upstream/src/arm64/qcom/sa8775p.dtsi b/dts/upstream/src/arm64/qcom/sa8775p.dtsi
+index 3d710ce1062..6715e3f1eba 100644
+--- a/dts/upstream/src/arm64/qcom/sa8775p.dtsi
++++ b/dts/upstream/src/arm64/qcom/sa8775p.dtsi
+@@ -3353,7 +3353,7 @@
+ 			reg = <0 0x088e4000 0 0x120>;
+ 			clocks = <&rpmhcc RPMH_CXO_CLK>;
+ 			clock-names = "ref";
+-			resets = <&gcc GCC_USB2_PHY_PRIM_BCR>;
++			resets = <&gcc GCC_USB3_PHY_PRIM_BCR>;
+ 
+ 			#phy-cells = <0>;
+ 
+@@ -3417,6 +3417,7 @@
+ 			required-opps = <&rpmhpd_opp_nom>;
+ 
+ 			resets = <&gcc GCC_USB30_PRIM_BCR>;
++			qcom,select-utmi-as-pipe-clk;
+ 
+ 			interconnects = <&aggre1_noc MASTER_USB3_0 0 &mc_virt SLAVE_EBI1 0>,
+ 					<&gem_noc MASTER_APPSS_PROC 0 &config_noc SLAVE_USB3_0 0>;
+@@ -3431,8 +3432,9 @@
+ 				reg = <0 0x0a600000 0 0xe000>;
+ 				interrupts = <GIC_SPI 292 IRQ_TYPE_LEVEL_HIGH>;
+ 				iommus = <&apps_smmu 0x080 0x0>;
+-				phys = <&usb_0_hsphy>, <&usb_0_qmpphy>;
+-				phy-names = "usb2-phy", "usb3-phy";
++				phys = <&usb_0_hsphy>;
++				phy-names = "usb2-phy";
++				maximum-speed = "high-speed";
+ 				snps,dis-u1-entry-quirk;
+ 				snps,dis-u2-entry-quirk;
+ 			};
+@@ -3522,8 +3524,8 @@
+ 				reg = <0 0x0a800000 0 0xe000>;
+ 				interrupts = <GIC_SPI 349 IRQ_TYPE_LEVEL_HIGH>;
+ 				iommus = <&apps_smmu 0x0a0 0x0>;
+-				phys = <&usb_1_hsphy>, <&usb_1_qmpphy>;
+-				phy-names = "usb2-phy", "usb3-phy";
++				phys = <&usb_1_hsphy>;
++				phy-names = "usb2-phy";
+ 				snps,dis-u1-entry-quirk;
+ 				snps,dis-u2-entry-quirk;
+ 			};
+-- 
+2.34.1
+

@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM += "file://audio_route.c;beginline=2;endline=20;md5=84ef494e742
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/audio-utils.git;protocol=https"
 SRCBRANCH  = "audio-utils.lnx.1.0.r1-rel"
-SRCREV     = "ae6b1e72e9aa1d52a6cd6825bfeb84051c28298d"
+SRCREV     = "70dabd1cce2a6a62127355bca922a186597934d4"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/audio-utils"
 

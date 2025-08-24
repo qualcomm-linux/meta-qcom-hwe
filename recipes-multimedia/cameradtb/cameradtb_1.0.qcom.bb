@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/${LICENSE};md5=550794465ba0ec53
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/opensource/camera-devicetree.git;protocol=https"
 SRCBRANCH  = "camera-kernel.qclinux.1.0.r1-rel"
-SRCREV     = "ca88075dd8d992709062ee5e1149df8408f29fc4"
+SRCREV     = "a300c6efcf76a6658f617e9dd0041b5d3078efc9"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=vendor/qcom/opensource/camera-devicetree"
 
@@ -21,7 +21,7 @@ KERNEL_INCLUDE := "${STAGING_KERNEL_DIR}/include/"
 COMPATIBLE_MACHINE = "qcm6490|qcs9100|qcs6490|qcs8300"
 KODIAK_BOARD_NAMES = "qcm6490-idp|qcs6490-rb3gen2-vision-kit|qcs6490-rb3gen2-core-kit|"
 LEMANS_BOARD_NAMES = "qcs9100-ride-sx|qcs9075-ride-sx|qcs9075-rb8-core-kit|qcs9075-iq-9075-evk|qcs9075-iq-9075-evk-ifp|"
-MONACO_BOARD_NAMES = "qcs8300-ride-sx|qcs8275-iq-8275-evk"
+MONACO_BOARD_NAMES = "qcs8300-ride-sx|qcs8275-iq-8275-evk|qcs8275-iq-8275-evk-ifp|qcs8275-iq-8275-evk-pro-sku"
 
 python get_soc_family() {
     need_machine = d.getVar('COMPATIBLE_MACHINE')
@@ -78,6 +78,10 @@ do_compile() {
             oe_runmake ${EXTRA_OEMAKE} qcs8300-camera
         elif [ "${TARGET_BOARD}" = "qcs8275-iq-8275-evk" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk
+        elif [ "${TARGET_BOARD}" = "qcs8275-iq-8275-evk-ifp" ]; then
+            oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk
+        elif [ "${TARGET_BOARD}" = "qcs8275-iq-8275-evk-pro-sku" ]; then
+            oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk-pro-sku
         fi
     else
         echo "Unknown SOC_FAM -> " ${SOC_FAM}

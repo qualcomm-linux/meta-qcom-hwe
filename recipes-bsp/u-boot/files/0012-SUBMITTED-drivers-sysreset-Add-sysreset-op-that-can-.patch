@@ -1,0 +1,106 @@
+From bb13636ce3b529288c017ced8f1bc94d383ef89a Mon Sep 17 00:00:00 2001
+From: Varadarajan Narayanan <quic_varada@quicinc.com>
+Date: Fri, 13 Jun 2025 10:49:54 +0530
+Subject: [PATCH 12/27] SUBMITTED: drivers: sysreset: Add sysreset op that can
+ take arguments
+
+Add a 'request_arg' op to struct sysreset_ops to enable sysreset drivers
+to receive arguments given to the 'reset' command. Process the
+request_arg() op before the usual request() op.
+
+Signed-off-by: Varadarajan Narayanan <quic_varada@quicinc.com>
+Upstream-Status: Submitted
+---
+ drivers/sysreset/sysreset-uclass.c | 32 ++++++++++++++++++++++++++++++
+ include/sysreset.h                 | 18 +++++++++++++++++
+ 2 files changed, 50 insertions(+)
+
+diff --git a/drivers/sysreset/sysreset-uclass.c b/drivers/sysreset/sysreset-uclass.c
+index 536ac727142..6eb090a37aa 100644
+--- a/drivers/sysreset/sysreset-uclass.c
++++ b/drivers/sysreset/sysreset-uclass.c
+@@ -32,6 +32,16 @@ int sysreset_request(struct udevice *dev, enum sysreset_t type)
+ 	return ops->request(dev, type);
+ }
+ 
++int sysreset_request_arg(struct udevice *dev, int argc, char * const argv[])
++{
++	struct sysreset_ops *ops = sysreset_get_ops(dev);
++
++	if (!ops->request_arg)
++		return -ENOSYS;
++
++	return ops->request_arg(dev, argc, argv);
++}
++
+ int sysreset_get_status(struct udevice *dev, char *buf, int size)
+ {
+ 	struct sysreset_ops *ops = sysreset_get_ops(dev);
+@@ -71,6 +81,24 @@ int sysreset_walk(enum sysreset_t type)
+ 	return ret;
+ }
+ 
++int sysreset_walk_arg(int argc, char * const argv[])
++{
++	struct udevice *dev;
++	int ret = -ENOSYS;
++
++	while (ret != -EINPROGRESS && ret != -EPROTONOSUPPORT) {
++		for (uclass_first_device(UCLASS_SYSRESET, &dev);
++		     dev;
++		     uclass_next_device(&dev)) {
++			ret = sysreset_request_arg(dev, argc, argv);
++			if (ret == -EINPROGRESS || ret == -EPROTONOSUPPORT)
++				break;
++		}
++	}
++
++	return ret;
++}
++
+ int sysreset_get_last_walk(void)
+ {
+ 	struct udevice *dev;
+@@ -132,6 +160,10 @@ int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+ 	printf("resetting ...\n");
+ 	mdelay(100);
+ 
++	if (argc > 1)
++		if (sysreset_walk_arg(argc, argv) == -EINPROGRESS)
++			return 0;
++
+ 	sysreset_walk_halt(reset_type);
+ 
+ 	return 0;
+diff --git a/include/sysreset.h b/include/sysreset.h
+index ff20abdeed3..d1cc9ebc542 100644
+--- a/include/sysreset.h
++++ b/include/sysreset.h
+@@ -43,6 +43,24 @@ struct sysreset_ops {
+ 	 * (in which case this method will not actually return)
+ 	 */
+ 	int (*request)(struct udevice *dev, enum sysreset_t type);
++
++	/**
++	 * @request_arg: Reset handler implementations that might need to process
++	 *		 arguments given to the 'reset' command.
++	 *
++	 * Note that this function may return before the reset takes effect.
++	 *
++	 * @dev:	Device to be used for system reset
++	 * @argc:	No. of items in @argv
++	 * @argv:	Arguments given to 'reset' command
++	 * Return:
++	 * -EINPROGRESS		if the reset has started and will complete soon
++	 * -EPROTONOSUPPORT	if not supported by this device
++	 * 0			if the reset has already happened
++	 * (in which case this method will not actually return)
++	 */
++	int (*request_arg)(struct udevice *dev, int argc, char * const argv[]);
++
+ 	/**
+ 	 * @get_status:	get printable reset status information
+ 	 *
+-- 
+2.34.1
+

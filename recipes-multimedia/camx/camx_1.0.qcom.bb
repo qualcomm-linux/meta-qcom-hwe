@@ -7,8 +7,8 @@ DESCRIPTION = "Camx"
 
 DEPENDS += "syslog-plumber glib-2.0 property-vault camxlib fastrpc"
 
-QCS9100_SHA256SUM = "74ef717d20191c3287a95e8b8ed161b9662dccac7e1685bc1c4308c4211dfe99"
-QCS8300_SHA256SUM = "c5b75cc62b32145d258d190028137b799a4f3a37f55fc5b8a4be1f3bdbd737db"
+QCS9100_SHA256SUM = "d7beeb979eeeaf5c9916e5af7de95fbe97e51e13f42d5937307271c3e512aa00"
+QCS8300_SHA256SUM = "fec7b88beac994b53bd5ef1bad2ad93b8f286d190a97b2fbe2485c03eba274bc"
 
 SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"
 SRC_URI[qcs8300.sha256sum] = "${QCS8300_SHA256SUM}"
@@ -18,9 +18,8 @@ SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT
 FILES:${PN} = "\
     /usr/lib/* \
     /usr/bin/* \
-    /usr/include/* \
     /lib/firmware/*"
-FILES:${PN}-dev = ""
+FILES:${PN}-dev = "/usr/include/*"
 
 #Skips check for .so symlinks
 INSANE_SKIP = "1"
