@@ -523,4 +523,7 @@ SRC_URI:append = " \
     file://common/0002-FROMLIST-soc-qcom-mdt_loader-Add-helper-functions-to.patch \
     file://qcs615/0001-UPSTREAM-clk-qcom-gcc-qcs615-Update-the-SDCC-clock-t.patch \
     file://common/0002-FROMLIST-media-iris-Enable-Secure-PAS-support-with-I.patch \
+    file://common/0001-FROMGIT-ASoC-qcom-sc8280xp-set-card-driver-name-from.patch \
+    file://common/0002-BACKPORT-FROMGIT-ASoC-qcom-sc8280xp-Fix-sound-card-d.patch \
+    file://common/0003-BACKPORT-FROMGIT-ASoC-qcom-sc8280xp-Enable-DAI-forma.patch \
 "

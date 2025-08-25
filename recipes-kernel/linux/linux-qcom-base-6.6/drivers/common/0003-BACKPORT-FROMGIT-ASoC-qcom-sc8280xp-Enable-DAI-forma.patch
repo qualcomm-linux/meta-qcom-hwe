@@ -1,0 +1,42 @@
+From 4fca66cce0f38ad4d39d093078e8bd7e0263b6d2 Mon Sep 17 00:00:00 2001
+From: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Date: Mon, 8 Sep 2025 11:06:31 +0530
+Subject: [PATCH 3/5] BACKPORT: FROMGIT: ASoC: qcom: sc8280xp: Enable DAI
+ format configuration for MI2S interfaces
+
+Add support for configuring the DAI format on MI2S interfaces,
+this enhancement allows setting the appropriate bit clock and
+frame clock polarity, ensuring correct audio data transmission
+over MI2S.
+
+Reviewed-by: Srinivas Kandagatla <srinivas.kandagatla@oss.qualcomm.com>
+Signed-off-by: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Rule: add
+Link: https://lore.kernel.org/stable/20250908053631.70978-4-mohammad.rafi.shaik%40oss.qualcomm.com
+Message-ID: <20250908053631.70978-4-mohammad.rafi.shaik@oss.qualcomm.com>
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Git-commit: 596e8ba2faf0d2beb9bb68801622fa6461918c1d
+Git-repo: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git 596e8ba2faf0d2beb9bb68801622fa6461918c1d]
+---
+ sound/soc/qcom/sc8280xp.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/sound/soc/qcom/sc8280xp.c b/sound/soc/qcom/sc8280xp.c
+index b1371b3e4bdb..a2440cb22b57 100644
+--- a/sound/soc/qcom/sc8280xp.c
++++ b/sound/soc/qcom/sc8280xp.c
+@@ -29,6 +29,10 @@ static int sc8280xp_snd_init(struct snd_soc_pcm_runtime *rtd)
+ 	struct snd_soc_card *card = rtd->card;
+ 
+ 	switch (cpu_dai->id) {
++	case PRIMARY_MI2S_RX...QUATERNARY_MI2S_TX:
++	case QUINARY_MI2S_RX...QUINARY_MI2S_TX:
++		snd_soc_dai_set_fmt(cpu_dai, SND_SOC_DAIFMT_BP_FP);
++		break;
+ 	case WSA_CODEC_DMA_RX_0:
+ 	case WSA_CODEC_DMA_RX_1:
+ 		/*
+-- 
+2.34.1
+
