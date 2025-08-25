@@ -1,4 +1,4 @@
-From 55562777896d223f42386e1f0492841b2c9c5455 Mon Sep 17 00:00:00 2001
+From 21ebd9339bf7d8098d48d7ce84e23cf3f4a12580 Mon Sep 17 00:00:00 2001
 From: Devanshi Bansal <quic_devanshi@quicinc.com>
 Date: Tue, 12 Aug 2025 09:01:16 +0530
 Subject: [PATCH] add MSM backend with xml schema
@@ -9,7 +9,7 @@ Upstream-Status: Inappropriate [Downstream]
 ---
  src/gbm/backends/msm/buffer_alloc.c           |  102 ++
  src/gbm/backends/msm/buffer_alloc.h           |   13 +
- src/gbm/backends/msm/buffer_layout.c          |  330 +++++
+ src/gbm/backends/msm/buffer_layout.c          |  334 +++++
  src/gbm/backends/msm/buffer_layout.h          |   24 +
  .../backends/msm/default_fmt_alignment.xml    | 1261 +++++++++++++++++
  src/gbm/backends/msm/gbm_msm.c                |  765 ++++++++++
@@ -20,7 +20,7 @@ Upstream-Status: Inappropriate [Downstream]
  src/gbm/meson.build                           |   34 +
  src/test/gbmtest.c                            |  502 +++++++
  src/test/meson.build                          |   28 +
- 13 files changed, 3417 insertions(+)
+ 13 files changed, 3421 insertions(+)
  create mode 100644 src/gbm/backends/msm/buffer_alloc.c
  create mode 100644 src/gbm/backends/msm/buffer_alloc.h
  create mode 100644 src/gbm/backends/msm/buffer_layout.c
@@ -163,10 +163,10 @@ index 0000000..741cbba
 +int bo_offset(int fd, uint32_t handle, uint64_t *offset);
 diff --git a/src/gbm/backends/msm/buffer_layout.c b/src/gbm/backends/msm/buffer_layout.c
 new file mode 100644
-index 0000000..3d8c432
+index 0000000..b54a6d6
 --- /dev/null
 +++ b/src/gbm/backends/msm/buffer_layout.c
-@@ -0,0 +1,330 @@
+@@ -0,0 +1,334 @@
 +/*
 + * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
 + * SPDX-License-Identifier: BSD-3-Clause-Clear
@@ -227,6 +227,10 @@ index 0000000..3d8c432
 +}
 +
 +int get_best_layout(const unsigned int count, const uint64_t *modifiers, struct gbm_bufdesc *descriptor) {
++   if (count == 0){
++	   descriptor->modifiers = 0;
++	   return 0;
++   }
 +   for (int m = 0; m < count; m++) {
 +      if (modifiers[m] == DRM_FORMAT_MOD_QCOM_COMPRESSED && ubwc_supported(descriptor)) {
 +         descriptor->modifiers = modifiers[m];
