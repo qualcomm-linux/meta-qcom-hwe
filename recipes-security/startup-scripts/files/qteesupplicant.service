@@ -22,9 +22,6 @@ ExecStartPre= +/usr/bin/find -L /dev/dma_heap/qcom,qseecom-ta -maxdepth 1 -exec 
 ExecStartPre= +/usr/bin/find -L /dev/dma_heap/qcom,qseecom-ta -maxdepth 1 -exec chmod 0660 {} +
 ExecStartPre= +/usr/bin/find -L /dev/dma_heap/qcom,qseecom -maxdepth 1 -exec chown root:system {} +
 ExecStartPre= +/usr/bin/find -L /dev/dma_heap/qcom,qseecom -maxdepth 1 -exec chmod 0660 {} +
-ExecStartPre=+/usr/bin/find -L /sys/class/drm/card0/device/power/control -maxdepth 1 -exec /bin/chown root:system {} +
-ExecStartPre=+/usr/bin/find -L /sys/class/drm/card0/device/power/control -maxdepth 1 -exec /bin/chmod 0660 {} +
-
 
 [Install]
 WantedBy=multi-user.target
