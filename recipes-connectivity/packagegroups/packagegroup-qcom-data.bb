@@ -32,3 +32,8 @@ RDEPENDS:${PN}:append:qcs9075-iq-9075-evk-ifp = " \
              kernel-module-qps615 \
              qps615-firmware \
 "
+
+RDEPENDS:${PN}:append:qcs8275-iq-8275-evk-ifp = " \
+             kernel-module-qps615 \
+             qps615-firmware \
+"
