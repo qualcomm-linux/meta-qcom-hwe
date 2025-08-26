@@ -1,0 +1,43 @@
+From 6e22846301c1996e8f2a69a7dd9df1a4f143f903 Mon Sep 17 00:00:00 2001
+From: "Cheah, Vincent Beng Keat" <vincent.beng.keat.cheah@intel.com>
+Date: Tue, 25 Jul 2023 11:37:02 +0800
+Subject: [PATCH] waylandsink: Add DRM modifiers support
+Upstream-Status: Inappropriate [backport]
+
+Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5103>
+---
+ gst-libs/gst/wayland/gstwldisplay.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/gst-libs/gst/wayland/gstwldisplay.c b/gst-libs/gst/wayland/gstwldisplay.c
+index 1f83cb2..2d01476 100644
+--- a/gst-libs/gst/wayland/gstwldisplay.c
++++ b/gst-libs/gst/wayland/gstwldisplay.c
+@@ -189,8 +189,15 @@ dmabuf_format (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
+     g_array_append_val (priv->dmabuf_formats, format);
+ }
+ 
++static void
++dmabuf_modifier (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
++    uint32_t format, uint32_t modifier_hi, uint32_t modifier_lo)
++{
++}
++
+ static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
+   dmabuf_format,
++  dmabuf_modifier,
+ };
+ 
+ gboolean
+@@ -277,7 +284,7 @@ registry_handle_global (void *data, struct wl_registry *registry,
+         wl_registry_bind (registry, id, &wp_viewporter_interface, 1);
+   } else if (g_strcmp0 (interface, "zwp_linux_dmabuf_v1") == 0) {
+     priv->dmabuf =
+-        wl_registry_bind (registry, id, &zwp_linux_dmabuf_v1_interface, 1);
++        wl_registry_bind (registry, id, &zwp_linux_dmabuf_v1_interface, 3);
+     zwp_linux_dmabuf_v1_add_listener (priv->dmabuf, &dmabuf_listener, self);
+   }
+ }
+-- 
+2.34.1
+
