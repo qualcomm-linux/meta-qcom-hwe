@@ -7,7 +7,7 @@ DESCRIPTION = "Sensors-api Library"
 
 DEPENDS += "glib-2.0 property-vault fastrpc syslog-plumber protobuf qcom-sensinghub"
 
-QCM6490_SHA256SUM = "806879f895cd76382772a93e491e9c16377208fc65138d8d072b7cddcd502938"
+QCM6490_SHA256SUM = "39309b560dcb161947721177bd10e9bfe449196672190c03bd995df90f24e244"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 

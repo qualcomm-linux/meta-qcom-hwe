@@ -10,9 +10,9 @@ DEPENDS += "wayland glib-2.0 linux-kernel-qcom-headers property-vault qcom-libdm
 PROVIDES  = "  virtual/libgles1 virtual/libgles2 virtual/egl adrenocl"
 RPROVIDES:${PN} = " libegl libgles1 libgles2 adrenocl"
 
-QCM6490_SHA256SUM = "a0e6144123a6a61ffbc09c90e1de95b9df45849bb40fa1b1ed5bd9afb88bf925"
-QCS9100_SHA256SUM = "b8f75c5b167533473b8d28939da5f03e415c921359f77959fb12a28a6bf6bf97"
-QCS8300_SHA256SUM = "385e94d93ec84e2c58db852a358a33399aabd700c9c07057e716836f7ebdbc2a"
+QCM6490_SHA256SUM = "93b4cffd0a3e8d304d36a1e11d57df8a831d7d7dc59f03107eea0a2a98445b22"
+QCS9100_SHA256SUM = "7c06cb88b2a16e18a41707eb162e9ced66ac872ee4e06e37d24cf0a8e4e32b92"
+QCS8300_SHA256SUM = "ec808834c4d2a49aa2d8d90680c234b36aa952b4d8bec0e295fcc2d8cb908c80"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"
