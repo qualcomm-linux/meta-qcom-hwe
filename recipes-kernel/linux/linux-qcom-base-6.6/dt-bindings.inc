@@ -158,4 +158,8 @@ SRC_URI:append = " \
     file://common/0002-FROMGIT-dt-bindings-media-qcom-sm8550-iris-document-.patch \
     file://qcs8300/0003-FROMGIT-dt-bindings-media-qcom-sm8550-iris-document-.patch \
     file://common/0001-FROMLIST-dt-bindings-qcom-se-common-Add-QUP-Peripher.patch \
+    file://qcs9100/0001-UPSTREAM-dt-bindings-display-msm-dsi-phy-7nm-document-the-SA8775P-DSI-PHY.patch \
+    file://qcs9100/0002-UPSTREAM-dt-bindings-msm-dsi-controller-main-document-the-SA8.patch \
+    file://qcs9100/0003-UPSTREAM-dt-bindings-display-msm-document-DSI-controller-and-phy-on-SA8775P.patch \
+    file://qcs9100/0004-UPSTREAM-dt-bindings-display-msm-dsi-phy-Add-header-with-exposed-clock-IDs.patch \
     "

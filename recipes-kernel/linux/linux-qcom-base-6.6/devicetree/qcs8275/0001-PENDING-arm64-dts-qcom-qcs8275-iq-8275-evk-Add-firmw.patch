@@ -1,0 +1,47 @@
+From db2667551b88e5131ac40d35e750e852aa5e9649 Mon Sep 17 00:00:00 2001
+From: Viken Dadhaniya <viken.dadhaniya@oss.qualcomm.com>
+Date: Mon, 18 Aug 2025 14:22:52 +0530
+Subject: [PATCH 1/1] PENDING: arm64: dts: qcom: qcs8275-iq-8275-evk: Add
+ firmware-name for QUPv3
+
+Add the 'firmware-name' property to QUPv3 nodes (qupv3_id_0 and qupv3_id_1)
+to specify the firmware binary 'qcom/qcs8300/qupv3fw.elf'.
+
+Enable GPI DMA controllers gpi_dma0 and gpi_dma1.
+
+Change-Id: I11c27e02dd7445cf3e53b9250be2562a9b075e13
+Signed-off-by: Viken Dadhaniya <viken.dadhaniya@oss.qualcomm.com>
+Upstream-Status: pending
+---
+ arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index 838e52d0b670..3135318a9ad0 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -210,7 +210,21 @@ vreg_l9c: ldo9 {
+ 	};
+ };
+ 
++&gpi_dma0 {
++	status = "okay";
++};
++
++&gpi_dma1 {
++	status = "okay";
++};
++
+ &qupv3_id_0 {
++	firmware-name = "qcom/qcs8300/qupv3fw.elf";
++	status = "okay";
++};
++
++&qupv3_id_1 {
++	firmware-name = "qcom/qcs8300/qupv3fw.elf";
+ 	status = "okay";
+ };
+ 
+-- 
+2.34.1
+

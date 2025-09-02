@@ -1,0 +1,46 @@
+From 42271fbc492daf8801ef49a172be83c2af246f1a Mon Sep 17 00:00:00 2001
+From: Varadarajan Narayanan <quic_varada@quicinc.com>
+Date: Fri, 13 Jun 2025 10:49:56 +0530
+Subject: [PATCH 14/27] SUBMITTED: cmd: boot: Add '-edl' option to reset
+ command documentation
+
+Add help text about '-edl' option to reset command definition and
+related documentation.
+
+Signed-off-by: Varadarajan Narayanan <quic_varada@quicinc.com>
+Upstream-Status: Submitted
+---
+ cmd/boot.c              | 3 +++
+ doc/usage/cmd/reset.rst | 2 ++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/cmd/boot.c b/cmd/boot.c
+index 23496cafdf5..d80f9d8c05d 100644
+--- a/cmd/boot.c
++++ b/cmd/boot.c
+@@ -60,6 +60,9 @@ U_BOOT_CMD(
+ 	reset, 2, 0,	do_reset,
+ 	"Perform RESET of the CPU",
+ 	"- cold boot without level specifier\n"
++#ifdef CONFIG_SYSRESET_QCOM_PSCI
++	"reset -edl - Boot to Emergency DownLoad mode\n"
++#endif
+ 	"reset -w - warm reset if implemented"
+ );
+ 
+diff --git a/doc/usage/cmd/reset.rst b/doc/usage/cmd/reset.rst
+index 126db21cdb8..366b17eea16 100644
+--- a/doc/usage/cmd/reset.rst
++++ b/doc/usage/cmd/reset.rst
+@@ -22,6 +22,8 @@ DDR and peripherals, on some boards also resets external PMIC.
+ -w
+     Do warm WARM, reset CPU but keep peripheral/DDR/PMIC active.
+ 
++-edl
++    Boot to Emergency DownLoad mode on supported Qualcomm platforms.
+ 
+ Return value
+ ------------
+-- 
+2.34.1
+

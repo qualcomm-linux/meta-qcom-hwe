@@ -74,23 +74,17 @@ corecmd_relabel_bin_files(ostree_t)
 kernel_read_kernel_sysctls(ostree_t)
 allow ostree_t self:udp_socket create_socket_perms;
 dev_read_urand(ostree_t)
-manage_dirs_pattern(ostree_t, initrc_tmp_t, initrc_tmp_t)
+init_manage_tmp_dir(ostree_t)
 fs_getattr_tmpfs(ostree_t)
 allow ostree_t self:process { getcap getsched setcap setsched sigkill signal };
 
 allow ostree_t self:capability { chown dac_override dac_read_search fowner fsetid ipc_lock kill mknod net_admin setgid setuid sys_admin sys_chroot sys_nice sys_rawio };
 
-
-
-manage_dirs_pattern(ostree_t, boot_t, boot_t)
-manage_dirs_pattern(ostree_t, var_run_t, var_run_t)
-manage_files_pattern(ostree_t, var_run_t, var_run_t)
+files_manage_boot_dirs(ostree_t)
+files_manage_var_run(ostree_t)
 
 manage_dirs_pattern(ostree_t, ostree_var_run_t, ostree_var_run_t)
 manage_files_pattern(ostree_t, ostree_var_run_t, ostree_var_run_t)
-
-
-allow kernel_t  boot_t:system   module_load ;
 
 kernel_list_unlabeled(ostree_t)
 kernel_relabelfrom_unlabeled_dirs(ostree_t)

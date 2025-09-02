@@ -1,8 +1,11 @@
-From 8387405d85e08a8d81ad578e3288a1bffa7cd43c Mon Sep 17 00:00:00 2001
+From 34ed8e6b490f6e2a08fe8bcd5d740cc23f52aacf Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Matti=20Lehtim=C3=A4ki?= <matti.lehtimaki@gmail.com>
 Date: Thu, 23 Nov 2023 17:03:06 +0000
-Subject: [PATCH 30/42] UPSTREAM: media: qcom: camss: Flag CSID-lites to
- support more CSIDs
+Subject: [PATCH 30/42] UPSTREAM: media: qcom: camss: Flag CSID-lites to support
+ more CSIDs
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 Some platforms such as SC7280 have 3 CSIDs and 2 CSID-lites but current
 code has hardcoded 2 as the maximum number of CSIDs. Remove the hardcoded
@@ -106,12 +109,12 @@ index 55c17712a48f..52f8b18eda29 100644
  
  #define CSID_TPG_CTRL		0x600
 diff --git a/drivers/media/platform/qcom/camss/camss-csid.c b/drivers/media/platform/qcom/camss/camss-csid.c
-index d5513c0a4db8..397c550f902e 100644
+index ac4ce1d0d9cc..676a8ee776c2 100644
 --- a/drivers/media/platform/qcom/camss/camss-csid.c
 +++ b/drivers/media/platform/qcom/camss/camss-csid.c
-@@ -1341,3 +1341,8 @@ void msm_csid_unregister_entity(struct csid_device *csid)
- 	media_entity_cleanup(&csid->subdev.entity);
- 	v4l2_ctrl_handler_free(&csid->ctrls);
+@@ -1351,3 +1351,8 @@ void msm_csid_unregister_entity(struct csid_device *csid)
+ 	if (csid->testgen.nmodes != CSID_PAYLOAD_MODE_DISABLED)
+ 		v4l2_ctrl_handler_free(&csid->ctrls);
  }
 +
 +inline bool csid_is_lite(struct csid_device *csid)

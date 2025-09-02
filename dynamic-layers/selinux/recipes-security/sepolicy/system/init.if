@@ -81,6 +81,24 @@ interface(`init_ioctl_file',`
 	allow $1 initrc_devpts_t:chr_file { ioctl };
 ')
 
+#######################################
+## <summary>
+##      Allow initrc_runtime
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access
+##      </summary>
+## </param>
+#
+interface(`initrc_runtime_sock_getattr',`
+    gen_require(`
+        type initrc_runtime_t;
+    ')
+    allow $1 initrc_runtime_t:sock_file getattr;
+')
+
+
 ########################################
 ## <summary>
 ##      Allow access to init.
@@ -157,4 +175,22 @@ interface(`init_search_tmp_dir',`
     ')
 
     allow $1 initrc_tmp_t:dir search;
+')
+
+########################################
+## <summary>
+##      Manage tmp directory
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+interface(`init_manage_tmp_dir',`
+    gen_require(`
+        type initrc_tmp_t;
+    ')
+
+    manage_dirs_pattern($1, initrc_tmp_t, initrc_tmp_t)
 ')

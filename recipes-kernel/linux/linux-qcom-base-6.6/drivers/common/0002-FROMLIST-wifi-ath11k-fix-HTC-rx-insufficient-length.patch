@@ -1,7 +1,7 @@
-From 5e7c22679f65a111e11a598280c1cdcd39713833 Mon Sep 17 00:00:00 2001
+From 7cb75e4f105889444e2429931c8c19c86560502a Mon Sep 17 00:00:00 2001
 From: Miaoqing Pan <quic_miaoqing@quicinc.com>
 Date: Tue, 25 Feb 2025 12:13:40 +0800
-Subject: [PATCH 2/2] FROMLIST: wifi: ath11k: fix HTC rx insufficient length
+Subject: [PATCH] FROMLIST: wifi: ath11k: fix HTC rx insufficient length
 
 A relatively unusual race condition occurs between host software
 and hardware, where the host sees the updated destination ring head
@@ -29,12 +29,12 @@ Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218623
 Signed-off-by: Miaoqing Pan <quic_miaoqing@quicinc.com>
 Upstream-Status: Submitted [https://lore.kernel.org/linux-wireless/20250317072036.2066518-3-quic_miaoqing@quicinc.com/]
 ---
- drivers/net/wireless/ath/ath11k/ce.c  | 14 +++++++++++---
- drivers/net/wireless/ath/ath11k/hal.c |  6 +++++-
- 2 files changed, 16 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath11k/ce.c  | 16 ++++++++++++++--
+ drivers/net/wireless/ath/ath11k/hal.c |  7 ++++++-
+ 2 files changed, 20 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
-index e66e86bdec20..2bc8bc97165a 100644
+index 9d8efec46508..0ffee4a9b25f 100644
 --- a/drivers/net/wireless/ath/ath11k/ce.c
 +++ b/drivers/net/wireless/ath/ath11k/ce.c
 @@ -1,7 +1,7 @@
@@ -46,7 +46,7 @@ index e66e86bdec20..2bc8bc97165a 100644
   */
  
  #include "dp_rx.h"
-@@ -387,18 +387,26 @@ static int ath11k_ce_completed_recv_next(struct ath11k_ce_pipe *pipe,
+@@ -387,7 +387,7 @@ static int ath11k_ce_completed_recv_next(struct ath11k_ce_pipe *pipe,
  
  	ath11k_hal_srng_access_begin(ab, srng);
  
@@ -55,10 +55,10 @@ index e66e86bdec20..2bc8bc97165a 100644
  	if (!desc) {
  		ret = -EIO;
  		goto err;
- 	}
+@@ -397,6 +397,18 @@ static int ath11k_ce_completed_recv_next(struct ath11k_ce_pipe *pipe,
+ 	dma_rmb();
  
  	*nbytes = ath11k_hal_ce_dst_status_get_length(desc);
--	if (*nbytes == 0) {
 +	if (unlikely(*nbytes == 0)) {
 +		/* A relatively unusual race condition occurs between host
 +		 * software and hardware, where the host sees the updated
@@ -66,24 +66,24 @@ index e66e86bdec20..2bc8bc97165a 100644
 +		 * the corresponding descriptor. Temporarily skip processing
 +		 * the current descriptor and handle it again next time.
 +		 */
- 		ret = -EIO;
- 		goto err;
- 	}
- 
-+	ath11k_hal_srng_dst_next(ab, srng);
++		ret = -EIO;
++		goto err;
++	}
 +
++	ath11k_hal_srng_dst_next(ab, srng);
+ 
  	*skb = pipe->dest_ring->skb[sw_index];
  	pipe->dest_ring->skb[sw_index] = NULL;
- 
 diff --git a/drivers/net/wireless/ath/ath11k/hal.c b/drivers/net/wireless/ath/ath11k/hal.c
-index 9d1f96a39916..4fa19ea39def 100644
+index 8c02ad7287d9..f0df16b724e3 100644
 --- a/drivers/net/wireless/ath/ath11k/hal.c
 +++ b/drivers/net/wireless/ath/ath11k/hal.c
-@@ -602,7 +602,11 @@ u32 ath11k_hal_ce_dst_status_get_length(void *buf)
+@@ -602,7 +602,12 @@ u32 ath11k_hal_ce_dst_status_get_length(void *buf)
  	u32 len;
  
- 	len = FIELD_GET(HAL_CE_DST_STATUS_DESC_FLAGS_LEN, desc->flags);
+ 	len = FIELD_GET(HAL_CE_DST_STATUS_DESC_FLAGS_LEN, READ_ONCE(desc->flags));
 -	desc->flags &= ~HAL_CE_DST_STATUS_DESC_FLAGS_LEN;
++	len = FIELD_GET(HAL_CE_DST_STATUS_DESC_FLAGS_LEN, desc->flags);
 +	/* Skip updating the length field of the descriptor when it is 0,
 +	 * because there's a racing update, may never see the updated length.
 +	 */
@@ -93,5 +93,5 @@ index 9d1f96a39916..4fa19ea39def 100644
  	return len;
  }
 -- 
-2.25.1
+2.17.1
 

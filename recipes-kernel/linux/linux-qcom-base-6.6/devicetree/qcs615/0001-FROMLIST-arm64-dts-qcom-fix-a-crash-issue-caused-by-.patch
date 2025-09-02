@@ -1,0 +1,35 @@
+From f9e3a0873dc7537f2c902f9cc66d52a8aacf5d45 Mon Sep 17 00:00:00 2001
+From: Jie Gan <quic_jiegan@quicinc.com>
+Date: Wed, 21 May 2025 10:26:20 +0800
+Subject: [PATCH] FROMLIST: arm64: dts: qcom: fix a crash issue caused by
+ infinite loop for QCS615
+
+An infinite loop has been created by the Coresight devices. When only a
+source device is enabled, the coresight_find_activated_sysfs_sink function
+is recursively invoked in an attempt to locate an active sink device,
+ultimately leading to a stack overflow and system crash. Therefore, disable
+the replicator1 to break the infinite loop and prevent a potential stack
+overflow.
+
+Link: https://lore.kernel.org/all/20250522005016.2148-1-jie.gan@oss.qualcomm.com/
+Signed-off-by: Jie Gan <quic_jiegan@quicinc.com>
+Upstream-Status: Submitted[https://lore.kernel.org/all/20250522005016.2148-1-jie.gan@oss.qualcomm.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615.dtsi b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+index 10020a0297ee..85a4c22e3ca2 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+@@ -1895,6 +1895,7 @@ tmc@6047000 {
+ 
+ 			clocks = <&aoss_qmp>;
+ 			clock-names = "apb_pclk";
++			status = "disabled";
+ 
+ 			in-ports {
+ 				port {
+-- 
+2.34.1
+

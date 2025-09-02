@@ -73,6 +73,7 @@ SRC_URI:append = " \
     file://qcs9100/0001-PENDING-arm64-dts-qcom-sa8775p-Add-gpr-node.patch \
     file://qcs9100/0002-Revert-PENDING-arm64-dts-qcom-iris-video-driver-for-.patch \
     file://qcs9100/0002-FROMLIST-arm64-dts-qcom-sa8775p-add-support-for-vide.patch \
+    file://qcs9100/0011-UPSTREAM-arm64-dts-qcom-sa8775p-add-Display-Serial-Interface-device-nodes.patch \
     "
 # qcs9100 board dts patches
 SRC_URI:append = " \
@@ -106,6 +107,7 @@ SRC_URI:append = " \
     file://qcs9100/0001-Revert-FROMLIST-arm64-dts-qcom-qcs9100-Update-memory.patch \
     file://qcs9100/0002-PENDING-arm64-dts-qcom-qcs9xxx-Update-memory-map-for.patch \
     file://qcs9100/0003-FROMLIST-arm64-dts-qcom-sa8775p-ride-enable-video.patch \
+    file://qcs9100/0012-UPSTREAM-arm64-dts-qcom-sa8775p-ride-add-anx7625-DSI-to-DP-bridge-nodes.patch \
     "
 
 # qcs615 dtsi patches
@@ -143,10 +145,13 @@ SRC_URI:append = " \
     file://qcs615/0003-FROMLIST-arm64-dts-qcom-qcs615-Add-mproc-node-for-SE.patch \
     file://qcs615/0004-FROMLIST-arm64-dts-qcom-qcs615-Add-IMEM-and-PIL-info.patch \
     file://qcs615/0005-FROMLIST-arm64-dts-qcom-qcs615-add-ADSP-and-CDSP-nod.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-fix-a-crash-issue-caused-by-.patch \
     file://qcs615/0001-PENDING-arm64-dts-qcom-Enable-cpu-and-gpu-mitigation.patch \
     file://qcs615/0001-QCLINUX-Revert-FROMLIST-arm64-dts-qcom-qcs615-add-SD.patch \
     file://qcs615/0001-UPSTREAM-arm64-dts-qcom-qcs615-add-SDHC1-and-SDHC2.patch \
+    file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-disable-the-CTI-devic.patch \
     file://qcs615/0001-FROMLIST-arm64-dts-qcom-qcs615-Add-ADSP-and-CDSP-fas.patch \
+    file://qcs615/0001-PENDING-arm64-dts-qcom-qcm615-Enable-tsens-thermal-z.patch \
     "
 
 # qcs615 board dts patches
@@ -294,8 +299,19 @@ SRC_URI:append = " \
     file://qcs9075/0002-PENDING-arm64-dts-qcom-Rename-qcs9075-rb8-to-qcs9075.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-iq-9075-evk-Add-PSCI-SYSTEM_R.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-Add-sound.patch \
-    file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-rb8-Enable-Display-Po.patch \
     file://qcs9075/0045-FROMLIST-arm64-qcs9075-evk-remove-uart-bt-en-and-b.patch \
-    file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-enable-vi.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-Add-firmw.patch \
+    file://qcs9075/0046-PENDING-arm64-dts-qcom-Add-sdcard-support-for-qcs907.patch \
+    file://qcs9075/0047-PENDING-arm64-dts-qcom-Enable-vqmmc-voltage-switchin.patch \
+    "
+
+# qcs8275 board dts patches
+SRC_URI:append = " \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Add-support-for-QCS8275-IQ8-E.patch \
+    file://addons/0002-QCLINUX-arm64-dts-qcom-Add-msm-id-board-id-for-qcs82.patch \
+    file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable.patch \
+    file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-enable-vi.patch \
+    file://qcs8275/0001-QCLINUX-arm64-dts-fix-base-BSP-compilation-issue-for.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-usb0-support-on-QCS827.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-qcs8275-iq-8275-evk-Add-firmw.patch \
     "

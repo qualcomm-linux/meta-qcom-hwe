@@ -1143,7 +1143,7 @@ index 000000000000..23015b055f6a
 +		.of_match_table = qcs615_tlmm_of_match,
 +	},
 +	.probe = qcs615_tlmm_probe,
-+	.remove = msm_pinctrl_remove,
++	.remove_new = msm_pinctrl_remove,
 +};
 +
 +static int __init qcs615_tlmm_init(void)

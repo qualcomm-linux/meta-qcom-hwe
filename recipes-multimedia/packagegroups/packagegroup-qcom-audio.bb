@@ -23,6 +23,21 @@ PULSEAUDIO_PKGS = " \
     pulseaudio-module-bluez5-discover \
     pulseaudio-module-bluez5-device \
 "
+PIPEWIRE_PKGS = " \
+    alsa-utils-alsactl \
+    alsa-utils-amixer \
+    ${VIRTUAL-RUNTIME_alsa-state} \
+    alsa-utils-alsaucm \
+    alsa-utils-aplay \
+    pipewire \
+    pipewire-pulse \
+    pipewire-alsa \
+    wireplumber \
+    libpipewire \
+    pipewire-modules-meta \
+    pipewire-tools \
+    pipewire-spa-tools \
+"
 
 PULSEAUDIO_PKGS:append:qcom-custom-bsp = " \
     pulseaudio-module-pal-card \
@@ -33,6 +48,7 @@ RDEPENDS:${PN}:append:qcom-base-bsp = ' \
     alsa-utils-aplay \
     alsa-utils-alsatplg \
     qcom-audio-firmware \
+    ${PIPEWIRE_PKGS} \
     ${PULSEAUDIO_PKGS}  \
 '
 
@@ -61,5 +77,7 @@ RDEPENDS:${PN}:append:qcom-custom-bsp = ' \
     qcom-dac-mer-testapp \
     qcom-dac-plugin \
     qcom-mercury-plugin \
+    qcom-pw-pal-plugin \
+    ${PIPEWIRE_PKGS} \
     ${PULSEAUDIO_PKGS}  \
 '

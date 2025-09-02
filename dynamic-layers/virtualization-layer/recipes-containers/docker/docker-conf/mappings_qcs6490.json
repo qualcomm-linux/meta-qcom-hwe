@@ -76,5 +76,11 @@
         "/dev/dma_heap/system",
         "/dev/dma_heap/qcom,system",
         "/dev/fastrpc-cdsp"
+    ],
+
+    "Soc" : [
+        "QCS6490",
+        "QCM6490",
+        "SC7280"
     ]
 }

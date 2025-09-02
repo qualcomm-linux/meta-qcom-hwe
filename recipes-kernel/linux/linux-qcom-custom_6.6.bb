@@ -128,8 +128,6 @@ do_install:prepend() {
     ln -rs ${STAGING_KERNEL_DIR} ${D}${nonarch_base_libdir}/modules/${KERNEL_VERSION}/source
 }
 
-do_package[nostamp] = "1"
-
 # Duplicate msm as msm_default after source unpacking. This is
 # needed to generate both msm.ko with GPU support and msm_display.ko
 # without GPU support. msm folder is patched to generate msm_display.ko.

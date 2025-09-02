@@ -1,0 +1,33 @@
+From 3087f24cfe76e987fc0a360c2bda5e2e5dd07608 Mon Sep 17 00:00:00 2001
+From: Varadarajan Narayanan <quic_varada@quicinc.com>
+Date: Fri, 13 Jun 2025 10:49:57 +0530
+Subject: [PATCH 15/27] SUBMITTED: configs: qcs9100_defconfig: Enable SYSRESET
+
+Move to SYSRESET for implementing the reset command.
+
+Reviewed-by: Sumit Garg <sumit.garg@oss.qualcomm.com>
+Signed-off-by: Varadarajan Narayanan <quic_varada@quicinc.com>
+Upstream-Status: Submitted
+---
+ configs/qcs9100_defconfig | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/configs/qcs9100_defconfig b/configs/qcs9100_defconfig
+index cd48973599b..0ba9415a7db 100644
+--- a/configs/qcs9100_defconfig
++++ b/configs/qcs9100_defconfig
+@@ -15,7 +15,11 @@ CONFIG_DEBUG_UART_CLOCK=14745600
+ CONFIG_TEXT_BASE=0xaf000000
+ CONFIG_REMAKE_ELF=y
+ CONFIG_DEFAULT_DEVICE_TREE="qcom/qcs9100-ride-r3"
++
+ CONFIG_ENV_IS_IN_SCSI=y
+ CONFIG_SCSI_ENV_PART_UUID="71cb9cd0-acf1-b6cb-ad91-be9572fe11a9"
+ # CONFIG_ENV_IS_DEFAULT is not set
+ # CONFIG_ENV_IS_NOWHERE is not set
++
++CONFIG_SYSRESET=y
++CONFIG_SYSRESET_QCOM_PSCI=y
+-- 
+2.34.1
+

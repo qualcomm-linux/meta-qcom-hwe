@@ -1,0 +1,82 @@
+From ecaa6fde0286f7e5c97799b0283098c72d507309 Mon Sep 17 00:00:00 2001
+From: Abhinav Parihar <parihar@qti.qualcomm.com>
+Date: Mon, 18 Aug 2025 14:31:26 +0530
+Subject: [PATCH] rpcmem: Register rpcmem-allocated buffers with fastrpc memory
+ framework
+
+Currently, rpcmem-allocated buffers used in remote calls are not recognized
+by the RPC kernel driver, resulting in fallback to copy buffers for message
+passing. This fallback introduces significant performance degradation, which
+worsens with increasing buffer sizes.
+
+This commit ensures that rpcmem-allocated buffers are properly registered
+with the fastrpc memory framework upon allocation and deregistered upon
+release. By enabling the kernel driver to identify the associated file
+descriptors, it avoids the use of copy buffers during remote invocation,
+thereby improving performance and efficiency.
+
+Link: https://github.com/qualcomm/fastrpc/pull/216/commits/84eeb114dcc735f3dbd3f15ff30440b0f9410a68
+Signed-off-by: Abhinav Parihar <quic_parihar@quicinc.com>
+Upstream-Status: Submitted[https://github.com/qualcomm/fastrpc/pull/216/commits/84eeb114dcc735f3dbd3f15ff30440b0f9410a68]
+---
+ inc/fastrpc_mem.h  | 17 +++++++++++++++++
+ src/rpcmem_linux.c |  3 +++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/inc/fastrpc_mem.h b/inc/fastrpc_mem.h
+index 06a9f98..aa923d0 100644
+--- a/inc/fastrpc_mem.h
++++ b/inc/fastrpc_mem.h
+@@ -55,4 +55,21 @@ int remote_mmap64_internal(int fd, uint32_t flags, uint64_t vaddrin, int64_t siz
+ */
+ int fastrpc_buffer_ref(int domain, int fd, int ref, void **va, size_t *size);
+ 
++
++/*
++ * Register or deregister a buffer with fastrpc framework, managing its reference count
++ * and associated metadata.
++ *
++ * @param buf Pointer to the buffer to be registered or deregistered
++ * @param size Size of the buffer in bytes
++ * @param fd File descriptor associated with the buffer; use -1 to deregister
++ * This function internally calls `remote_register_buf_common` with default attributes.
++ * - If `fd` is not -1, the buffer is registered and its reference count is incremented.
++ * - If `fd` is -1, the buffer is deregistered and its reference count is decremented.
++ *   If the reference count reaches zero, the buffer is unmapped and its metadata is freed.
++ *
++ * @return void
++ */
++void remote_register_buf(void *buf, int size, int fd);
++
+ #endif //FASTRPC_MEM_H
+diff --git a/src/rpcmem_linux.c b/src/rpcmem_linux.c
+index b456fcd..7120cd9 100644
+--- a/src/rpcmem_linux.c
++++ b/src/rpcmem_linux.c
+@@ -49,6 +49,7 @@
+ #include "fastrpc_common.h"
+ #include "rpcmem.h"
+ #include "verify.h"
++#include "fastrpc_mem.h"
+ 
+ #define PAGE_SIZE 4096
+ 
+@@ -166,6 +167,7 @@ void *rpcmem_alloc_internal(int heapid, uint32 flags, size_t size) {
+   pthread_mutex_unlock(&rpcmt);
+   FARF(RUNTIME_RPC_HIGH, "Allocted memory from DMA heap fd %d ptr %p orig ptr %p\n",
+        rinfo->fd, rinfo->aligned_buf, rinfo->buf);
++  remote_register_buf(rinfo->buf, rinfo->size, rinfo->fd);
+   return rinfo->aligned_buf;
+ bail:
+   if (nErr) {
+@@ -194,6 +196,7 @@ void rpcmem_free_internal(void *po) {
+   }
+   pthread_mutex_unlock(&rpcmt);
+   if (rfree) {
++    remote_register_buf(rfree->buf, rfree->size, -1);
+     munmap(rfree->buf, rfree->size);
+     close(rfree->fd);
+     free(rfree);
+-- 
+2.34.1
+

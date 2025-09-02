@@ -1,18 +1,18 @@
-From 3667c19b0ca488bc388c7f090614142c86dd2c68 Mon Sep 17 00:00:00 2001
+From 21ebd9339bf7d8098d48d7ce84e23cf3f4a12580 Mon Sep 17 00:00:00 2001
 From: Devanshi Bansal <quic_devanshi@quicinc.com>
-Date: Thu, 27 Mar 2025 13:49:31 +0530
+Date: Tue, 12 Aug 2025 09:01:16 +0530
 Subject: [PATCH] add MSM backend with xml schema
 
 Signed-off-by: Devanshi Bansal <quic_devanshi@quicinc.com>
 
 Upstream-Status: Inappropriate [Downstream]
 ---
- src/gbm/backends/msm/buffer_alloc.c           |   98 ++
+ src/gbm/backends/msm/buffer_alloc.c           |  102 ++
  src/gbm/backends/msm/buffer_alloc.h           |   13 +
- src/gbm/backends/msm/buffer_layout.c          |  285 ++++
- src/gbm/backends/msm/buffer_layout.h          |   21 +
+ src/gbm/backends/msm/buffer_layout.c          |  334 +++++
+ src/gbm/backends/msm/buffer_layout.h          |   24 +
  .../backends/msm/default_fmt_alignment.xml    | 1261 +++++++++++++++++
- src/gbm/backends/msm/gbm_msm.c                |  755 ++++++++++
+ src/gbm/backends/msm/gbm_msm.c                |  765 ++++++++++
  src/gbm/backends/msm/gbm_msm.h                |   47 +
  src/gbm/backends/msm/gbm_msm_int.h            |   38 +
  src/gbm/backends/msm/schema_parser.c          |  222 +++
@@ -20,7 +20,7 @@ Upstream-Status: Inappropriate [Downstream]
  src/gbm/meson.build                           |   34 +
  src/test/gbmtest.c                            |  502 +++++++
  src/test/meson.build                          |   28 +
- 13 files changed, 3355 insertions(+)
+ 13 files changed, 3421 insertions(+)
  create mode 100644 src/gbm/backends/msm/buffer_alloc.c
  create mode 100644 src/gbm/backends/msm/buffer_alloc.h
  create mode 100644 src/gbm/backends/msm/buffer_layout.c
@@ -36,10 +36,10 @@ Upstream-Status: Inappropriate [Downstream]
 
 diff --git a/src/gbm/backends/msm/buffer_alloc.c b/src/gbm/backends/msm/buffer_alloc.c
 new file mode 100644
-index 0000000..5314b7d
+index 0000000..d34b531
 --- /dev/null
 +++ b/src/gbm/backends/msm/buffer_alloc.c
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,102 @@
 +/*
 + * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
 + * SPDX-License-Identifier: BSD-3-Clause-Clear
@@ -54,14 +54,18 @@ index 0000000..5314b7d
 +#include "buffer_alloc.h"
 +#include <sys/stat.h>
 +
-+int allocate_buffer(const struct gbm_msm_device *msm_dev, uint32_t size, uint32_t *handle) {
++int allocate_buffer(const struct gbm_msm_device *msm_dev, uint32_t size, uint32_t usage, uint32_t *handle) {
 +   if (!msm_dev || !handle)
 +      return -1;
 +
 +   struct drm_msm_gem_new args;
 +   memset(&args, 0, sizeof(args));
 +   args.size = size;
-+   args.flags = MSM_BO_CACHED;
++   if (usage & GBM_BO_USE_CURSOR)
++     args.flags = MSM_BO_CACHED_COHERENT;
++   else
++     args.flags = MSM_BO_CACHED;
++
 +   if(drmIoctl(msm_dev->base.v0.fd, DRM_IOCTL_MSM_GEM_NEW, &args)) {
 +      fprintf(stderr, "MSM_GEM_NEW failed \n");
 +      return -1;
@@ -140,7 +144,7 @@ index 0000000..5314b7d
 +}
 diff --git a/src/gbm/backends/msm/buffer_alloc.h b/src/gbm/backends/msm/buffer_alloc.h
 new file mode 100644
-index 0000000..cbd7ddd
+index 0000000..741cbba
 --- /dev/null
 +++ b/src/gbm/backends/msm/buffer_alloc.h
 @@ -0,0 +1,13 @@
@@ -152,17 +156,17 @@ index 0000000..cbd7ddd
 +#include <stdio.h>
 +#include "gbm_msm_int.h"
 +
-+int allocate_buffer(const struct gbm_msm_device *msm_dev, uint32_t size, uint32_t *handle);
++int allocate_buffer(const struct gbm_msm_device *msm_dev, uint32_t size, uint32_t usage, uint32_t *handle);
 +int import_gem_buffer(const struct gbm_msm_device *msm_dev, int fd, uint32_t *handle);
 +int get_fd(const struct gbm_msm_device *msm_dev, uint32_t handle, int *fd);
 +int free_buffer(const struct gbm_msm_device *msm_dev, uint32_t handle);
 +int bo_offset(int fd, uint32_t handle, uint64_t *offset);
 diff --git a/src/gbm/backends/msm/buffer_layout.c b/src/gbm/backends/msm/buffer_layout.c
 new file mode 100644
-index 0000000..1c15709
+index 0000000..b54a6d6
 --- /dev/null
 +++ b/src/gbm/backends/msm/buffer_layout.c
-@@ -0,0 +1,285 @@
+@@ -0,0 +1,334 @@
 +/*
 + * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
 + * SPDX-License-Identifier: BSD-3-Clause-Clear
@@ -200,6 +204,55 @@ index 0000000..1c15709
 +      return true;
 +
 +   return false;
++}
++
++bool ubwc_supported(struct gbm_bufdesc *descriptor) {
++   if (!descriptor)
++      return false;
++
++   const char *format_name = find_format_name(descriptor->format);
++   if (!format_name) {
++      return false;
++   }
++
++   struct format_info *info = get_format_info(format_name);
++   if (!info)
++      return false;
++
++   if (!info->planes[0].meta_info) {
++      return false;
++   }
++
++   return true;
++}
++
++int get_best_layout(const unsigned int count, const uint64_t *modifiers, struct gbm_bufdesc *descriptor) {
++   if (count == 0){
++	   descriptor->modifiers = 0;
++	   return 0;
++   }
++   for (int m = 0; m < count; m++) {
++      if (modifiers[m] == DRM_FORMAT_MOD_QCOM_COMPRESSED && ubwc_supported(descriptor)) {
++         descriptor->modifiers = modifiers[m];
++         return 0;
++      }
++   }
++
++   for (int m = 0; m < count; m++) {
++      if (modifiers[m] == DRM_FORMAT_MOD_LINEAR) {
++         descriptor->modifiers = modifiers[m];
++         return 0;
++      }
++   }
++
++   for (int m = 0; m < count; m++) {
++      if (modifiers[m] == DRM_FORMAT_MOD_INVALID) {
++         descriptor->modifiers = modifiers[m];
++         return 0;
++      }
++   }
++
++   return -1;
 +}
 +
 +void get_plane_width_and_height(uint32_t format, int plane, uint32_t *plane_width, uint32_t *plane_height) {
@@ -450,10 +503,10 @@ index 0000000..1c15709
 +}
 diff --git a/src/gbm/backends/msm/buffer_layout.h b/src/gbm/backends/msm/buffer_layout.h
 new file mode 100644
-index 0000000..787e6b1
+index 0000000..5fd8cfe
 --- /dev/null
 +++ b/src/gbm/backends/msm/buffer_layout.h
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,24 @@
 +/*
 + * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
 + * SPDX-License-Identifier: BSD-3-Clause-Clear
@@ -475,6 +528,9 @@ index 0000000..787e6b1
 +                     uint32_t *plane_offset);
 +void get_plane_width_and_height(uint32_t format, int plane,
 +                                uint32_t *buffer_width, uint32_t *buffer_height);
++bool ubwc_supported(struct gbm_bufdesc *descriptor);
++int get_best_layout(const unsigned int count, const uint64_t *modifiers,
++                    struct gbm_bufdesc *descriptor);
 diff --git a/src/gbm/backends/msm/default_fmt_alignment.xml b/src/gbm/backends/msm/default_fmt_alignment.xml
 new file mode 100644
 index 0000000..5cc909a
@@ -1744,10 +1800,10 @@ index 0000000..5cc909a
 +</formats>
 diff --git a/src/gbm/backends/msm/gbm_msm.c b/src/gbm/backends/msm/gbm_msm.c
 new file mode 100644
-index 0000000..324f903
+index 0000000..226416f
 --- /dev/null
 +++ b/src/gbm/backends/msm/gbm_msm.c
-@@ -0,0 +1,755 @@
+@@ -0,0 +1,765 @@
 +/*
 + * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
 + * SPDX-License-Identifier: BSD-3-Clause-Clear
@@ -2036,6 +2092,9 @@ index 0000000..324f903
 +
 +   struct gbm_bufdesc bufdesc = {width, height, format, usage, modifiers_mask};
 +
++   if (get_best_layout(count, modifiers, &bufdesc) != 0)
++      return NULL;
++
 +   if (get_num_planes(&bufdesc, &(bo->num_planes)) != 0)
 +      return NULL;
 +
@@ -2046,7 +2105,7 @@ index 0000000..324f903
 +   if (get_size(&bufdesc, &size) != 0)
 +      return NULL;
 +
-+   if (allocate_buffer(msm_dev, size, &(bo->base.v0.handle.u32)) != 0)
++   if (allocate_buffer(msm_dev, size, usage, &(bo->base.v0.handle.u32)) != 0)
 +      return NULL;
 +
 +   add_gem_handle(bo->base.v0.handle.u32);
@@ -2055,7 +2114,7 @@ index 0000000..324f903
 +      return NULL;
 +
 +   bo->size = size;
-+   bo->modifier = modifiers_mask;
++   bo->modifier = bufdesc.modifiers;
 +   bo->bo_dump_buffers = gbm_msm_bo_dump;
 +   bo->bo_get_metabuffer_size = gbm_msm_bo_metabuffer_size;
 +   bo->bo_get_plane_aligned_width_height = gbm_msm_bo_get_aligned_width_height;
@@ -2155,7 +2214,7 @@ index 0000000..324f903
 +      if (get_stride(&bufdesc, 0, &(bo->base.v0.stride)) != 0)
 +         return NULL;
 +
-+      bo->modifier = fd_modifer_data->modifier;
++      bo->modifier = bufdesc.modifiers;
 +      break;
 +
 +   default:
@@ -2253,6 +2312,12 @@ index 0000000..324f903
 +gbm_msm_bo_get_handle(struct gbm_bo *_bo, int plane)
 +{
 +   return _bo->v0.handle;
++}
++
++static int
++gbm_msm_bo_get_plane_fd(struct gbm_bo *_bo, int plane)
++{
++   return gbm_msm_bo_get_fd(_bo);
 +}
 +
 +static int
@@ -2483,6 +2548,7 @@ index 0000000..324f903
 +   msm->base.v0.bo_get_offset = gbm_msm_bo_get_offset;
 +   msm->base.v0.bo_get_handle = gbm_msm_bo_get_handle;
 +   msm->base.v0.bo_write = gbm_msm_bo_write;
++   msm->base.v0.bo_get_plane_fd = gbm_msm_bo_get_plane_fd;
 +
 +   msm->base.v0.name = "msm";
 +
@@ -2505,7 +2571,7 @@ index 0000000..324f903
 +
 diff --git a/src/gbm/backends/msm/gbm_msm.h b/src/gbm/backends/msm/gbm_msm.h
 new file mode 100644
-index 0000000..24ac7c1
+index 0000000..e933539
 --- /dev/null
 +++ b/src/gbm/backends/msm/gbm_msm.h
 @@ -0,0 +1,47 @@

@@ -1,0 +1,36 @@
+From 5d799e7b534258ccb923e7b8c0b6139bf607349a Mon Sep 17 00:00:00 2001
+From: Jie Gan <quic_jiegan@quicinc.com>
+Date: Tue, 27 May 2025 09:37:12 +0800
+Subject: [PATCH] FROMLIST: arm64: dts: qcom: qcs615: disable the CTI device of
+ the camera block
+
+Disable the CTI device of the camera block to prevent potential NoC errors
+during AMBA bus device matching.
+
+The clocks for the Qualcomm Debug Subsystem (QDSS) are managed by aoss_qmp
+through a mailbox. However, the camera block resides outside the AP domain,
+meaning its QDSS clock cannot be controlled via aoss_qmp.
+
+Fixes: bf469630552a ("arm64: dts: qcom: qcs615: Add coresight nodes")
+Link: https://lore.kernel.org/all/20250527015224.7343-1-jie.gan@oss.qualcomm.com/
+Signed-off-by: Jie Gan <quic_jiegan@quicinc.com>
+Upstream-Status: Submitted[https://lore.kernel.org/all/20250527015224.7343-1-jie.gan@oss.qualcomm.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs615.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs615.dtsi b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+index 85a4c22e3ca2..adb366f4fbe0 100644
+--- a/arch/arm64/boot/dts/qcom/qcs615.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs615.dtsi
+@@ -2479,6 +2479,7 @@ cti@6c13000 {
+ 
+ 			clocks = <&aoss_qmp>;
+ 			clock-names = "apb_pclk";
++			status = "disabled";
+ 		};
+ 
+ 		cti@6c20000 {
+-- 
+2.34.1
+

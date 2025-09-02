@@ -5,7 +5,9 @@ LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f2
 
 DESCRIPTION = "securemsm-features with QseecomAPI user space library to interact with qseecom driver"
 
-DEPENDS += "libxml2 libtinyxml2 linux-kernel-qcom-headers glib-2.0 glibc qcom-libdmabufheap securemsm-headers minkipc property-vault jsoncpp qmi-framework curl"
+DEPENDS = "libxml2 libdrm libtinyxml2 linux-kernel-qcom-headers glib-2.0 glibc qcom-libvmmem qcom-libdmabufheap \
+           securemsm-headers minkipc property-vault jsoncpp qmi-framework curl\
+          "
 
 QCM6490_SHA256SUM = "08fbbb4f92a351af43aeeb51aedc47ae03f41a6008f5c3a2c1bf95be0e4cc359"
 QCS9100_SHA256SUM = "c5025125e228ce582b513fba1a51b2d0716cd73d32a1c626152f45c86617f8e2"
@@ -23,6 +25,7 @@ FILES:${PN} += "${bindir}/*"
 FILES:${PN} += "${libdir} ${includedir}"
 FILES:${PN}-dev = "${libdir}/*.la"
 
+PROVIDES:append = " virtual/wvoec"
 
 INSANE_SKIP:${PN} = "dev-so"
 INSANE_SKIP:${PN} += "dev-deps"

@@ -24,7 +24,7 @@ Signed-off-by: Satyam Kumar Singh <quic_satysing@quicinc.com>
  .../sdm-service/sdm_color_mode_intf_impl.h    |  108 +
  .../backend-sdm/sdm-service/sdm_display.cpp   | 1738 +++++++++++++++
  .../backend-sdm/sdm-service/sdm_display.h     |  311 +++
- .../sdm_display_buffer_allocator.cpp          |  342 +++
+ .../sdm_display_buffer_allocator.cpp          |  336 +++
  .../sdm_display_buffer_allocator.h            |   76 +
  .../sdm_display_buffer_sync_handler.cpp       |   86 +
  .../sdm_display_buffer_sync_handler.h         |   49 +
@@ -37,13 +37,13 @@ Signed-off-by: Satyam Kumar Singh <quic_satysing@quicinc.com>
  .../sdm-service/sdm_display_socket_handler.h  |   46 +
  libweston/backend-sdm/sdm-service/uevent.c    |  135 ++
  libweston/backend-sdm/sdm-service/uevent.h    |   39 +
- libweston/backend-sdm/sdm.c                   | 1881 +++++++++++++++++
- libweston/backend-sdm/state-propose.c         |  168 ++
+ libweston/backend-sdm/sdm.c                   | 1877 +++++++++++++++++
+ libweston/backend-sdm/state-propose.c         |  169 ++
  libweston/compositor.c                        |    1 +
  libweston/meson.build                         |   49 +-
  meson.build                                   |   16 +-
  meson_options.txt                             |   13 +-
- 33 files changed, 8937 insertions(+), 14 deletions(-)
+ 33 files changed, 8928 insertions(+), 14 deletions(-)
  create mode 100644 libweston/backend-sdm/fb.c
  create mode 100644 libweston/backend-sdm/kms.c
  create mode 100644 libweston/backend-sdm/meson.build
@@ -4690,10 +4690,10 @@ index 0000000..233524a
 +#endif  // __SDM_DISPLAY_H__
 diff --git a/libweston/backend-sdm/sdm-service/sdm_display_buffer_allocator.cpp b/libweston/backend-sdm/sdm-service/sdm_display_buffer_allocator.cpp
 new file mode 100644
-index 0000000..445af2b
+index 0000000..8862cf1
 --- /dev/null
 +++ b/libweston/backend-sdm/sdm-service/sdm_display_buffer_allocator.cpp
-@@ -0,0 +1,338 @@
+@@ -0,0 +1,336 @@
 +/*
 +* Copyright (c) 2017, 2020-2021, The Linux Foundation. All rights reserved.
 +*
@@ -4983,7 +4983,7 @@ index 0000000..445af2b
 +
 +    SetBufferInfo(buf_info.format, &format1, &flags);
 +
-+    import_fd_data.fd = ::dup(buf_info.fd);
++    import_fd_data.fd = buf_info.fd;
 +    import_fd_data.format = format1;
 +    import_fd_data.width = buf_info.aligned_width;
 +    import_fd_data.height = buf_info.aligned_height;
@@ -4992,8 +4992,6 @@ index 0000000..445af2b
 +    bo = gbm_bo_import(gbm_, GBM_BO_IMPORT_FD, &import_fd_data, flags);
 +
 +    if (bo == NULL) {
-+        DLOGW("Failed to import buffer fd %d format 0x%x", import_fd_data.fd, format1);
-+        close(import_fd_data.fd);
 +        return kErrorNone;
 +    }
 +
@@ -7079,7 +7077,7 @@ index 0000000..4da8531
 +#endif // _HARDWARE_UEVENT_H
 diff --git a/libweston/backend-sdm/sdm.c b/libweston/backend-sdm/sdm.c
 new file mode 100644
-index 0000000..488d472
+index 0000000..4d8e2c3
 --- /dev/null
 +++ b/libweston/backend-sdm/sdm.c
 @@ -0,0 +1,1877 @@
@@ -8962,7 +8960,7 @@ index 0000000..488d472
 +}
 diff --git a/libweston/backend-sdm/state-propose.c b/libweston/backend-sdm/state-propose.c
 new file mode 100644
-index 0000000..d429946
+index 0000000..a6ea1fb
 --- /dev/null
 +++ b/libweston/backend-sdm/state-propose.c
 @@ -0,0 +1,169 @@
@@ -9303,5 +9301,5 @@ index ac355f1..cbb4080 100644
  	'backend-drm',
  	type: 'boolean',
 -- 
-2.17.1
+2.34.1
 
