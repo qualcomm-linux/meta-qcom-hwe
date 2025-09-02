@@ -22,7 +22,6 @@ SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=kernel \
            ${@bb.utils.contains('DISTRO_FEATURES', 'smack', ' file://smack_debug.cfg', '', d)} \
            file://0001-QCLINUX-Add-support-to-compile-msm_display.ko.patch \
            file://0002-QCLINUX-arm64-dts-qcom-Disable-eMMC-ICE.patch \
-           file://0003-PENDING-arm64-dts-qcom-Add-EEPROM-support-for-IQ-907.patch \
            "
 
 S = "${WORKDIR}/kernel"
