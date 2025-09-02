@@ -23,7 +23,6 @@ SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=kernel \
            file://0001-QCLINUX-Add-support-to-compile-msm_display.ko.patch \
            file://0002-QCLINUX-arm64-dts-qcom-Disable-eMMC-ICE.patch \
            file://0003-PENDING-arm64-dts-qcom-Add-EEPROM-support-for-IQ-907.patch \
-           file://0004-QCLINUX-net-stmmac-Add-EEPROM-support-to-driver.patch \
            "
 
 S = "${WORKDIR}/kernel"
