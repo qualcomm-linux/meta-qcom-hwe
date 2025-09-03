@@ -22,8 +22,6 @@
         "/usr/lib/libtensorflowlite_c.so",
         "/usr/lib/libtf_logging.so",
         "/usr/lib/libVideoCtrl.so",
-        "/usr/lib/libIB2C.so",
-        "/usr/lib/libIB2C.so.1",
         "/usr/lib/libEGL_adreno.so.1",
         "/usr/lib/libGLESv2_adreno.so.2",
         "/usr/lib/libpropertyvault.so.0",
