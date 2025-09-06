@@ -5,8 +5,8 @@ LICENSE = "BSD-3-Clause-Clear"
 LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=3771d4920bd6cdb8cbdf1e8344489ee0"
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/pulseaudio-plugin.git;protocol=https"
-SRCBRANCH  = "pulseaudio-plugins.lnx.1.0"
-SRCREV     = "a2e9d5c0f8b033f59d0e121e95ebab78f53584c3"
+SRCBRANCH  = "audio-algos.lnx.1.0.r1-rel"
+SRCREV     = "35adad85a280ea8dc72f5687c1a70ddc9833758c"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/pulseaudio-plugins"
 SRC_URI += "\

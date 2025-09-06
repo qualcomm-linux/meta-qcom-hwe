@@ -8,7 +8,7 @@ DEPENDS = "fluoride"
 
 QCOM_BLUETOOTH_SRC ?= "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/bluetooth.git;protocol=https"
 QCOM_BLUETOOTH_SRCBRANCH ?= "bt-performant.qclinux.1.0.r1-rel"
-QCOM_BLUETOOTH_SRCREV ?= "1710c237b493454dc93f41de09b50cd8d109f970"
+QCOM_BLUETOOTH_SRCREV ?= "b908f6524be00474ceb402381f546d90ef15f330"
 
 SRCREV_FORMAT = "bluetooth"
 

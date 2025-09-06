@@ -7,7 +7,7 @@ DESCRIPTION = "audio plugin headers"
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/audio-utils.git;protocol=https"
 SRCBRANCH  = "audio-utils.lnx.1.0.r1-rel"
-SRCREV     = "70dabd1cce2a6a62127355bca922a186597934d4"
+SRCREV     = "40e72b34df7cbb64ab1eb237eec7aa9dd5bf0d41"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/audio-utils"
 

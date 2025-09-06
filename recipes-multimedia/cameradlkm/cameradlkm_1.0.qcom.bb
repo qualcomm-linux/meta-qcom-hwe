@@ -8,7 +8,7 @@ DEPENDS += "linux-kernel-headers-install-native"
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/opensource/camera-kernel.git;protocol=https"
 SRCBRANCH  = "camera-kernel.qclinux.1.0.r1-rel"
-SRCREV     = "f09a43b2584655d75dea39c7fae6ef72d034c645"
+SRCREV     = "72897f8624a7fcbdeb68358036f74a36e939e8b5"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=vendor/qcom/opensource/camera-kernel"
 
