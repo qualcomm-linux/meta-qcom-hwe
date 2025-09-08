@@ -23,6 +23,7 @@ kernel_read_kernel_sysctls(systemd_backlight_t)
 init_use_script_ptys(systemd_journal_init_t)
 systemd_manage_journal_files(systemd_journal_init_t)
 files_read_etc_runtime_files(systemd_journal_init_t)
+allow systemd_journal_init_t systemd_journal_t:dir { watch };
 
 files_manage_mounttab(systemd_journal_init_t)
 logging_rw_generic_logs(systemd_journal_init_t)
