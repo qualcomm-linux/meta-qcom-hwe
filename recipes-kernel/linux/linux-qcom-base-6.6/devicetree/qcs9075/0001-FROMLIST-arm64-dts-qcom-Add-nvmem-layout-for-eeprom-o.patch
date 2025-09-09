@@ -1,0 +1,50 @@
+From 438b49a29bea7bf5041bf5065188e6e0ce436d12 Mon Sep 17 00:00:00 2001
+From: Monish Chunara <quic_mchunara@quicinc.com>
+Date: Thu, 11 Sep 2025 18:29:55 +0530
+Subject: [PATCH] FROMLIST: arm64: dts: qcom: Add nvmem-layout for eeprom on
+ qcs9075
+
+Enable nvmem layout for eeprom on qcs9075-iq-9075-evk to be used by
+ethernet and other consumers for storing data.
+
+Change-Id: I825f472807aa4455fd9f5d4a3e4601ff9a3b523c
+Signed-off-by: Monish Chunara <quic_mchunara@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250916-lemans-evk-bu-v5-4-53d7d206669d@oss.qualcomm.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index 833d29c5e8bb..7774cc82186a 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -22,6 +22,7 @@ / {
+ 
+ 	aliases {
+ 		ethernet0 = &ethernet0;
++		i2c18 = &i2c18;
+ 		mmc0 = &sdhc_1; /* SDC1 SD card slot */
+ 		serial0 = &uart10;
+ 		serial1 = &uart17;
+@@ -649,6 +650,18 @@ expander3: pca953x@3b {
+ 		gpio-controller;
+ 		reg = <0x3b>;
+ 	};
++
++	eeprom0: eeprom@50 {
++		compatible = "atmel,24c256";
++		reg = <0x50>;
++		pagesize = <64>;
++
++		nvmem-layout {
++			compatible = "fixed-layout";
++			#address-cells = <1>;
++			#size-cells = <1>;
++		};
++	};
+ };
+ 
+ &i2c19 {
+-- 
+2.34.1
+
