@@ -1,0 +1,60 @@
+From 976a3ec3ff7409eeb63011bb5446994af956a1ea Mon Sep 17 00:00:00 2001
+From: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+Date: Fri, 21 Nov 2025 14:43:25 +0530
+Subject: [PATCH 2/3] FROMLIST: ufs: host: Add ICE clock scaling during UFS
+ clock changes
+
+Implement ICE (Inline Crypto Engine) clock scaling in sync with
+UFS controller clock scaling. This ensures that the ICE operates at
+an appropriate frequency when the UFS clocks are scaled up or down,
+improving performance and maintaining stability for crypto operations.
+
+Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+Upstream-Status: Submitted
+---
+ drivers/ufs/host/ufs-qcom.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index fa045e3d3184..d72acfedd5ab 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -224,6 +224,14 @@ static int ufs_qcom_ice_import_key(struct ufs_hba *hba,
+ 			   lt_key);
+ }
+ 
++static int ufs_qcom_ice_scale_clk(struct ufs_qcom_host *host, bool scale_up)
++{
++	if (host->hba->caps & UFSHCD_CAP_CRYPTO)
++		return qcom_ice_scale_clk(host->ice, scale_up);
++
++	return 0;
++}
++
+ #else
+ 
+ #define ufs_qcom_ice_program_key NULL
+@@ -250,6 +258,11 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
+ {
+ 	return 0;
+ }
++
++static int ufs_qcom_ice_scale_clk(struct ufs_qcom_host *host, bool scale_up)
++{
++	return 0;
++}
+ #endif
+ 
+ static int ufs_qcom_host_clk_get(struct device *dev,
+@@ -1468,6 +1481,8 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
+ 		else
+ 			err = ufs_qcom_clk_scale_down_post_change(hba);
+ 
++		if (!err)
++			err = ufs_qcom_ice_scale_clk(host, scale_up);
+ 
+ 		if (err) {
+ 			ufshcd_uic_hibern8_exit(hba);
+-- 
+2.34.1
+
