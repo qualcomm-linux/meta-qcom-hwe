@@ -21,5 +21,6 @@ RRECOMMENDS:${PN}:qcom-base-bsp = " \
     linux-firmware-qcom-qcs8300-audio \
     linux-firmware-qcom-qcs8300-compute \
     linux-firmware-qcom-qcs8300-generalpurpose \
+    linux-firmware-qcom-qcs8300-qupv3fw \
     linux-firmware-qcom-vpu \
 "
