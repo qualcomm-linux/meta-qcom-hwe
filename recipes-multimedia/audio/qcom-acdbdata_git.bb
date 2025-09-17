@@ -15,6 +15,10 @@ S = "${WORKDIR}/audio/opensource/audioreach-conf/ar-acdb/acdbdata"
 
 do_install:append:qcm6490() {
     mkdir -p -m 0777 ${D}${sysconfdir}/acdbdata
+    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/qcm6490_idp
+    install -m 0644 ${S}/qcm6490/qcm6490_idp/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcm6490_idp/acdb_cal.acdb
+    install -m 0644 ${S}/qcm6490/qcm6490_idp/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/qcm6490_idp/workspaceFileXml.qwsp
+
     mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2
     install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2/acdb_cal.acdb
     install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2/workspaceFileXml.qwsp
