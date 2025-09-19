@@ -1,0 +1,126 @@
+From bbb056e91e2d25f0f3560755aff1164431d880e2 Mon Sep 17 00:00:00 2001
+From: bowehan <bowehan@qti.qualcomm.com>
+Date: Mon, 11 Aug 2025 14:30:22 +0800
+Subject: [PATCH 03/12] FROMLIST: drm/msm/dp: Read DPCD and sink count in
+ bridge detect()
+
+Instead of relying on the link_ready flag to specify if DP is connected, read the DPCD bits and get the sink count to accurately detect if DP is connected.
+
+Signed-off-by: Jessica Zhang <jessica.zhang@oss.qualcomm.com>
+Signed-off-by: bowehan <bowehan@qti.qualcomm.com>
+Link: https://lore.kernel.org/all/20250808-hpd-refactor-v2-3-7f4e1e741aa3@oss.qualcomm.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250808-hpd-refactor-v2-3-7f4e1e741aa3@oss.qualcomm.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_display.c | 53 +++++++++++++++++++++++++++++
+ drivers/gpu/drm/msm/dp/dp_drm.c     | 18 ----------
+ drivers/gpu/drm/msm/dp/dp_drm.h     |  1 +
+ 3 files changed, 54 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index 825efa964b3a..917dcfb1fa0f 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -1352,6 +1352,59 @@ static int msm_dp_hpd_event_thread_start(struct msm_dp_display_private *msm_dp_p
+ 	return 0;
+ }
+ 
++/**
++ * msm_dp_bridge_detect - callback to determine if connector is connected
++ * @bridge: Pointer to drm bridge structure
++ * Returns: Bridge's 'is connected' status
++ */
++enum drm_connector_status msm_dp_bridge_detect(struct drm_bridge *bridge)
++{
++	struct msm_dp_bridge *msm_dp_bridge = to_dp_bridge(bridge);
++	struct msm_dp *dp = msm_dp_bridge->msm_dp_display;
++	struct msm_dp_display_private *priv;
++	int ret = 0, sink_count = 0;
++	int status = connector_status_disconnected;
++	u8 dpcd[DP_RECEIVER_CAP_SIZE];
++
++	dp = to_dp_bridge(bridge)->msm_dp_display;
++
++	priv = container_of(dp, struct msm_dp_display_private, msm_dp_display);
++
++	if (!dp->link_ready || dp->mst_active)
++		return status;
++
++	msm_dp_aux_enable_xfers(priv->aux, true);
++
++	ret = pm_runtime_resume_and_get(&dp->pdev->dev);
++	if (ret) {
++		DRM_ERROR("failed to pm_runtime_resume\n");
++		msm_dp_aux_enable_xfers(priv->aux, false);
++		return status;
++	}
++
++	ret = msm_dp_catalog_link_is_connected(priv->catalog);
++	if (dp->internal_hpd && !ret)
++		goto end;
++	ret = drm_dp_read_dpcd_caps(priv->aux, dpcd);
++	if (ret)
++		goto end;
++
++	sink_count = drm_dp_read_sink_count(priv->aux);
++
++	drm_dbg_dp(dp->drm_dev, "is_branch = %s, sink_count = %d\n",
++		   drm_dp_is_branch(dpcd) ? "true" : "false",
++		   sink_count);
++
++	if (drm_dp_is_branch(dpcd) && sink_count == 0)
++		status = connector_status_disconnected;
++	else
++		status = connector_status_connected;
++
++end:
++	pm_runtime_put_sync(&dp->pdev->dev);
++	return status;
++}
++
+ static irqreturn_t msm_dp_display_irq_handler(int irq, void *dev_id)
+ {
+ 	struct msm_dp_display_private *dp = dev_id;
+diff --git a/drivers/gpu/drm/msm/dp/dp_drm.c b/drivers/gpu/drm/msm/dp/dp_drm.c
+index 225858c62405..e507578e0e4a 100644
+--- a/drivers/gpu/drm/msm/dp/dp_drm.c
++++ b/drivers/gpu/drm/msm/dp/dp_drm.c
+@@ -13,24 +13,6 @@
+ #include "msm_kms.h"
+ #include "dp_drm.h"
+ 
+-/**
+- * msm_dp_bridge_detect - callback to determine if connector is connected
+- * @bridge: Pointer to drm bridge structure
+- * Returns: Bridge's 'is connected' status
+- */
+-static enum drm_connector_status msm_dp_bridge_detect(struct drm_bridge *bridge)
+-{
+-	struct msm_dp *dp;
+-
+-	dp = to_dp_bridge(bridge)->msm_dp_display;
+-
+-	drm_dbg_dp(dp->drm_dev, "link_ready = %s\n",
+-		(dp->link_ready) ? "true" : "false");
+-
+-	return (dp->link_ready && !dp->mst_active) ? connector_status_connected :
+-					connector_status_disconnected;
+-}
+-
+ static int msm_dp_bridge_atomic_check(struct drm_bridge *bridge,
+ 			    struct drm_bridge_state *bridge_state,
+ 			    struct drm_crtc_state *crtc_state,
+diff --git a/drivers/gpu/drm/msm/dp/dp_drm.h b/drivers/gpu/drm/msm/dp/dp_drm.h
+index 81e628c32279..f04242ff5e08 100644
+--- a/drivers/gpu/drm/msm/dp/dp_drm.h
++++ b/drivers/gpu/drm/msm/dp/dp_drm.h
+@@ -25,6 +25,7 @@ int msm_dp_bridge_init(struct msm_dp *msm_dp_display, struct drm_device *dev,
+ 		   struct drm_encoder *encoder,
+ 		   bool yuv_supported);
+ 
++enum drm_connector_status msm_dp_bridge_detect(struct drm_bridge *bridge);
+ void msm_dp_bridge_hpd_enable(struct drm_bridge *bridge);
+ void msm_dp_bridge_hpd_disable(struct drm_bridge *bridge);
+ void msm_dp_bridge_hpd_notify(struct drm_bridge *bridge,
+-- 
+2.34.1
+

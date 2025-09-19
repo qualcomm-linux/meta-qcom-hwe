@@ -487,4 +487,18 @@ SRC_URI:append = " \
     file://common/0146-FROMLIST-driver-bluetooth-hci_qca-Multiple-trigge.patch \
     file://common/0001-PENDING-serial-qcom-geni-Add-DFS-clock-mode-support-.patch \
     file://common/0147-FROMLIST-driver-bluetooth-hci_qca-SSR-Sub-System-.patch \
+    file://qcs615/0001-FROMLIST-drm-msm-dp-fix-HPD-state-status-bit-shift-value.patch \
+    file://qcs615/0002-FROMLIST-drm-msm-dp-Fix-the-ISR_-enum-values.patch \
+    file://qcs615/0003-FROMLIST-drm-msm-dp-Read-DPCD-and-sink-count-in-brid.patch \
+    file://qcs615/0004-FROMLIST-drm-msm-dp-Move-link-training-to-atomic_ena.patch \
+    file://qcs615/0005-FROMLIST-drm-msm-dp-Drop-EV_USER_NOTIFICATION.patch \
+    file://qcs615/0006-FROMLIST-drm-msm-dp-Use-drm_bridge_hpd_notify.patch \
+    file://qcs615/0007-FROMLIST-drm-msm-dp-Handle-internal-HPD-IRQ-in-hpd_n.patch \
+    file://qcs615/0008-FROMLIST-drm-msm-dp-Drop-event-waitqueue.patch \
+    file://qcs615/0009-FROMLIST-drm-msm-dp-remove-redundant-checks-related-.patch \
+    file://qcs615/0010-FROMLIST-drm-msm-dp-drop-the-entire-HPD-state-machin.patch \
+    file://qcs615/0011-FROMLIST-drm-msm-dp-Add-sink_count-and-link_ready-to.patch \
+    file://qcs615/0012-FROMLIST-drm-bridge_connector-stop-filtering-events-.patch \
+    file://qcs615/0013-FROMLIST-drm-msm-dp-Add-support-for-sending-VCPF-pac.patch \
+    file://qcs615/0014-FROMLIST-drm-msm-dp-use-stream_id-to-change-offsets-.patch \
 "

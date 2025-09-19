@@ -1,0 +1,71 @@
+From 3dea017160affc2ac11fe0461ca24b1c5f1926a5 Mon Sep 17 00:00:00 2001
+From: bowehan <bowehan@qti.qualcomm.com>
+Date: Mon, 11 Aug 2025 14:53:02 +0800
+Subject: [PATCH 05/12] FROMLIST: drm/msm/dp: Drop EV_USER_NOTIFICATION
+
+Currently, we queue an event for signalling HPD connect/disconnect. This can mean a delay in plug/unplug handling and notifying DRM core when a hotplug happens.
+
+Drop EV_USER_NOTIFICATION and signal the IRQ event as part of hotplug
+handling.
+
+Signed-off-by: Jessica Zhang <jessica.zhang@oss.qualcomm.com>
+Signed-off-by: bowehan <bowehan@qti.qualcomm.com>
+Link: https://lore.kernel.org/all/20250808-hpd-refactor-v2-5-7f4e1e741aa3@oss.qualcomm.com/
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250808-hpd-refactor-v2-5-7f4e1e741aa3@oss.qualcomm.com/]
+---
+ drivers/gpu/drm/msm/dp/dp_display.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/gpu/drm/msm/dp/dp_display.c b/drivers/gpu/drm/msm/dp/dp_display.c
+index dd38dfa10b4c..30a8fbae11d0 100644
+--- a/drivers/gpu/drm/msm/dp/dp_display.c
++++ b/drivers/gpu/drm/msm/dp/dp_display.c
+@@ -59,7 +59,6 @@ enum {
+ 	EV_HPD_PLUG_INT,
+ 	EV_IRQ_HPD_INT,
+ 	EV_HPD_UNPLUG_INT,
+-	EV_USER_NOTIFICATION,
+ };
+ 
+ #define EVENT_TIMEOUT	(HZ/10)	/* 100ms */
+@@ -510,7 +509,7 @@ static int msm_dp_display_process_hpd_high(struct msm_dp_display_private *dp)
+ 
+ 	msm_dp_display_set_mst_mgr_state(dp, true);
+ 
+-	msm_dp_add_event(dp, EV_USER_NOTIFICATION, true, 0);
++	msm_dp_display_send_hpd_notification(dp, true);
+ 
+ end:
+ 	return rc;
+@@ -583,7 +582,7 @@ static int msm_dp_display_notify_disconnect(struct device *dev)
+ 		dp_display->mst_active = false;
+ 	}
+ 
+-	msm_dp_add_event(dp, EV_USER_NOTIFICATION, false, 0);
++	msm_dp_display_send_hpd_notification(dp, false);
+ 
+ 	return 0;
+ }
+@@ -604,7 +603,7 @@ static int msm_dp_display_handle_port_status_changed(struct msm_dp_display_priva
+ 		drm_dbg_dp(dp->drm_dev, "sink count is zero, nothing to do\n");
+ 		if (dp->hpd_state != ST_DISCONNECTED) {
+ 			dp->hpd_state = ST_DISCONNECT_PENDING;
+-			msm_dp_add_event(dp, EV_USER_NOTIFICATION, false, 0);
++			msm_dp_display_send_hpd_notification(dp, false);
+ 		}
+ 	} else {
+ 		if (dp->hpd_state == ST_DISCONNECTED) {
+@@ -1330,10 +1329,6 @@ static int hpd_event_thread(void *data)
+ 		case EV_IRQ_HPD_INT:
+ 			msm_dp_irq_hpd_handle(msm_dp_priv, todo->data);
+ 			break;
+-		case EV_USER_NOTIFICATION:
+-			msm_dp_display_send_hpd_notification(msm_dp_priv,
+-						todo->data);
+-			break;
+ 		default:
+ 			break;
+ 		}
+-- 
+2.34.1
+
