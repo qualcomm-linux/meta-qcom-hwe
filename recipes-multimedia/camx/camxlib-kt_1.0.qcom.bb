@@ -9,7 +9,7 @@ DEPENDS += "syslog-plumber glib-2.0 property-vault camxapi-kt fastrpc virtual/eg
 
 RDEPENDS:${PN} += "cameradlkm"
 
-QCM6490_SHA256SUM = "7daeef30f0cc643f81bb994912ced7480a37b3248a3965494b23306fabf5ce91"
+QCM6490_SHA256SUM = "376bf4cce49bcecc8a85b16cd6205dac5cabfc6e4b578c4dc7d058cfa2a068f1"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 

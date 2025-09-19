@@ -7,7 +7,7 @@ DESCRIPTION = "Camx"
 
 DEPENDS += "syslog-plumber glib-2.0 property-vault camxlib-kt cameradlkm fastrpc qcom-sensinghub qcom-sensors-utils qcom-sensors-core qmi-framework abseil-cpp"
 
-QCM6490_SHA256SUM = "1abd3e9999ad77f9d79a12b6a0767ca15d6e752b373d46a725d87771ae238fb5"
+QCM6490_SHA256SUM = "50e19df7e496c3df3b80f531c614841412d84cf6e4599a75bc53b3e11fe2f9e0"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 
