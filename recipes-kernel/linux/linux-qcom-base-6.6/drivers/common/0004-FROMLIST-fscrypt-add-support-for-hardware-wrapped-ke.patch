@@ -1,8 +1,7 @@
-From 0b3a7969cb68f4037d0e13890aae59ebbecbeff3 Mon Sep 17 00:00:00 2001
+From 7c46149b708f71f2ce6fc100fd79d365f3a9387a Mon Sep 17 00:00:00 2001
 From: Eric Biggers <ebiggers@google.com>
 Date: Tue, 11 Feb 2025 11:55:42 +0530
-Subject: [PATCH 04/17] FROMLIST: fscrypt: add support for hardware-wrapped
- keys
+Subject: [PATCH] FROMLIST: fscrypt: add support for hardware-wrapped keys
 
 Add support for hardware-wrapped keys to fscrypt.  Such keys are
 protected from certain attacks, such as cold boot attacks.  For more
@@ -47,22 +46,22 @@ Upstream-Status: Submitted [https://lore.kernel.org/all/20241011-wrapped-keys-v7
  9 files changed, 412 insertions(+), 73 deletions(-)
 
 diff --git a/Documentation/filesystems/fscrypt.rst b/Documentation/filesystems/fscrypt.rst
-index a624e92f2687..aad50a797ada 100644
+index 6ba11dfb4bf3..775fa332b922 100644
 --- a/Documentation/filesystems/fscrypt.rst
 +++ b/Documentation/filesystems/fscrypt.rst
 @@ -70,7 +70,7 @@ Online attacks
  --------------
-
+ 
  fscrypt (and storage encryption in general) can only provide limited
 -protection, if any at all, against online attacks.  In detail:
 +protection against online attacks.  In detail:
-
+ 
  Side-channel attacks
  ~~~~~~~~~~~~~~~~~~~~
 @@ -99,16 +99,23 @@ Therefore, any encryption-specific access control checks would merely
  be enforced by kernel *code* and therefore would be largely redundant
  with the wide variety of access control mechanisms already available.)
-
+ 
 -Kernel memory compromise
 -~~~~~~~~~~~~~~~~~~~~~~~~
 +Read-only kernel memory compromise
@@ -74,7 +73,7 @@ index a624e92f2687..aad50a797ada 100644
 +compromise all fscrypt keys that are currently in-use.  This also
 +extends to cold boot attacks; if the system is suddenly powered off,
 +keys the system was using may remain in memory for a short time.
-
+ 
 -An attacker who compromises the system enough to read from arbitrary
 -memory, e.g. by mounting a physical attack or by exploiting a kernel
 -security vulnerability, can compromise all encryption keys that are
@@ -83,18 +82,18 @@ index a624e92f2687..aad50a797ada 100644
 +keys and file contents encryption keys (but not other types of fscrypt
 +subkeys such as filenames encryption keys) are protected from
 +compromises of arbitrary kernel memory.
-
+ 
 -However, fscrypt allows encryption keys to be removed from the kernel,
 -which may protect them from later compromise.
 +In addition, fscrypt allows encryption keys to be removed from the
 +kernel, which may protect them from later compromise.
-
+ 
  In more detail, the FS_IOC_REMOVE_ENCRYPTION_KEY ioctl (or the
  FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS ioctl) can wipe a master
-@@ -145,6 +152,24 @@ However, these ioctls have some limitations:
-   accelerator hardware (if used by the crypto API to implement any of
-   the algorithms), or in other places not explicitly considered here.
-
+@@ -144,6 +151,24 @@ However, these ioctls have some limitations:
+ - Secret keys might still exist in CPU registers or in other places
+   not explicitly considered here.
+ 
 +Full system compromise
 +~~~~~~~~~~~~~~~~~~~~~~
 +
@@ -115,11 +114,11 @@ index a624e92f2687..aad50a797ada 100644
 +
  Limitations of v1 policies
  ~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-@@ -171,6 +196,11 @@ policies on all new encrypted directories.
+ 
+@@ -170,6 +195,11 @@ policies on all new encrypted directories.
  Key hierarchy
  =============
-
+ 
 +Note: this section assumes the use of standard keys (i.e. "software
 +keys") rather than hardware-wrapped keys.  The use of hardware-wrapped
 +keys modifies the key hierarchy slightly.  For details, see the
@@ -127,17 +126,17 @@ index a624e92f2687..aad50a797ada 100644
 +
  Master Keys
  -----------
-
-@@ -579,6 +609,8 @@ This structure must be initialized as follows:
+ 
+@@ -581,6 +611,8 @@ This structure must be initialized as follows:
      policies`_.
    - FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32: See `IV_INO_LBLK_32
      policies`_.
 +  - FSCRYPT_POLICY_FLAG_HW_WRAPPED_KEY: This flag denotes that this
 +    policy uses a hardware-wrapped key.  See `Hardware-wrapped keys`_.
-
+ 
    v1 encryption policies only support the PAD_* and DIRECT_KEY flags.
    The other flags are only supported by v2 encryption policies.
-@@ -778,7 +810,8 @@ a pointer to struct fscrypt_add_key_arg, defined as follows::
+@@ -780,7 +812,8 @@ a pointer to struct fscrypt_add_key_arg, defined as follows::
              struct fscrypt_key_specifier key_spec;
              __u32 raw_size;
              __u32 key_id;
@@ -146,20 +145,20 @@ index a624e92f2687..aad50a797ada 100644
 +            __u32 __reserved[7];
              __u8 raw[];
      };
-
-@@ -797,7 +830,7 @@ a pointer to struct fscrypt_add_key_arg, defined as follows::
-
+ 
+@@ -799,7 +832,7 @@ a pointer to struct fscrypt_add_key_arg, defined as follows::
+ 
      struct fscrypt_provisioning_key_payload {
              __u32 type;
 -            __u32 __reserved;
 +            __u32 flags;
              __u8 raw[];
      };
-
-@@ -825,6 +858,12 @@ as follows:
+ 
+@@ -827,6 +860,12 @@ as follows:
    Alternatively, if ``key_id`` is nonzero, this field must be 0, since
    in that case the size is implied by the specified Linux keyring key.
-
+ 
 +- ``flags`` contains optional flags from ``<linux/fscrypt.h>``:
 +
 +  - FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED: This denotes that the key is a
@@ -169,7 +168,7 @@ index a624e92f2687..aad50a797ada 100644
  - ``key_id`` is 0 if the raw key is given directly in the ``raw``
    field.  Otherwise ``key_id`` is the ID of a Linux keyring key of
    type "fscrypt-provisioning" whose payload is
-@@ -866,6 +905,8 @@ FS_IOC_ADD_ENCRYPTION_KEY can fail with the following errors:
+@@ -868,6 +907,8 @@ FS_IOC_ADD_ENCRYPTION_KEY can fail with the following errors:
    caller does not have the CAP_SYS_ADMIN capability in the initial
    user namespace; or the raw key was specified by Linux key ID but the
    process lacks Search permission on the key.
@@ -178,7 +177,7 @@ index a624e92f2687..aad50a797ada 100644
  - ``EDQUOT``: the key quota for this user would be exceeded by adding
    the key
  - ``EINVAL``: invalid key size or key specifier type, or reserved bits
-@@ -877,7 +918,9 @@ FS_IOC_ADD_ENCRYPTION_KEY can fail with the following errors:
+@@ -879,7 +920,9 @@ FS_IOC_ADD_ENCRYPTION_KEY can fail with the following errors:
  - ``ENOTTY``: this type of filesystem does not implement encryption
  - ``EOPNOTSUPP``: the kernel was not configured with encryption
    support for this filesystem, or the filesystem superblock has not
@@ -186,33 +185,33 @@ index a624e92f2687..aad50a797ada 100644
 +  had encryption enabled on it, or FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED was
 +  specified but the filesystem and/or the hardware doesn't support
 +  hardware-wrapped keys
-
+ 
  Legacy method
  ~~~~~~~~~~~~~
-@@ -940,9 +983,8 @@ or removed by non-root users.
+@@ -942,9 +985,8 @@ or removed by non-root users.
  These ioctls don't work on keys that were added via the legacy
  process-subscribed keyrings mechanism.
-
+ 
 -Before using these ioctls, read the `Kernel memory compromise`_
 -section for a discussion of the security goals and limitations of
 -these ioctls.
 +Before using these ioctls, read the `Online attacks`_ section for a
 +discussion of the security goals and limitations of these ioctls.
-
+ 
  FS_IOC_REMOVE_ENCRYPTION_KEY
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@@ -1262,7 +1304,8 @@ inline encryption hardware doesn't have the needed crypto capabilities
+@@ -1255,7 +1297,8 @@ inline encryption hardware doesn't have the needed crypto capabilities
  (e.g. support for the needed encryption algorithm and data unit size)
  and where blk-crypto-fallback is unusable.  (For blk-crypto-fallback
  to be usable, it must be enabled in the kernel configuration with
 -CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK=y.)
 +CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK=y, and the file must be
 +protected by a standard key rather than a hardware-wrapped key.)
-
+ 
  Currently fscrypt always uses the filesystem block size (which is
  usually 4096 bytes) as the data unit size.  Therefore, it can only use
-@@ -1270,7 +1313,84 @@ inline encryption hardware that supports that data unit size.
-
+@@ -1263,7 +1306,84 @@ inline encryption hardware that supports that data unit size.
+ 
  Inline encryption doesn't affect the ciphertext or other aspects of
  the on-disk format, so users may freely switch back and forth between
 -using "inlinecrypt" and not using "inlinecrypt".
@@ -294,17 +293,17 @@ index a624e92f2687..aad50a797ada 100644
 +Note that this implies that the hardware-wrapped key feature only
 +protects the file contents encryption keys.  It doesn't protect other
 +fscrypt subkeys such as filenames encryption keys.
-
+ 
  Direct I/O support
  ==================
 diff --git a/fs/crypto/fscrypt_private.h b/fs/crypto/fscrypt_private.h
-index 2d63da48635a..01949624084b 100644
+index 14b26036055e..1e936091c0fa 100644
 --- a/fs/crypto/fscrypt_private.h
 +++ b/fs/crypto/fscrypt_private.h
-@@ -27,6 +27,27 @@
+@@ -43,6 +43,27 @@
   */
- #define FSCRYPT_MIN_KEY_SIZE	16
-
+ #define FSCRYPT_CRYPTOAPI_MASK \
+ 	(CRYPTO_ALG_ALLOCATES_MEMORY | CRYPTO_ALG_KERN_DRIVER_ONLY)
 +/* Maximum size of a standard fscrypt master key */
 +#define FSCRYPT_MAX_STANDARD_KEY_SIZE	64
 +
@@ -328,8 +327,8 @@ index 2d63da48635a..01949624084b 100644
 +
  #define FSCRYPT_CONTEXT_V1	1
  #define FSCRYPT_CONTEXT_V2	2
-
-@@ -316,13 +337,16 @@ int fscrypt_init_hkdf(struct fscrypt_hkdf *hkdf, const u8 *master_key,
+ 
+@@ -332,13 +353,16 @@ int fscrypt_init_hkdf(struct fscrypt_hkdf *hkdf, const u8 *master_key,
   * outputs are unique and cryptographically isolated, i.e. knowledge of one
   * output doesn't reveal another.
   */
@@ -344,21 +343,21 @@ index 2d63da48635a..01949624084b 100644
  #define HKDF_CONTEXT_INODE_HASH_KEY	7 /* info=<empty>		*/
 +#define HKDF_CONTEXT_KEY_IDENTIFIER_FOR_HW_WRAPPED_KEY \
 +					8 /* info=<empty>		*/
-
+ 
  int fscrypt_hkdf_expand(const struct fscrypt_hkdf *hkdf, u8 context,
  			const u8 *info, unsigned int infolen,
-@@ -341,12 +365,17 @@ fscrypt_using_inline_encryption(const struct fscrypt_info *ci)
+@@ -357,12 +381,17 @@ fscrypt_using_inline_encryption(const struct fscrypt_info *ci)
  }
-
+ 
  int fscrypt_prepare_inline_crypt_key(struct fscrypt_prepared_key *prep_key,
 -				     const u8 *raw_key,
 +				     const u8 *raw_key, size_t raw_key_size,
 +				     bool is_hw_wrapped,
  				     const struct fscrypt_info *ci);
-
+ 
  void fscrypt_destroy_inline_crypt_key(struct super_block *sb,
  				      struct fscrypt_prepared_key *prep_key);
-
+ 
 +int fscrypt_derive_sw_secret(struct super_block *sb,
 +			     const u8 *wrapped_key, size_t wrapped_key_size,
 +			     u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE]);
@@ -366,8 +365,8 @@ index 2d63da48635a..01949624084b 100644
  /*
   * Check whether the crypto transform or blk-crypto key has been allocated in
   * @prep_key, depending on which encryption implementation the file will use.
-@@ -383,7 +412,8 @@ fscrypt_using_inline_encryption(const struct fscrypt_info *ci)
-
+@@ -399,7 +428,8 @@ fscrypt_using_inline_encryption(const struct fscrypt_info *ci)
+ 
  static inline int
  fscrypt_prepare_inline_crypt_key(struct fscrypt_prepared_key *prep_key,
 -				 const u8 *raw_key,
@@ -376,10 +375,10 @@ index 2d63da48635a..01949624084b 100644
  				 const struct fscrypt_info *ci)
  {
  	WARN_ON_ONCE(1);
-@@ -396,6 +426,15 @@ fscrypt_destroy_inline_crypt_key(struct super_block *sb,
+@@ -412,6 +442,15 @@ fscrypt_destroy_inline_crypt_key(struct super_block *sb,
  {
  }
-
+ 
 +static inline int
 +fscrypt_derive_sw_secret(struct super_block *sb,
 +			 const u8 *wrapped_key, size_t wrapped_key_size,
@@ -392,9 +391,9 @@ index 2d63da48635a..01949624084b 100644
  static inline bool
  fscrypt_is_key_prepared(struct fscrypt_prepared_key *prep_key,
  			const struct fscrypt_info *ci)
-@@ -412,11 +451,23 @@ fscrypt_is_key_prepared(struct fscrypt_prepared_key *prep_key,
+@@ -428,11 +467,23 @@ fscrypt_is_key_prepared(struct fscrypt_prepared_key *prep_key,
  struct fscrypt_master_key_secret {
-
+ 
  	/*
 -	 * For v2 policy keys: HKDF context keyed by this master key.
 -	 * For v1 policy keys: not set (hkdf.hmac_tfm == NULL).
@@ -406,7 +405,7 @@ index 2d63da48635a..01949624084b 100644
 +	 * derived from this master key if ->is_hw_wrapped=true.
  	 */
  	struct fscrypt_hkdf	hkdf;
-
+ 
 +	/*
 +	 * True if this key is a hardware-wrapped key; false if this key is a
 +	 * standard key (i.e. a "software key").  For v1 policy keys this will
@@ -418,10 +417,10 @@ index 2d63da48635a..01949624084b 100644
  	/*
  	 * Size of the raw key in bytes.  This remains set even if ->raw was
  	 * zeroized due to no longer being needed.  I.e. we still remember the
-@@ -424,8 +475,14 @@ struct fscrypt_master_key_secret {
+@@ -440,8 +491,14 @@ struct fscrypt_master_key_secret {
  	 */
  	u32			size;
-
+ 
 -	/* For v1 policy keys: the raw key.  Wiped for v2 policy keys. */
 -	u8			raw[FSCRYPT_MAX_KEY_SIZE];
 +	/*
@@ -432,11 +431,11 @@ index 2d63da48635a..01949624084b 100644
 +	 * will be zeroized as soon as ->hkdf is initialized.
 +	 */
 +	u8			raw[FSCRYPT_MAX_ANY_KEY_SIZE];
-
+ 
  } __randomize_layout;
-
+ 
 diff --git a/fs/crypto/hkdf.c b/fs/crypto/hkdf.c
-index 5a384dad2c72..7e007810e434 100644
+index b7f5e7884e03..06b18797d0b1 100644
 --- a/fs/crypto/hkdf.c
 +++ b/fs/crypto/hkdf.c
 @@ -4,7 +4,9 @@
@@ -459,9 +458,9 @@ index 1321fdbc725f..36cfaeed2d32 100644
  #include <linux/slab.h>
  #include <linux/uio.h>
 +#include <linux/version.h>
-
+ 
  #include "fscrypt_private.h"
-
+ 
 @@ -94,6 +95,7 @@ int fscrypt_select_encryption_impl(struct fscrypt_info *ci)
  {
  	const struct inode *inode = ci->ci_inode;
@@ -479,7 +478,7 @@ index 1321fdbc725f..36cfaeed2d32 100644
 +	if ((policy_flags & FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32) &&
  	    sb->s_blocksize != PAGE_SIZE)
  		return 0;
-
+ 
 @@ -129,9 +130,15 @@ int fscrypt_select_encryption_impl(struct fscrypt_info *ci)
  	 * crypto configuration that the file would use.
  	 */
@@ -494,12 +493,12 @@ index 1321fdbc725f..36cfaeed2d32 100644
 +	crypto_cfg.key_type =
 +		(policy_flags & FSCRYPT_POLICY_FLAG_HW_WRAPPED_KEY) ?
 +		BLK_CRYPTO_KEY_TYPE_HW_WRAPPED : BLK_CRYPTO_KEY_TYPE_STANDARD;
-
+ 
  	devs = fscrypt_get_devices(sb, &num_devs);
  	if (IS_ERR(devs))
 @@ -152,12 +159,15 @@ int fscrypt_select_encryption_impl(struct fscrypt_info *ci)
  }
-
+ 
  int fscrypt_prepare_inline_crypt_key(struct fscrypt_prepared_key *prep_key,
 -				     const u8 *raw_key,
 +				     const u8 *raw_key, size_t raw_key_size,
@@ -517,7 +516,7 @@ index 1321fdbc725f..36cfaeed2d32 100644
 @@ -168,9 +178,14 @@ int fscrypt_prepare_inline_crypt_key(struct fscrypt_prepared_key *prep_key,
  	if (!blk_key)
  		return -ENOMEM;
-
+ 
 -	err = blk_crypto_init_key(blk_key, raw_key, ci->ci_mode->keysize,
 -				  BLK_CRYPTO_KEY_TYPE_STANDARD, crypto_mode,
 -				  fscrypt_get_dun_bytes(ci), sb->s_blocksize);
@@ -535,7 +534,7 @@ index 1321fdbc725f..36cfaeed2d32 100644
 @@ -228,6 +243,34 @@ void fscrypt_destroy_inline_crypt_key(struct super_block *sb,
  	kfree_sensitive(blk_key);
  }
-
+ 
 +/*
 + * Ask the inline encryption hardware to derive the software secret from a
 + * hardware-wrapped key.  Returns -EOPNOTSUPP if hardware-wrapped keys aren't
@@ -585,11 +584,11 @@ index 7cbb1fd872ac..5e6de94481f8 100644
 -	return key_payload_reserve(key, FSCRYPT_MAX_KEY_SIZE);
 +	return key_payload_reserve(key, FSCRYPT_MAX_STANDARD_KEY_SIZE);
  }
-
+ 
  static void fscrypt_user_key_describe(const struct key *key, struct seq_file *m)
 @@ -534,20 +534,45 @@ static int add_master_key(struct super_block *sb,
  	int err;
-
+ 
  	if (key_spec->type == FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER) {
 -		err = fscrypt_init_hkdf(&secret->hkdf, secret->raw,
 -					secret->size);
@@ -599,7 +598,7 @@ index 7cbb1fd872ac..5e6de94481f8 100644
 +		u8 *kdf_key = secret->raw;
 +		unsigned int kdf_key_size = secret->size;
 +		u8 keyid_kdf_ctx = HKDF_CONTEXT_KEY_IDENTIFIER_FOR_STANDARD_KEY;
-
+ 
  		/*
 -		 * Now that the HKDF context is initialized, the raw key is no
 -		 * longer needed.
@@ -634,7 +633,7 @@ index 7cbb1fd872ac..5e6de94481f8 100644
 +		memzero_explicit(kdf_key, kdf_key_size);
 +		if (err)
 +			return err;
-
+ 
  		/* Calculate the key identifier */
 -		err = fscrypt_hkdf_expand(&secret->hkdf,
 -					  HKDF_CONTEXT_KEY_IDENTIFIER, NULL, 0,
@@ -645,7 +644,7 @@ index 7cbb1fd872ac..5e6de94481f8 100644
 @@ -556,19 +581,36 @@ static int add_master_key(struct super_block *sb,
  	return do_add_master_key(sb, secret, key_spec);
  }
-
+ 
 +/*
 + * Validate the size of an fscrypt master key being added.  Note that this is
 + * just an initial check, as we don't know which ciphers will be used yet.
@@ -663,7 +662,7 @@ index 7cbb1fd872ac..5e6de94481f8 100644
  static int fscrypt_provisioning_key_preparse(struct key_preparsed_payload *prep)
  {
  	const struct fscrypt_provisioning_key_payload *payload = prep->data;
-
+ 
 -	if (prep->datalen < sizeof(*payload) + FSCRYPT_MIN_KEY_SIZE ||
 -	    prep->datalen > sizeof(*payload) + FSCRYPT_MAX_KEY_SIZE)
 +	if (prep->datalen < sizeof(*payload))
@@ -672,15 +671,15 @@ index 7cbb1fd872ac..5e6de94481f8 100644
 +	if (!fscrypt_valid_key_size(prep->datalen - sizeof(*payload),
 +				    payload->flags))
  		return -EINVAL;
-
+ 
  	if (payload->type != FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR &&
  	    payload->type != FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER)
  		return -EINVAL;
-
+ 
 -	if (payload->__reserved)
 +	if (payload->flags & ~FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED)
  		return -EINVAL;
-
+ 
  	prep->payload.data[0] = kmemdup(payload, prep->datalen, GFP_KERNEL);
 @@ -615,18 +657,18 @@ static struct key_type key_type_fscrypt_provisioning = {
   * Retrieve the raw key from the Linux keyring key specified by 'key_id', and
@@ -711,7 +710,7 @@ index 7cbb1fd872ac..5e6de94481f8 100644
 @@ -643,8 +685,12 @@ static int get_keyring_key(u32 key_id, u32 type,
  		goto bad_key;
  	payload = key->payload.data[0];
-
+ 
 -	/* Don't allow fscrypt v1 keys to be used as v2 keys and vice versa. */
 -	if (payload->type != type)
 +	/*
@@ -721,11 +720,11 @@ index 7cbb1fd872ac..5e6de94481f8 100644
 +	 */
 +	if (payload->type != type || payload->flags != flags)
  		goto bad_key;
-
+ 
  	secret->size = key->datalen - sizeof(*payload);
 @@ -710,15 +756,24 @@ int fscrypt_ioctl_add_key(struct file *filp, void __user *_uarg)
  		return -EACCES;
-
+ 
  	memset(&secret, 0, sizeof(secret));
 +
 +	if (arg.flags) {
@@ -757,17 +756,17 @@ index 7cbb1fd872ac..5e6de94481f8 100644
  {
 -	static u8 test_key[FSCRYPT_MAX_KEY_SIZE];
 +	static u8 test_key[FSCRYPT_MAX_STANDARD_KEY_SIZE];
-
+ 
 -	get_random_once(test_key, FSCRYPT_MAX_KEY_SIZE);
 +	get_random_once(test_key, sizeof(test_key));
-
+ 
  	memset(secret, 0, sizeof(*secret));
 -	secret->size = FSCRYPT_MAX_KEY_SIZE;
 -	memcpy(secret->raw, test_key, FSCRYPT_MAX_KEY_SIZE);
 +	secret->size = sizeof(test_key);
 +	memcpy(secret->raw, test_key, sizeof(test_key));
  }
-
+ 
  int fscrypt_get_test_dummy_key_identifier(
 @@ -766,7 +821,8 @@ int fscrypt_get_test_dummy_key_identifier(
  	err = fscrypt_init_hkdf(&secret.hkdf, secret.raw, secret.size);
@@ -780,21 +779,21 @@ index 7cbb1fd872ac..5e6de94481f8 100644
  				  FSCRYPT_KEY_IDENTIFIER_SIZE);
  out:
 diff --git a/fs/crypto/keysetup.c b/fs/crypto/keysetup.c
-index 361f41ef46c7..1e5f14d207b2 100644
+index 2348fc2a47f8..d347e9540af3 100644
 --- a/fs/crypto/keysetup.c
 +++ b/fs/crypto/keysetup.c
-@@ -153,7 +153,9 @@ int fscrypt_prepare_key(struct fscrypt_prepared_key *prep_key,
+@@ -154,7 +154,9 @@ int fscrypt_prepare_key(struct fscrypt_prepared_key *prep_key,
  	struct crypto_skcipher *tfm;
-
+ 
  	if (fscrypt_using_inline_encryption(ci))
 -		return fscrypt_prepare_inline_crypt_key(prep_key, raw_key, ci);
 +		return fscrypt_prepare_inline_crypt_key(prep_key, raw_key,
 +							ci->ci_mode->keysize,
 +							false, ci);
-
+ 
  	tfm = fscrypt_allocate_skcipher(ci->ci_mode, raw_key, ci->ci_inode);
  	if (IS_ERR(tfm))
-@@ -194,14 +196,29 @@ static int setup_per_mode_enc_key(struct fscrypt_info *ci,
+@@ -195,14 +197,29 @@ static int setup_per_mode_enc_key(struct fscrypt_info *ci,
  	struct fscrypt_mode *mode = ci->ci_mode;
  	const u8 mode_num = mode - fscrypt_modes;
  	struct fscrypt_prepared_key *prep_key;
@@ -804,10 +803,10 @@ index 361f41ef46c7..1e5f14d207b2 100644
  	unsigned int hkdf_infolen = 0;
 +	bool use_hw_wrapped_key = false;
  	int err;
-
+ 
  	if (WARN_ON_ONCE(mode_num > FSCRYPT_MODE_MAX))
  		return -EINVAL;
-
+ 
 +	if (mk->mk_secret.is_hw_wrapped && S_ISREG(inode->i_mode)) {
 +		/* Using a hardware-wrapped key for file contents encryption */
 +		if (!fscrypt_using_inline_encryption(ci)) {
@@ -825,10 +824,10 @@ index 361f41ef46c7..1e5f14d207b2 100644
  	prep_key = &keys[mode_num];
  	if (fscrypt_is_key_prepared(prep_key, ci)) {
  		ci->ci_enc_key = *prep_key;
-@@ -213,6 +230,16 @@ static int setup_per_mode_enc_key(struct fscrypt_info *ci,
+@@ -214,6 +231,16 @@ static int setup_per_mode_enc_key(struct fscrypt_info *ci,
  	if (fscrypt_is_key_prepared(prep_key, ci))
  		goto done_unlock;
-
+ 
 +	if (use_hw_wrapped_key) {
 +		err = fscrypt_prepare_inline_crypt_key(prep_key,
 +						       mk->mk_secret.raw,
@@ -842,10 +841,10 @@ index 361f41ef46c7..1e5f14d207b2 100644
  	BUILD_BUG_ON(sizeof(mode_num) != 1);
  	BUILD_BUG_ON(sizeof(sb->s_uuid) != 16);
  	BUILD_BUG_ON(sizeof(hkdf_info) != 17);
-@@ -335,6 +362,19 @@ static int fscrypt_setup_v2_file_key(struct fscrypt_info *ci,
+@@ -336,6 +363,19 @@ static int fscrypt_setup_v2_file_key(struct fscrypt_info *ci,
  {
  	int err;
-
+ 
 +	if (mk->mk_secret.is_hw_wrapped &&
 +	    !(ci->ci_policy.v2.flags & FSCRYPT_POLICY_FLAG_HW_WRAPPED_KEY)) {
 +		fscrypt_warn(ci->ci_inode,
@@ -862,17 +861,17 @@ index 361f41ef46c7..1e5f14d207b2 100644
  	if (ci->ci_policy.v2.flags & FSCRYPT_POLICY_FLAG_DIRECT_KEY) {
  		/*
  		 * DIRECT_KEY: instead of deriving per-file encryption keys, the
-@@ -361,7 +401,7 @@ static int fscrypt_setup_v2_file_key(struct fscrypt_info *ci,
+@@ -362,7 +402,7 @@ static int fscrypt_setup_v2_file_key(struct fscrypt_info *ci,
  		   FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32) {
  		err = fscrypt_setup_iv_ino_lblk_32_key(ci, mk);
  	} else {
 -		u8 derived_key[FSCRYPT_MAX_KEY_SIZE];
 +		u8 derived_key[FSCRYPT_MAX_STANDARD_KEY_SIZE];
-
+ 
  		err = fscrypt_hkdf_expand(&mk->mk_secret.hkdf,
  					  HKDF_CONTEXT_PER_FILE_ENC_KEY,
-@@ -497,6 +537,14 @@ static int setup_file_encryption_key(struct fscrypt_info *ci,
-
+@@ -498,6 +538,14 @@ static int setup_file_encryption_key(struct fscrypt_info *ci,
+ 
  	switch (ci->ci_policy.version) {
  	case FSCRYPT_POLICY_V1:
 +		if (WARN_ON(mk->mk_secret.is_hw_wrapped)) {
@@ -887,12 +886,12 @@ index 361f41ef46c7..1e5f14d207b2 100644
  		break;
  	case FSCRYPT_POLICY_V2:
 diff --git a/fs/crypto/keysetup_v1.c b/fs/crypto/keysetup_v1.c
-index 75dabd9b27f9..ee8246382805 100644
+index 159dd0288349..fc856376cd83 100644
 --- a/fs/crypto/keysetup_v1.c
 +++ b/fs/crypto/keysetup_v1.c
-@@ -118,7 +118,8 @@ find_and_lock_process_key(const char *prefix,
+@@ -119,7 +119,8 @@ find_and_lock_process_key(const char *prefix,
  	payload = (const struct fscrypt_key *)ukp->data;
-
+ 
  	if (ukp->datalen != sizeof(struct fscrypt_key) ||
 -	    payload->size < 1 || payload->size > FSCRYPT_MAX_KEY_SIZE) {
 +	    payload->size < 1 ||
@@ -900,14 +899,14 @@ index 75dabd9b27f9..ee8246382805 100644
  		fscrypt_warn(NULL,
  			     "key with description '%s' has invalid payload",
  			     key->description);
-@@ -149,7 +150,7 @@ struct fscrypt_direct_key {
+@@ -150,7 +151,7 @@ struct fscrypt_direct_key {
  	const struct fscrypt_mode	*dk_mode;
  	struct fscrypt_prepared_key	dk_key;
  	u8				dk_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE];
 -	u8				dk_raw[FSCRYPT_MAX_KEY_SIZE];
 +	u8				dk_raw[FSCRYPT_MAX_STANDARD_KEY_SIZE];
  };
-
+ 
  static void free_direct_key(struct fscrypt_direct_key *dk)
 diff --git a/fs/crypto/policy.c b/fs/crypto/policy.c
 index f4456ecb3f87..911ff590d96f 100644
@@ -926,7 +925,7 @@ index f4456ecb3f87..911ff590d96f 100644
 @@ -233,6 +234,14 @@ static bool fscrypt_supported_v2_policy(const struct fscrypt_policy_v2 *policy,
  		return false;
  	}
-
+ 
 +	if ((policy->flags & FSCRYPT_POLICY_FLAG_HW_WRAPPED_KEY) &&
 +	    !(policy->flags & (FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64 |
 +			       FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32))) {
@@ -947,7 +946,7 @@ index fd1fb0d5389d..a533c14b6cc1 100644
  #define FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64	0x08
  #define FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32	0x10
 +#define FSCRYPT_POLICY_FLAG_HW_WRAPPED_KEY	0x20
-
+ 
  /* Encryption algorithms */
  #define FSCRYPT_MODE_AES_256_XTS		1
 @@ -118,7 +119,7 @@ struct fscrypt_key_specifier {
@@ -958,7 +957,7 @@ index fd1fb0d5389d..a533c14b6cc1 100644
 +	__u32 flags;
  	__u8 raw[];
  };
-
+ 
 @@ -127,7 +128,9 @@ struct fscrypt_add_key_arg {
  	struct fscrypt_key_specifier key_spec;
  	__u32 raw_size;
@@ -969,7 +968,7 @@ index fd1fb0d5389d..a533c14b6cc1 100644
 +	__u32 __reserved[7];
  	__u8 raw[];
  };
-
---
-2.34.1
+ 
+-- 
+2.17.1
 
