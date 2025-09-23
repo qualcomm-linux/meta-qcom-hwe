@@ -12,7 +12,7 @@ LICENSE = " \
 LIC_FILES_CHKSUM = "\
     file://LICENSE.qcom;md5=56e86b6c508490dadc343f39468b5f5e \
     file://LICENSE.qcom-2;md5=165287851294f2fb8ac8cbc5e24b02b0 \
-    file://WHENCE;md5=d087a91a94b0dd5f6592fcd16a07a869 \
+    file://WHENCE;md5=76bb6e36d4cc64bbc46a1be16f84b1b3 \
 "
 NO_GENERIC_LICENSE[dspso-qcom] = "LICENSE.qcom"
 NO_GENERIC_LICENSE[dspso-qcom-2] = "LICENSE.qcom-2"
@@ -22,7 +22,7 @@ SRC_URI = " \
     git://github.com/linux-msm/dsp-binaries;protocol=https;branch=trunk \
 "
 
-SRCREV = "4195fbd4da54f3830af2c01d141c30051f446e51"
+SRCREV = "1d73849501371b6f4a0b9c6e897e848ccfe3c1d3"
 
 S = "${WORKDIR}/git"
 
