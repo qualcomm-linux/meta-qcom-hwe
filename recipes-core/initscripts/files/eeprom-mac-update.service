@@ -1,0 +1,13 @@
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+
+[Unit]
+SourcePath=/etc/initscripts/eeprom_mac_update.sh
+Description=EEPROM format change
+ConditionPathExists=/sys/bus/i2c/devices/18-0050/eeprom
+
+[Service]
+ExecStart=/etc/initscripts/eeprom_mac_update.sh
+
+[Install]
+WantedBy=multi-user.target

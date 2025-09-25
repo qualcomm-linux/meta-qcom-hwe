@@ -16,6 +16,8 @@ SRC_URI:append:qcom = " \
     file://post_boot.sh \
     file://post-boot.service \
     file://start_stop_modem.sh \
+    file://eeprom_mac_update.sh \
+    file://eeprom-mac-update.service \
 "
 
 do_install:append:qcom() {
@@ -28,6 +30,11 @@ do_install:append:qcom() {
     install -m 0755 ${WORKDIR}/post_boot.sh ${D}${sysconfdir}/initscripts/post_boot.sh
     install -m 0644 ${WORKDIR}/post-boot.service -D ${D}${systemd_unitdir}/system/post-boot.service
     ln -sf ${systemd_unitdir}/system/post-boot.service ${D}${systemd_unitdir}/system/multi-user.target.wants/post-boot.service
+
+    # eeprom-mac-update
+    install -m 0755 ${WORKDIR}/eeprom_mac_update.sh -D ${D}${sysconfdir}/initscripts/eeprom_mac_update.sh
+    install -m 0644 ${WORKDIR}/eeprom-mac-update.service -D ${D}${systemd_unitdir}/system/eeprom-mac-update.service
+    ln -sf ${systemd_unitdir}/system/eeprom-mac-update.service ${D}${systemd_unitdir}/system/multi-user.target.wants/eeprom-mac-update.service
 
     # log-restrict
     install -m 0755 ${WORKDIR}/logging-restrictions.sh -D ${D}${sysconfdir}/initscripts/log_restrict.sh
@@ -72,6 +79,12 @@ INITSCRIPT_NAME:${PN}-post-boot = "post_boot.sh"
 PACKAGES =+ "${PN}-post-boot"
 FILES:${PN}-post-boot += "${systemd_unitdir}/system/post-boot.service ${systemd_unitdir}/system/multi-user.target.wants/post-boot.service ${sysconfdir}/initscripts/post_boot.sh"
 ALLOW_EMPTY:${PN}-functions = "1"
+
+INITSCRIPT_PACKAGES =+ "${PN}-eeprom-mac-update"
+INITSCRIPT_NAME:${PN}-eeprom-mac-update = "eeprom_mac_update.sh"
+
+PACKAGES =+ "${PN}-eeprom-mac-update"
+FILES:${PN}-eeprom-mac-update += "${systemd_unitdir}/system/eeprom-mac-update.service ${systemd_unitdir}/system/multi-user.target.wants/eeprom-mac-update.service ${sysconfdir}/initscripts/eeprom_mac_update.sh"
 
 INITSCRIPT_PACKAGES =+ "${PN}-modem-start-stop"
 INITSCRIPT_NAME:${PN}-modem-start-stop = "start_stop_modem.sh"
