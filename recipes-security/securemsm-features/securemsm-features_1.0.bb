@@ -9,9 +9,9 @@ DEPENDS = "libxml2 libdrm libtinyxml2 linux-kernel-qcom-headers glib-2.0 glibc q
            securemsm-headers minkipc property-vault jsoncpp qmi-framework curl\
           "
 
-QCM6490_SHA256SUM = "424f8658bd91af3d53ed0f2bb78500575745e6f70bb8bf55b05241cf39dc44b9"
-QCS9100_SHA256SUM = "541cad1c7a6c9730338224555942064babf7c912757fa74e804d1e30cc19430b"
-QCS8300_SHA256SUM = "3455e94e84df066ccc7b70e236aac02af912fca097a5724c2b5125be26cbcfb0"
+QCM6490_SHA256SUM = "c908bec2638fc98766f6aea590a6b529792803f2b86afbe2151cb2beb081add9"
+QCS9100_SHA256SUM = "290b5ebd06459d2be68845579436f2a1b448267505ae6544848a8f0f0742178f"
+QCS8300_SHA256SUM = "128bf59d458affb9fb30a248ef60ccf1dfb1184bfc212c7eb4ed707cb3a334e4"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"
