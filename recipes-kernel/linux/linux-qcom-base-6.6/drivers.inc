@@ -501,4 +501,5 @@ SRC_URI:append = " \
     file://qcs615/0012-FROMLIST-drm-bridge_connector-stop-filtering-events-.patch \
     file://qcs615/0013-FROMLIST-drm-msm-dp-Add-support-for-sending-VCPF-pac.patch \
     file://qcs615/0014-FROMLIST-drm-msm-dp-use-stream_id-to-change-offsets-.patch \
+    file://common/0148-PENDING-drm-msm-update-the-high-bitfield-of-certain-DSI.patch \
 "
