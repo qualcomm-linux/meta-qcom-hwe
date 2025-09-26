@@ -1,0 +1,100 @@
+From 87a0ce376a04fd3765923fbf20f90b5b66eb99a1 Mon Sep 17 00:00:00 2001
+From: Gargi Misra <quic_gmisra@quicinc.com>
+Date: Mon, 29 Sep 2025 11:48:16 +0530
+Subject: [PATCH] QCLINUX: Enable required booleans through tunable policy
+
+Upstream-status: Inappropriate [internal requirement]
+Signed-off-by: Gargi Misra <quic_gmisra@quicinc.com>
+
+---
+ policy/modules/services/container.te |  2 +-
+ policy/modules/services/ssh.te       |  2 +-
+ policy/modules/services/virt.te      | 12 ++++++------
+ 3 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/policy/modules/services/container.te b/policy/modules/services/container.te
+index 864fae707..e85ad932b 100644
+--- a/policy/modules/services/container.te
++++ b/policy/modules/services/container.te
+@@ -14,7 +14,7 @@ gen_tunable(container_manage_cgroup, false)
+ ##	Allow container engines to mount on all non-security files.
+ ##	</p>
+ ## </desc>
+-gen_tunable(container_mounton_non_security, false)
++gen_tunable(container_mounton_non_security, true)
+ 
+ ## <desc>
+ ##	<p>
+diff --git a/policy/modules/services/ssh.te b/policy/modules/services/ssh.te
+index 2d10ecb73..ea450f14d 100644
+--- a/policy/modules/services/ssh.te
++++ b/policy/modules/services/ssh.te
+@@ -17,7 +17,7 @@ gen_tunable(allow_ssh_keysign, false)
+ ## Allow ssh logins as sysadm_r:sysadm_t
+ ## </p>
+ ## </desc>
+-gen_tunable(ssh_sysadm_login, false)
++gen_tunable(ssh_sysadm_login, true)
+ 
+ ## <desc>
+ ## <p>
+diff --git a/policy/modules/services/virt.te b/policy/modules/services/virt.te
+index d1ca4e810..c28b29147 100644
+--- a/policy/modules/services/virt.te
++++ b/policy/modules/services/virt.te
+@@ -11,7 +11,7 @@ policy_module(virt)
+ ##	can use serial/parallel communication ports.
+ ##	</p>
+ ## </desc>
+-gen_tunable(virt_use_comm, false)
++gen_tunable(virt_use_comm, true)
+ 
+ ## <desc>
+ ##	<p>
+@@ -20,7 +20,7 @@ gen_tunable(virt_use_comm, false)
+ ##	their stack executable.
+ ##	</p>
+ ## </desc>
+-gen_tunable(virt_use_execmem, false)
++gen_tunable(virt_use_execmem, true)
+ 
+ ## <desc>
+ ##	<p>
+@@ -52,7 +52,7 @@ gen_tunable(virt_use_samba, false)
+ ##	can manage device configuration.
+ ##	</p>
+ ## </desc>
+-gen_tunable(virt_use_sysfs, false)
++gen_tunable(virt_use_sysfs, true)
+ 
+ ## <desc>
+ ##	<p>
+@@ -60,7 +60,7 @@ gen_tunable(virt_use_sysfs, false)
+ ##	can use usb devices.
+ ##	</p>
+ ## </desc>
+-gen_tunable(virt_use_usb, false)
++gen_tunable(virt_use_usb, true)
+ 
+ ## <desc>
+ ##	<p>
+@@ -76,7 +76,7 @@ gen_tunable(virt_use_xserver, false)
+ ##	can use vfio for pci device pass through (vt-d).
+ ##	</p>
+ ## </desc>
+-gen_tunable(virt_use_vfio, false)
++gen_tunable(virt_use_vfio, true)
+ 
+ ## <desc>
+ ##	<p>
+@@ -84,7 +84,7 @@ gen_tunable(virt_use_vfio, false)
+ ##	can use input devices via evdev pass through.
+ ##	</p>
+ ## </desc>
+-gen_tunable(virt_use_evdev, false)
++gen_tunable(virt_use_evdev, true)
+ 
+ attribute virt_ptynode;
+ attribute virt_domain;
+-- 
+2.34.1
