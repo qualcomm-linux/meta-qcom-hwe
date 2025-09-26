@@ -10,6 +10,7 @@ PACKAGE_ARCH = "${SOC_ARCH}"
 
 S = "${WORKDIR}"
 SRC_URI = " file://init_qti.service \
+            file://weston-sleep.sh  \
             file://init_qti"
 
 DISPLAY_SERVICE_FILENAME = "init_qti.service"
@@ -22,6 +23,8 @@ do_install() {
         install -m 0755 ${S}/${DISPLAY_SERVICE_FILENAME} -D ${D}${sysconfdir}/systemd/system/init_display.service
         install -d ${D}/etc/systemd/system/multi-user.target.wants
         ln -sf /etc/systemd/system/init_display.service ${D}/etc/systemd/system/multi-user.target.wants/init_display.service
+        install -d ${D}${libdir}/systemd/system-sleep
+        install -m 0755 ${S}/weston-sleep.sh ${D}${libdir}/systemd/system-sleep/weston-sleep.sh
     else
         install -d ${D}/${sysconfdir}/init.d
         install -m755 ${S}/init_qti ${D}/${sysconfdir}/init.d/weston
@@ -29,4 +32,5 @@ do_install() {
 }
 
 SYSTEMD_SERVICE:${PN} = "init_display.service"
-
+FILES:${PN} += "${libdir}/systemd/system-sleep/weston-sleep.sh"
+RDEPENDS:${PN} += "bash"
