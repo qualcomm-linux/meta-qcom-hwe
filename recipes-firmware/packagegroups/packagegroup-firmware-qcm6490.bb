@@ -5,6 +5,21 @@ inherit packagegroup
 RRECOMMENDS:${PN} = " \
     firmware-qcom-dspso \
     firmware-qcom-hlosfw \
+    linux-firmware-ath11k-qca6698aq-updates \
+    linux-firmware-ath11k-wcn6750-updates \
+    linux-firmware-ath11k-wcn6855-updates \
+    linux-firmware-qcacld-wcn6855-updates \
+    linux-firmware-qca-qca61x4-usb-updates \
+    linux-firmware-qcom-adreno-a660-updates \
+    linux-firmware-qcom-qcm6490-audio-updates \
+    linux-firmware-qcom-qcm6490-compute-updates \
+    linux-firmware-qcom-qcm6490-qps615-updates \
+    linux-firmware-qcom-qcm6490-qupv3fw-updates \
+    linux-firmware-qcom-qcm6490-wlanhsp-updates \
+    linux-firmware-qcom-qcm6490-wlan-updates \
+    linux-firmware-qcom-tzapps-updates \
+    linux-firmware-qcom-qcm6490-verinfo \
+    linux-firmware-qcom-vpu-updates \
 "
 
 RRECOMMENDS:${PN}:qcom-base-bsp = " \
