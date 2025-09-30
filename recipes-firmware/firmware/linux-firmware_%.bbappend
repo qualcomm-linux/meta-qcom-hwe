@@ -10,3 +10,4 @@ FW_ARTIFACTORY = "https://softwarecenter.qualcomm.com/download/software/chip/com
 
 require linux-firmware-updates-gpu.inc
 require linux-firmware-updates-vpu.inc
+require linux-firmware-updates-hlosfw.inc
