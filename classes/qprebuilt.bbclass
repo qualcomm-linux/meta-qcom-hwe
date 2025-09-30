@@ -45,6 +45,11 @@ python qprebuilt_do_install() {
     if os.path.exists("%s/CHANGES" % dest):
         os.remove("%s/CHANGES" % dest)
 
+    # Stop notice file from getting packaged
+    noticefile = os.path.join(dest, "NOTICE.txt")
+    if os.path.exists(noticefile):
+        os.remove(noticefile)
+
     # Install license
     licensedir = d.getVar('LICENSE_DIRECTORY')
     pn = d.getVar("PN")
