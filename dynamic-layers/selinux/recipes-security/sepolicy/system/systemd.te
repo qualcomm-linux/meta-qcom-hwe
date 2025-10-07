@@ -27,3 +27,5 @@ allow systemd_journal_init_t systemd_journal_t:dir { watch };
 
 files_manage_mounttab(systemd_journal_init_t)
 logging_rw_generic_logs(systemd_journal_init_t)
+
+qcom_connect_property_vault_to_var(systemd_tmpfiles_t)

@@ -97,7 +97,7 @@ interface(`qcom_connect_property_vault_to_var',`
         type qcom_property_vault_var_t ;
     ')
 
-    allow $1 qcom_property_vault_var_t:file { read open write setattr getattr create relabelfrom relabelto };
+    allow $1 qcom_property_vault_var_t:file { relabel_file_perms manage_file_perms };
 ')
 
 ########################################
