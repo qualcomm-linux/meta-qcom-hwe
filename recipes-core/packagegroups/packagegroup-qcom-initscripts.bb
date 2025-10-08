@@ -8,6 +8,7 @@ RDEPENDS:${PN} = " \
   initscripts-post-boot \
   initscripts-log-restrict \
   initscripts-modem-start-stop \
+  initscripts-eeprom-mac-update \
 "
 
 RDEPENDS:${PN}:append:qcom-custom-bsp = " \
