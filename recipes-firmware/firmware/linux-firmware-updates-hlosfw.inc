@@ -109,6 +109,26 @@ PACKAGES:prepend = " \
     ${PN}-qcom-sa8775p-qupv3fw-updates \
 "
 
+# These packages are not avalible in upstream
+# linux-firmware git but part of hlosfw tarballs.
+# Maintain as separate packages and add to the
+# list of packages to be built.
+
+PACKAGES:prepend = " \
+  ${PN}-qca-qca2066-hpbtfw-updates \
+  ${PN}-qca-ramps-updates \
+  ${PN}-qcacld-wcn6855-updates \
+  ${PN}-qcom-qcm6490-wlan-updates \
+  ${PN}-qcom-qcm6490-wlanhsp-updates \
+  ${PN}-qcom-qcm6490-qps615-updates \
+  ${PN}-qcom-qcs615-updates \
+  ${PN}-qcom-qcm6490-verinfo \
+  ${PN}-qcom-qcs9100-verinfo \
+  ${PN}-qcom-qcs8300-verinfo \
+  ${PN}-qcom-qcs615-verinfo \
+  ${PN}-qcom-tzapps-updates \
+"
+
 SUMMARY:${PN}-qcom-copyright = "QCOM copyright files overlay"
 FILES:${PN}-qcom-copyright = "Qualcomm-Technologies-Inc.-Proprietary"
 
@@ -164,6 +184,16 @@ FILES:${PN}-qca-qca6698-updates = " \
   ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b206* \
   ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b207* \
   ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.bin* \
+"
+# extra qca QCA6698 files in hlosfw tarball
+FILES:${PN}-qca-qca6698-updates += " \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_losslessg.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48K.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48Kg.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPOg.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPO.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_lossless.bin \
 "
 
 SUMMARY:${PN}-qca-wcn6750-updates = "QCA WCN6750 firmware update files"
@@ -248,4 +278,62 @@ FILES:${PN}-qcom-sa8775p-generalpurpose-updates = " \
 SUMMARY:${PN}-qcom-sa8775p-qupv3fw-updates = "QCOM qcom-sa8775p-qupv3fw firmware overlay"
 FILES:${PN}-qcom-sa8775p-qupv3fw-updates = " \
   ${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/qupv3fw.elf* \
+"
+
+SUMMARY:${PN}-qcacld-wcn6855-updates = "QCACLD WCN6855 firmware update files"
+FILES:${PN}-qcacld-wcn6855-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcacld/WCN6855/* \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-wlan-updates = "QCOM WLAN QCM6490 firmware update files"
+FILES:${PN}-qcom-qcm6490-wlan-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/bdwlan* \
+"
+SUMMARY:${PN}-qcom-tzapps-updates = "QCOM FD02C9DA firmware update files"
+FILES:${PN}-qcom-tzapps-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/FD02C9DA* \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-wlanhsp-updates = "QCOM QCM6490 Data firmware update files"
+FILES:${PN}-qcom-qcm6490-wlanhsp-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/Data* \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/regdb.* \
+"
+
+SUMMARY:${PN}-qcom-qcs615-updates = "QCOM QCS615 firmware update files"
+FILES:${PN}-qcom-qcs615-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qcs615* \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-qps615-updates = "QCOM QCM6490 QPS615 firmware update files"
+FILES:${PN}-qcom-qcm6490-qps615-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qps615.bin \
+"
+
+SUMMARY:${PN}-qca-ramps-updates = "QCOM QCA ramps firmware update files"
+FILES:${PN}-qca-ramps-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qca/ramps_0x00130201_030a.dfu \
+  ${FIRMWARE_UPDATES_DIR}/qca/ramps_0x00130201_gf_030a.dfu \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-verinfo = "QCOM HLOS Ver_Info.txt convenience link in overlay"
+FILES:${PN}-qcom-qcm6490-verinfo = "${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/Ver_Info.txt"
+
+SUMMARY:${PN}-qcom-qcs615-verinfo = "QCOM HLOS Ver_Info.txt convenience link in overlay"
+FILES:${PN}-qcom-qcs615-verinfo = "${FIRMWARE_UPDATES_DIR}/qcom/qcs615/Ver_Info.txt"
+
+SUMMARY:${PN}-qcom-qcs9100-verinfo = "QCOM HLOS Ver_Info.txt convenience link in overlay"
+FILES:${PN}-qcom-qcs9100-verinfo = " ${FIRMWARE_UPDATES_DIR}/qcom/qcs9100/Ver_Info.txt"
+
+SUMMARY:${PN}-qcom-qcs8300-verinfo = "QCOM HLOS Ver_Info.txt convenience link in overlay"
+FILES:${PN}-qcom-qcs8300-verinfo = "${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/Ver_Info.txt"
+
+SUMMARY:${PN}-qca-qca2066-hpbtfw-updates = "QCA firmware update files"
+FILES:${PN}-qca-qca2066-hpbtfw-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpbtfw21* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21_LPO* \
+  ${FIRMWARE_UPDATES_DIR}/qca/msbtfw11* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpbtfw20* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv20* \
 "
