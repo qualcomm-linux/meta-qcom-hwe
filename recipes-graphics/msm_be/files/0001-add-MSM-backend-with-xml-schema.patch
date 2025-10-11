@@ -1,4 +1,4 @@
-From 21ebd9339bf7d8098d48d7ce84e23cf3f4a12580 Mon Sep 17 00:00:00 2001
+From fc3bc6166b13e746e3e0b70a54ebfa10673957ef Mon Sep 17 00:00:00 2001
 From: Devanshi Bansal <quic_devanshi@quicinc.com>
 Date: Tue, 12 Aug 2025 09:01:16 +0530
 Subject: [PATCH] add MSM backend with xml schema
@@ -163,7 +163,7 @@ index 0000000..741cbba
 +int bo_offset(int fd, uint32_t handle, uint64_t *offset);
 diff --git a/src/gbm/backends/msm/buffer_layout.c b/src/gbm/backends/msm/buffer_layout.c
 new file mode 100644
-index 0000000..b54a6d6
+index 0000000..480a10a
 --- /dev/null
 +++ b/src/gbm/backends/msm/buffer_layout.c
 @@ -0,0 +1,334 @@
@@ -200,7 +200,7 @@ index 0000000..b54a6d6
 +   if (!descriptor)
 +      return false;
 +
-+   if (descriptor->modifiers & DRM_FORMAT_MOD_QCOM_COMPRESSED)
++   if ((descriptor->modifiers & DRM_FORMAT_MOD_QCOM_COMPRESSED) == DRM_FORMAT_MOD_QCOM_COMPRESSED)
 +      return true;
 +
 +   return false;
@@ -533,7 +533,7 @@ index 0000000..5fd8cfe
 +                    struct gbm_bufdesc *descriptor);
 diff --git a/src/gbm/backends/msm/default_fmt_alignment.xml b/src/gbm/backends/msm/default_fmt_alignment.xml
 new file mode 100644
-index 0000000..5cc909a
+index 0000000..04aac2e
 --- /dev/null
 +++ b/src/gbm/backends/msm/default_fmt_alignment.xml
 @@ -0,0 +1,1261 @@
@@ -1779,7 +1779,7 @@ index 0000000..5cc909a
 +     <format_name>RGBA_32323232F</format_name>
 +     <constraints>
 +       <size_align>1</size_align>
-+       <bpp>8</bpp>
++       <bpp>16</bpp>
 +       <planes>
 +         <plane>
 +           <plane_name>RGBA</plane_name>
@@ -1800,7 +1800,7 @@ index 0000000..5cc909a
 +</formats>
 diff --git a/src/gbm/backends/msm/gbm_msm.c b/src/gbm/backends/msm/gbm_msm.c
 new file mode 100644
-index 0000000..226416f
+index 0000000..fafeccd
 --- /dev/null
 +++ b/src/gbm/backends/msm/gbm_msm.c
 @@ -0,0 +1,765 @@
@@ -2192,7 +2192,7 @@ index 0000000..226416f
 +      bo->base.v0.height = fd_modifer_data->height;
 +      bo->base.v0.format = fd_modifer_data->format;
 +      if ((bo->base.v0.format == GBM_FORMAT_XBGR16161616F) &&
-+          (fd_modifer_data->modifier & DRM_FORMAT_MOD_QCOM_32F)) {
++          ((fd_modifer_data->modifier & DRM_FORMAT_MOD_QCOM_32F) == DRM_FORMAT_MOD_QCOM_32F)) {
 +         bo->gbm_format = GBM_FORMAT_RGBA32323232F;
 +      } else {
 +         bo->gbm_format = bo->base.v0.format;
