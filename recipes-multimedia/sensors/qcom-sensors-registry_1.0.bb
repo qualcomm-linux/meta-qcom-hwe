@@ -7,7 +7,7 @@ DESCRIPTION = "Sensing-registry Library"
 
 DEPENDS += "syslog-plumber"
 
-QCM6490_SHA256SUM = "667ac5c9207c9e6766c86cd25e76e33eec710b36f3694edd083d4124a4203bc6"
+QCM6490_SHA256SUM = "9c8ed66706a453f33f82fbfa0391c5d9e7ade0b91ceeaa647fb56bae0e3ad663"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 
