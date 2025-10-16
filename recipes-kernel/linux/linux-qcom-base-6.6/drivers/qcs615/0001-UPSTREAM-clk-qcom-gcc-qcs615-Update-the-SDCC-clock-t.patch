@@ -1,0 +1,67 @@
+From 8a71c974eb4df9fbab11c04db059b8c2cd039b0f Mon Sep 17 00:00:00 2001
+From: Taniya Das <taniya.das@oss.qualcomm.com>
+Date: Wed, 29 Oct 2025 15:07:54 +0530
+Subject: [PATCH] UPSTREAM: clk: qcom: gcc-qcs615: Update the SDCC clock to use
+ shared_floor_ops
+
+Fix "gcc_sdcc2_apps_clk_src: rcg didn't update its configuration" during
+boot. This happens due to the floor_ops tries to update the rcg
+configuration even if the clock is not enabled.
+The shared_floor_ops ensures that the RCG is safely parked and the new
+parent configuration is cached in the parked_cfg when the clock is off.
+
+Ensure to use the ops for the other SDCC clock instances as well.
+
+Fixes: 39d6dcf67fe9 ("clk: qcom: gcc: Add support for QCS615 GCC clocks")
+Reviewed-by: Abel Vesa <abel.vesa@linaro.org>
+Signed-off-by: Taniya Das <taniya.das@oss.qualcomm.com>
+Reviewed-by: Imran Shaik <imran.shaik@oss.qualcomm.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Signed-off-by: Dongfang Zhao <dongfang.zhao@oss.qualcomm.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?id=0820c9373369c83de5202871d02682d583a91a9c]
+---
+ drivers/clk/qcom/gcc-qcs615.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/clk/qcom/gcc-qcs615.c b/drivers/clk/qcom/gcc-qcs615.c
+index 58f3ceb01105..906d783968be 100644
+--- a/drivers/clk/qcom/gcc-qcs615.c
++++ b/drivers/clk/qcom/gcc-qcs615.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ /*
+- * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
++ * Copyright (c) 2024-2025, Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
+ #include <linux/clk-provider.h>
+@@ -782,7 +782,7 @@ static struct clk_rcg2 gcc_sdcc1_apps_clk_src = {
+ 		.name = "gcc_sdcc1_apps_clk_src",
+ 		.parent_data = gcc_parent_data_1,
+ 		.num_parents = ARRAY_SIZE(gcc_parent_data_1),
+-		.ops = &clk_rcg2_floor_ops,
++		.ops = &clk_rcg2_shared_floor_ops,
+ 	},
+ };
+ 
+@@ -804,7 +804,7 @@ static struct clk_rcg2 gcc_sdcc1_ice_core_clk_src = {
+ 		.name = "gcc_sdcc1_ice_core_clk_src",
+ 		.parent_data = gcc_parent_data_0,
+ 		.num_parents = ARRAY_SIZE(gcc_parent_data_0),
+-		.ops = &clk_rcg2_floor_ops,
++		.ops = &clk_rcg2_shared_floor_ops,
+ 	},
+ };
+ 
+@@ -828,7 +828,7 @@ static struct clk_rcg2 gcc_sdcc2_apps_clk_src = {
+ 		.name = "gcc_sdcc2_apps_clk_src",
+ 		.parent_data = gcc_parent_data_8,
+ 		.num_parents = ARRAY_SIZE(gcc_parent_data_8),
+-		.ops = &clk_rcg2_floor_ops,
++		.ops = &clk_rcg2_shared_floor_ops,
+ 	},
+ };
+ 
+-- 
+2.34.1
+

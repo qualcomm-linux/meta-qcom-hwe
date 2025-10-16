@@ -521,4 +521,5 @@ SRC_URI:append = " \
     file://common/0019-FROMLIST-remoteproc-qcom-pas-Enable-Secure-PAS-suppo.patch \
     file://common/0001-PENDING-firmware-scm-Fix-mem-abort-in-start-stop-tes.patch \
     file://common/0002-FROMLIST-soc-qcom-mdt_loader-Add-helper-functions-to.patch \
+    file://qcs615/0001-UPSTREAM-clk-qcom-gcc-qcs615-Update-the-SDCC-clock-t.patch \
 "
