@@ -502,4 +502,21 @@ SRC_URI:append = " \
     file://qcs615/0013-FROMLIST-drm-msm-dp-Add-support-for-sending-VCPF-pac.patch \
     file://qcs615/0014-FROMLIST-drm-msm-dp-use-stream_id-to-change-offsets-.patch \
     file://common/0148-PENDING-drm-msm-update-the-high-bitfield-of-certain-DSI.patch \
+    file://common/0001-Revert-QCLINUX-FROMLIST-remoteproc-qcom-Enable-map-u.patch \
+    file://common/0002-Revert-QCLINUX-FROMLIST-remoteproc-qcom-Add-support-.patch \
+    file://common/0003-Revert-QCLINUX-FROMLIST-remoteproc-qcom-Add-support-.patch \
+    file://common/0004-Revert-QCLINUX-FROMLIST-remoteproc-qcom-Add-helper-f.patch \
+    file://common/0005-Revert-QCLINUX-FROMLIST-remoteproc-qcom-Add-iommu-ma.patch \
+    file://common/0007-UPSTREAM-firmware-qcom-tzmem-export-shm_bridge-creat.patch \
+    file://common/0009-FROMLIST-firmware-qcom_scm-Rename-peripheral-as-pas_.patch \
+    file://common/0010-FROMLIST-firmware-qcom_scm-Introduce-PAS-context-ini.patch \
+    file://common/0011-FROMLIST-remoteproc-pas-Replace-metadata-context-wit.patch \
+    file://common/0012-FROMLIST-soc-qcom-mdtloader-Add-PAS-context-aware-qc.patch \
+    file://common/0013-FROMLIST-soc-qcom-mdtloader-Remove-qcom_mdt_pas_init.patch \
+    file://common/0014-FROMLIST-firmware-qcom_scm-Add-a-prep-version-of-aut.patch \
+    file://common/0015-FROMLIST-firmware-qcom_scm-Simplify-qcom_scm_pas_ini.patch \
+    file://common/0016-FROMLIST-firmware-qcom_scm-Add-SHM-bridge-handling-f.patch \
+    file://common/0017-FROMLIST-firmware-qcom_scm-Add-qcom_scm_pas_get_rsc_.patch \
+    file://common/0018-FROMLIST-remoteproc-pas-Extend-parse_fw-callback-to-.patch \
+    file://common/0019-FROMLIST-remoteproc-qcom-pas-Enable-Secure-PAS-suppo.patch \
 "

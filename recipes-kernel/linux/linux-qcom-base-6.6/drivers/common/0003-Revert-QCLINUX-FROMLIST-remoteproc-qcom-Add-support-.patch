@@ -1,0 +1,102 @@
+From 57c830a422fa53a55a150bb33d4b00d04f48163f Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Fri, 20 Jun 2025 14:54:50 +0530
+Subject: [PATCH 03/20] Revert "QCLINUX: FROMLIST: remoteproc: qcom: Add
+ support to parse qcom,devmem property"
+
+This reverts commit c3f36189657000bd1cc9cbf3f541d4605072856a as they
+are longer required as we are going to follow newer approach of
+getting resource table from Secure world.
+
+Change-Id: Ic3b728129d21571290f896f94ad0db13672a26a0
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Inappropriate
+---
+ drivers/remoteproc/qcom_q6v5_pas.c | 57 ------------------------------
+ 1 file changed, 57 deletions(-)
+
+diff --git a/drivers/remoteproc/qcom_q6v5_pas.c b/drivers/remoteproc/qcom_q6v5_pas.c
+index 34aff0e3c2fe..fb2e5d914055 100644
+--- a/drivers/remoteproc/qcom_q6v5_pas.c
++++ b/drivers/remoteproc/qcom_q6v5_pas.c
+@@ -33,9 +33,6 @@
+ 
+ #define ADSP_DECRYPT_SHUTDOWN_DELAY_MS	100
+ 
+-#define MAX_ASSIGN_COUNT 3
+-#define DEVMEM_ENTRY_SIZE 4
+-
+ struct adsp_data {
+ 	int crash_reason_smem;
+ 	const char *firmware_name;
+@@ -107,8 +104,6 @@ struct qcom_adsp {
+ 
+ 	struct qcom_scm_pas_metadata pas_metadata;
+ 	struct qcom_scm_pas_metadata dtb_pas_metadata;
+-
+-	struct qcom_devmem_table *devmem;
+ };
+ 
+ static void adsp_segment_dump(struct rproc *rproc, struct rproc_dump_segment *segment,
+@@ -650,58 +645,6 @@ static void adsp_unassign_memory_region(struct qcom_adsp *adsp)
+ 		dev_err(adsp->dev, "unassign memory failed\n");
+ }
+ 
+-static int adsp_devmem_init(struct qcom_adsp *adsp)
+-{
+-	unsigned int entry_size = DEVMEM_ENTRY_SIZE;
+-	struct qcom_devmem_table *devmem_table;
+-	struct rproc *rproc = adsp->rproc;
+-	struct device *dev = adsp->dev;
+-	struct qcom_devmem_info *info;
+-	char *pname = "qcom,devmem";
+-	size_t table_size;
+-	int num_entries;
+-	u32 i;
+-
+-	if (!rproc->has_iommu)
+-		return 0;
+-
+-	/* devmem property is a set of n-tuple */
+-	num_entries = of_property_count_u32_elems(dev->of_node, pname);
+-	if (num_entries < 0) {
+-		dev_err(adsp->dev, "No '%s' property present\n", pname);
+-		return num_entries;
+-	}
+-
+-	if (!num_entries || (num_entries % entry_size)) {
+-		dev_err(adsp->dev, "All '%s' list entries need %d vals\n", pname,
+-			entry_size);
+-		return -EINVAL;
+-	}
+-
+-	num_entries /= entry_size;
+-	table_size = sizeof(*devmem_table) + sizeof(*info) * num_entries;
+-	devmem_table = devm_kzalloc(dev, table_size, GFP_KERNEL);
+-	if (!devmem_table)
+-		return -ENOMEM;
+-
+-	devmem_table->num_entries = num_entries;
+-	info = &devmem_table->entries[0];
+-	for (i = 0; i < num_entries; i++, info++) {
+-		of_property_read_u32_index(dev->of_node, pname,
+-					   i * entry_size, (u32 *)&info->da);
+-		of_property_read_u32_index(dev->of_node, pname,
+-					   i * entry_size + 1, (u32 *)&info->pa);
+-		of_property_read_u32_index(dev->of_node, pname,
+-					   i * entry_size + 2, &info->len);
+-		of_property_read_u32_index(dev->of_node, pname,
+-					   i * entry_size + 3, &info->flags);
+-	}
+-
+-	adsp->devmem = devmem_table;
+-
+-	return 0;
+-}
+-
+ static int adsp_probe(struct platform_device *pdev)
+ {
+ 	const struct adsp_data *desc;
+-- 
+2.50.1
+

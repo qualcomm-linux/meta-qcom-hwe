@@ -1,0 +1,109 @@
+From 47a27c28d9d0e9d556326c54363a5097c7327bfb Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 13 Oct 2025 17:35:49 +0530
+Subject: [PATCH 10/20] FROMLIST: firmware: qcom_scm: Introduce PAS context
+ initialization helper function
+
+When the Peripheral Authentication Service (PAS) method runs on a SoC
+where Linux operates at EL2 (i.e., without the Gunyah hypervisor), the
+reset sequences are handled by TrustZone. In such cases, Linux must
+perform additional steps before invoking PAS SMC calls, such as creating
+a SHM bridge. Therefore, PAS SMC calls require awareness and handling of
+these additional steps when Linux runs at EL2.
+
+To support this, there is a need for a data structure that can be
+initialized prior to invoking any SMC or MDT functions. This structure
+allows those functions to determine whether they are operating in the
+presence or absence of the Gunyah hypervisor and behave accordingly.
+
+Currently, remoteproc and non-remoteproc subsystems use different
+variants of the MDT loader helper API, primarily due to differences in
+metadata context handling. Remoteproc subsystems retain the metadata
+context until authentication and reset are completed, while
+non-remoteproc subsystems (e.g., video, graphics, IPA, etc.) do not
+retain the metadata context and can free it within the
+qcom_scm_pas_init() call by passing a NULL context parameter and due to
+these differences, it is not possible to extend metadata context
+handling to support remoteproc and non remoteproc subsystem use PAS
+operations, when Linux operates at EL2.
+
+Add PAS context data structure and initialization helper function.
+
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+
+Change-Id: I8c792cf90477521684a216263a332544b5992532
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20251013-kvm_rprocv5-v5-3-d609ed766061@oss.qualcomm.com/]
+---
+ drivers/firmware/qcom_scm.c            | 33 ++++++++++++++++++++++++++
+ include/linux/firmware/qcom/qcom_scm.h | 10 ++++++++
+ 2 files changed, 43 insertions(+)
+
+diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+index 1b4858c34b65..ba959411a266 100644
+--- a/drivers/firmware/qcom_scm.c
++++ b/drivers/firmware/qcom_scm.c
+@@ -485,6 +485,39 @@ static void qcom_scm_set_download_mode(bool enable)
+ 		dev_err(__scm->dev, "failed to set download mode: %d\n", ret);
+ }
+ 
++/**
++ * qcom_scm_pas_context_init() - Initialize peripheral authentication service
++ *				 context for a given peripheral
++ *
++ * @dev:	  PAS firmware device
++ * @pas_id:	  peripheral authentication service id
++ * @mem_phys:	  Subsystem reserve memory start address
++ * @mem_size:	  Subsystem reserve memory size
++ *
++ * Upon successful, returns the PAS context or ERR_PTR() of the error otherwise.
++ */
++void *qcom_scm_pas_context_init(struct device *dev, u32 pas_id, phys_addr_t mem_phys,
++				size_t mem_size)
++{
++	struct qcom_scm_pas_context *ctx;
++
++	ctx = devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
++	if (!ctx)
++		return ERR_PTR(-ENOMEM);
++
++	ctx->dev = dev;
++	ctx->pas_id = pas_id;
++	ctx->mem_phys = mem_phys;
++	ctx->mem_size = mem_size;
++
++	ctx->metadata = devm_kzalloc(dev, sizeof(*ctx->metadata), GFP_KERNEL);
++	if (!ctx->metadata)
++		return ERR_PTR(-ENOMEM);
++
++	return ctx;
++}
++EXPORT_SYMBOL_GPL(qcom_scm_pas_context_init);
++
+ /**
+  * qcom_scm_pas_init_image() - Initialize peripheral authentication service
+  *			       state machine for a given peripheral, using the
+diff --git a/include/linux/firmware/qcom/qcom_scm.h b/include/linux/firmware/qcom/qcom_scm.h
+index 855408440e0f..5415e64279e4 100644
+--- a/include/linux/firmware/qcom/qcom_scm.h
++++ b/include/linux/firmware/qcom/qcom_scm.h
+@@ -72,6 +72,16 @@ struct qcom_scm_pas_metadata {
+ 	ssize_t size;
+ };
+ 
++struct qcom_scm_pas_context {
++	struct device *dev;
++	u32 pas_id;
++	phys_addr_t mem_phys;
++	size_t mem_size;
++	struct qcom_scm_pas_metadata *metadata;
++};
++
++void *qcom_scm_pas_context_init(struct device *dev, u32 pas_id, phys_addr_t mem_phys,
++				size_t mem_size);
+ extern int qcom_scm_pas_init_image(u32 pas_id, const void *metadata,
+ 				   size_t size,
+ 				   struct qcom_scm_pas_metadata *ctx);
+-- 
+2.50.1
+

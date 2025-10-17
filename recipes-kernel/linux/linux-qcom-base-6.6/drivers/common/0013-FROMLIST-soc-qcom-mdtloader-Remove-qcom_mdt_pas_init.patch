@@ -1,0 +1,98 @@
+From a051e3b6275e79281813ce21aa85f783296d60a0 Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 13 Oct 2025 18:36:37 +0530
+Subject: [PATCH 13/20] FROMLIST: soc: qcom: mdtloader: Remove
+ qcom_mdt_pas_init() from exported symbols
+
+qcom_mdt_pas_init() was previously used only by the remoteproc driver
+(drivers/remoteproc/qcom_q6v5_pas.c). Since that driver has now
+transitioned to using PAS context-based qcom_mdt_pas_load() function,
+making qcom_mdt_pas_init() obsolete for external use.
+
+Removes qcom_mdt_pas_init() from the list of exported symbols and make
+it static to limit its scope to internal use within mdtloader.
+
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+
+Change-Id: Ifbc9a8b6f8cdc530fbef7fc0a13df43df2addf8c
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20251013-kvm_rprocv5-v5-6-d609ed766061@oss.qualcomm.com/]
+---
+ drivers/soc/qcom/mdt_loader.c       | 11 +++++------
+ include/linux/soc/qcom/mdt_loader.h | 10 ----------
+ 2 files changed, 5 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/soc/qcom/mdt_loader.c b/drivers/soc/qcom/mdt_loader.c
+index ea0ae7ce4726..7ff87ddf5639 100644
+--- a/drivers/soc/qcom/mdt_loader.c
++++ b/drivers/soc/qcom/mdt_loader.c
+@@ -240,9 +240,9 @@ EXPORT_SYMBOL_GPL(qcom_mdt_read_metadata);
+  *
+  * Returns 0 on success, negative errno otherwise.
+  */
+-int qcom_mdt_pas_init(struct device *dev, const struct firmware *fw,
+-		      const char *fw_name, int pas_id, phys_addr_t mem_phys,
+-		      struct qcom_scm_pas_context *ctx)
++static int __qcom_mdt_pas_init(struct device *dev, const struct firmware *fw,
++			       const char *fw_name, int pas_id, phys_addr_t mem_phys,
++			       struct qcom_scm_pas_context *ctx)
+ {
+ 	const struct elf32_phdr *phdrs;
+ 	const struct elf32_phdr *phdr;
+@@ -304,7 +304,6 @@ int qcom_mdt_pas_init(struct device *dev, const struct firmware *fw,
+ out:
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(qcom_mdt_pas_init);
+ 
+ static bool qcom_mdt_bins_are_split(const struct firmware *fw, const char *fw_name)
+ {
+@@ -458,7 +457,7 @@ int qcom_mdt_load(struct device *dev, const struct firmware *fw,
+ {
+ 	int ret;
+ 
+-	ret = qcom_mdt_pas_init(dev, fw, firmware, pas_id, mem_phys, NULL);
++	ret = __qcom_mdt_pas_init(dev, fw, firmware, pas_id, mem_phys, NULL);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -512,7 +511,7 @@ int qcom_mdt_pas_load(struct qcom_scm_pas_context *ctx, const struct firmware *f
+ {
+ 	int ret;
+ 
+-	ret = qcom_mdt_pas_init(ctx->dev, fw, firmware, ctx->pas_id, ctx->mem_phys,
++	ret = __qcom_mdt_pas_init(ctx->dev, fw, firmware, ctx->pas_id, ctx->mem_phys,
+ 				ctx);
+ 	if (ret)
+ 		return ret;
+diff --git a/include/linux/soc/qcom/mdt_loader.h b/include/linux/soc/qcom/mdt_loader.h
+index 905bcdabc189..fa6875c2c1f3 100644
+--- a/include/linux/soc/qcom/mdt_loader.h
++++ b/include/linux/soc/qcom/mdt_loader.h
+@@ -15,9 +15,6 @@ struct qcom_scm_pas_context;
+ #if IS_ENABLED(CONFIG_QCOM_MDT_LOADER)
+ 
+ ssize_t qcom_mdt_get_size(const struct firmware *fw);
+-int qcom_mdt_pas_init(struct device *dev, const struct firmware *fw,
+-		      const char *fw_name, int pas_id, phys_addr_t mem_phys,
+-		      struct qcom_scm_pas_context *ctx);
+ int qcom_mdt_load(struct device *dev, const struct firmware *fw,
+ 		  const char *fw_name, int pas_id, void *mem_region,
+ 		  phys_addr_t mem_phys, size_t mem_size,
+@@ -41,13 +38,6 @@ static inline ssize_t qcom_mdt_get_size(const struct firmware *fw)
+ 	return -ENODEV;
+ }
+ 
+-static inline int qcom_mdt_pas_init(struct device *dev, const struct firmware *fw,
+-				    const char *fw_name, int pas_id, phys_addr_t mem_phys,
+-				    struct qcom_scm_pas_context *ctx)
+-{
+-	return -ENODEV;
+-}
+-
+ static inline int qcom_mdt_load(struct device *dev, const struct firmware *fw,
+ 				const char *fw_name, int pas_id,
+ 				void *mem_region, phys_addr_t mem_phys,
+-- 
+2.50.1
+

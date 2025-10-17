@@ -1,0 +1,143 @@
+From 1ce062fa60e4ae7fbdcc1966f6de8abd9bc1f5b5 Mon Sep 17 00:00:00 2001
+From: Amirreza Zarrabi <amirreza.zarrabi@oss.qualcomm.com>
+Date: Fri, 3 Oct 2025 14:04:39 +0530
+Subject: [PATCH 07/20] UPSTREAM: firmware: qcom: tzmem: export shm_bridge
+ create/delete
+
+Anyone with access to contiguous physical memory should be able to
+share memory with QTEE using shm_bridge.
+
+Change-Id: Ie6eb89813856fe72f04a8c45676996199f1dc057
+
+Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
+Tested-by: Harshal Dev <quic_hdev@quicinc.com>
+Reviewed-by: Kuldeep Singh <quic_kuldsing@quicinc.com>
+Signed-off-by: Amirreza Zarrabi <amirreza.zarrabi@oss.qualcomm.com>
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?id=8aa1e3a6f0ffbcfdf3bd7d87feb9090f96c54bc4]
+---
+ drivers/firmware/qcom/qcom_tzmem.c       | 65 +++++++++++++++++++-----
+ include/linux/firmware/qcom/qcom_tzmem.h | 15 ++++++
+ 2 files changed, 68 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/firmware/qcom/qcom_tzmem.c b/drivers/firmware/qcom/qcom_tzmem.c
+index ab156ab3a6b4..1bc52ac73c4c 100644
+--- a/drivers/firmware/qcom/qcom_tzmem.c
++++ b/drivers/firmware/qcom/qcom_tzmem.c
+@@ -105,25 +105,69 @@ static int qcom_tzmem_init(void)
+ 	return 0;
+ }
+ 
++/**
++ * qcom_tzmem_shm_bridge_create() - Create a SHM bridge.
++ * @paddr: Physical address of the memory to share.
++ * @size: Size of the memory to share.
++ * @handle: Handle to the SHM bridge.
++ *
++ * On platforms that support SHM bridge, this function creates a SHM bridge
++ * for the given memory region with QTEE. The handle returned by this function
++ * must be passed to qcom_tzmem_shm_bridge_delete() to free the SHM bridge.
++ *
++ * Return: On success, returns 0; on failure, returns < 0.
++ */
++int qcom_tzmem_shm_bridge_create(phys_addr_t paddr, size_t size, u64 *handle)
++ {
++	u64 pfn_and_ns_perm, ipfn_and_s_perm, size_and_flags;
++	int ret;
++
++	pfn_and_ns_perm = paddr | QCOM_SCM_PERM_RW;
++	ipfn_and_s_perm = paddr | QCOM_SCM_PERM_RW;
++	size_and_flags = size | (1 << QCOM_SHM_BRIDGE_NUM_VM_SHIFT);
++
++	ret = qcom_scm_shm_bridge_create(qcom_tzmem_dev, pfn_and_ns_perm, ipfn_and_s_perm,
++					 size_and_flags, QCOM_SCM_VMID_HLOS,
++					 handle);
++	if (ret) {
++		dev_err(qcom_tzmem_dev,
++			"SHM Bridge failed: ret %d paddr 0x%pa, size %zu\n",
++			ret, &paddr, size);
++
++		return ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(qcom_tzmem_shm_bridge_create);
++
++/**
++ * qcom_tzmem_shm_bridge_delete() - Delete a SHM bridge.
++ * @handle: Handle to the SHM bridge.
++ *
++ * On platforms that support SHM bridge, this function deletes the SHM bridge
++ * for the given memory region. The handle must be the same as the one
++ * returned by qcom_tzmem_shm_bridge_create().
++ */
++void qcom_tzmem_shm_bridge_delete(u64 handle)
++{
++	if (qcom_tzmem_using_shm_bridge)
++		qcom_scm_shm_bridge_delete(qcom_tzmem_dev, handle);
++}
++EXPORT_SYMBOL_GPL(qcom_tzmem_shm_bridge_delete);
++
+ static int qcom_tzmem_init_area(struct qcom_tzmem_area *area)
+ {
+-	u64 pfn_and_ns_perm, ipfn_and_s_perm, size_and_flags;
+ 	int ret;
+ 
+ 	if (!qcom_tzmem_using_shm_bridge)
+ 		return 0;
+ 
+-	pfn_and_ns_perm = (u64)area->paddr | QCOM_SCM_PERM_RW;
+-	ipfn_and_s_perm = (u64)area->paddr | QCOM_SCM_PERM_RW;
+-	size_and_flags = area->size | (1 << QCOM_SHM_BRIDGE_NUM_VM_SHIFT);
+-
+ 	u64 *handle __free(kfree) = kzalloc(sizeof(*handle), GFP_KERNEL);
+ 	if (!handle)
+ 		return -ENOMEM;
+ 
+-	ret = qcom_scm_shm_bridge_create(qcom_tzmem_dev, pfn_and_ns_perm,
+-					 ipfn_and_s_perm, size_and_flags,
+-					 QCOM_SCM_VMID_HLOS, handle);
++	ret = qcom_tzmem_shm_bridge_create(area->paddr, area->size, handle);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -136,10 +180,7 @@ static void qcom_tzmem_cleanup_area(struct qcom_tzmem_area *area)
+ {
+ 	u64 *handle = area->priv;
+ 
+-	if (!qcom_tzmem_using_shm_bridge)
+-		return;
+-
+-	qcom_scm_shm_bridge_delete(qcom_tzmem_dev, *handle);
++	qcom_tzmem_shm_bridge_delete(*handle);
+ 	kfree(handle);
+ }
+ 
+diff --git a/include/linux/firmware/qcom/qcom_tzmem.h b/include/linux/firmware/qcom/qcom_tzmem.h
+index b83b63a0c049..48ac0e5454c7 100644
+--- a/include/linux/firmware/qcom/qcom_tzmem.h
++++ b/include/linux/firmware/qcom/qcom_tzmem.h
+@@ -53,4 +53,19 @@ DEFINE_FREE(qcom_tzmem, void *, if (_T) qcom_tzmem_free(_T))
+ 
+ phys_addr_t qcom_tzmem_to_phys(void *ptr);
+ 
++#if IS_ENABLED(CONFIG_QCOM_TZMEM_MODE_SHMBRIDGE)
++int qcom_tzmem_shm_bridge_create(phys_addr_t paddr, size_t size, u64 *handle);
++void qcom_tzmem_shm_bridge_delete(u64 handle);
++#else
++static inline int qcom_tzmem_shm_bridge_create(phys_addr_t paddr,
++					       size_t size, u64 *handle)
++{
++	return 0;
++}
++
++static inline void qcom_tzmem_shm_bridge_delete(u64 handle)
++{
++}
++#endif
++
+ #endif /* __QCOM_TZMEM */
+-- 
+2.50.1
+

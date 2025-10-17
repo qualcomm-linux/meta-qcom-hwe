@@ -1,0 +1,122 @@
+From 3ae52afe81d20dd1ebb9900e20a06a74fb1d9d5e Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 13 Oct 2025 19:01:00 +0530
+Subject: [PATCH 16/20] FROMLIST: firmware: qcom_scm: Add SHM bridge handling
+ for PAS when running without QHEE
+
+On SoCs running with a non-Gunyah-based hypervisor, Linux must take
+responsibility for creating the SHM bridge both for metadata (before
+calling qcom_scm_pas_init_image()) and for remoteproc memory (before
+calling qcom_scm_pas_auth_and_reset()). We have taken care the things
+required for qcom_scm_pas_auth_and_reset().
+
+Lets put these awareness of above conditions into
+qcom_scm_pas_init_image() and qcom_scm_pas_metadata_release().
+
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+
+Change-Id: Iac0019baa9b9017e0ad2a84d5f99b90908703af6
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20251013-kvm_rprocv5-v5-9-d609ed766061@oss.qualcomm.com/]
+---
+ drivers/firmware/qcom_scm.c            | 45 ++++++++++++++++++++++++--
+ include/linux/firmware/qcom/qcom_scm.h |  5 ++-
+ 2 files changed, 46 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+index 3def7e422e66..dab4ef6d8af9 100644
+--- a/drivers/firmware/qcom_scm.c
++++ b/drivers/firmware/qcom_scm.c
+@@ -549,6 +549,36 @@ static int __qcom_scm_pas_init_image(u32 pas_id, dma_addr_t mdata_phys, void *me
+ 	return ret;
+ }
+ 
++static int qcom_scm_pas_prep_and_init_image(struct qcom_scm_pas_context *ctx,
++					    const void *metadata, size_t size)
++{
++	struct qcom_scm_pas_metadata *mdt_ctx;
++	struct qcom_scm_res res;
++	phys_addr_t mdata_phys;
++	void *mdata_buf;
++	int ret;
++
++	mdt_ctx = ctx->metadata;
++	mdata_buf = qcom_tzmem_alloc(__scm->mempool, size, GFP_KERNEL);
++	if (!mdata_buf)
++		return -ENOMEM;
++
++	memcpy(mdata_buf, metadata, size);
++	mdata_phys = qcom_tzmem_to_phys(mdata_buf);
++
++	ret = __qcom_scm_pas_init_image(ctx->pas_id, mdata_phys, mdata_buf, size, &res);
++	if (ret < 0 || !mdt_ctx) {
++		qcom_tzmem_free(mdata_buf);
++	} else if (mdt_ctx) {
++		mdt_ctx->ptr = mdata_buf;
++		mdt_ctx->addr.phys_addr = mdata_phys;
++		mdt_ctx->size = size;
++	}
++
++	return ret ? : res.result[0];
++}
++
++
+ /**
+  * qcom_scm_pas_init_image() - Initialize peripheral authentication service
+  *			       state machine for a given peripheral, using the
+@@ -575,6 +605,9 @@ int qcom_scm_pas_init_image(u32 pas_id, const void *metadata, size_t size,
+ 	void *mdata_buf;
+ 	int ret;
+ 
++	if (ctx && ctx->has_iommu)
++		return qcom_scm_pas_prep_and_init_image(ctx, metadata, size);
++
+ 	/*
+ 	 * During the scm call memory protection will be enabled for the meta
+ 	 * data blob, so make sure it's physically contiguous, 4K aligned and
+@@ -601,7 +634,7 @@ int qcom_scm_pas_init_image(u32 pas_id, const void *metadata, size_t size,
+ 	} else if (ctx && ctx->metadata) {
+ 		mdt_ctx = ctx->metadata;
+ 		mdt_ctx->ptr = mdata_buf;
+-		mdt_ctx->phys = mdata_phys;
++		mdt_ctx->addr.dma_addr = mdata_phys;
+ 		mdt_ctx->size = size;
+ 	}
+ 
+@@ -621,9 +654,15 @@ void qcom_scm_pas_metadata_release(struct qcom_scm_pas_context *ctx)
+ 	if (!mdt_ctx->ptr)
+ 		return;
+ 
+-	dma_free_coherent(__scm->dev, mdt_ctx->size, mdt_ctx->ptr, mdt_ctx->phys);
++	if (ctx->has_iommu) {
++		qcom_tzmem_free(mdt_ctx->ptr);
++		mdt_ctx->addr.phys_addr = 0;
++	} else {
++		dma_free_coherent(__scm->dev, mdt_ctx->size, mdt_ctx->ptr,
++				  mdt_ctx->addr.dma_addr);
++		mdt_ctx->addr.dma_addr = 0;
++	}
+ 	mdt_ctx->ptr = NULL;
+-	mdt_ctx->phys = 0;
+ 	mdt_ctx->size = 0;
+ }
+ EXPORT_SYMBOL_GPL(qcom_scm_pas_metadata_release);
+diff --git a/include/linux/firmware/qcom/qcom_scm.h b/include/linux/firmware/qcom/qcom_scm.h
+index debd96e9038c..ea946de5c497 100644
+--- a/include/linux/firmware/qcom/qcom_scm.h
++++ b/include/linux/firmware/qcom/qcom_scm.h
+@@ -68,7 +68,10 @@ extern int qcom_scm_set_remote_state(u32 state, u32 id);
+ 
+ struct qcom_scm_pas_metadata {
+ 	void *ptr;
+-	dma_addr_t phys;
++	union {
++		dma_addr_t dma_addr;
++		phys_addr_t phys_addr;
++	} addr;
+ 	ssize_t size;
+ };
+ 
+-- 
+2.50.1
+

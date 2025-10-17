@@ -1,0 +1,38 @@
+From 38dff1a4aac4375e011f903f264213d81ea0ef6b Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 13 Oct 2025 16:51:02 +0530
+Subject: [PATCH 08/20] FROMLIST: dt-bindings: remoteproc: qcom,pas: Add iommus
+ property
+
+Most Qualcomm platforms feature Gunyah hypervisor which handles IOMMU
+configuration for remote processor and when it is not present, the
+operating system must perform these configurations instead and for that
+firmware stream should be presented to the operating system. Hence, add
+iommus property as optional property for PAS supported devices.
+
+Change-Id: I7847365d8d6df0f85008b43f1af404cc610c6364
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20251013-kvm_rprocv5-v5-1-d609ed766061@oss.qualcomm.com/]
+---
+ .../devicetree/bindings/remoteproc/qcom,pas-common.yaml        | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/remoteproc/qcom,pas-common.yaml b/Documentation/devicetree/bindings/remoteproc/qcom,pas-common.yaml
+index bbc82253f76b..6a736161d5ae 100644
+--- a/Documentation/devicetree/bindings/remoteproc/qcom,pas-common.yaml
++++ b/Documentation/devicetree/bindings/remoteproc/qcom,pas-common.yaml
+@@ -44,6 +44,9 @@ properties:
+       - const: stop-ack
+       - const: shutdown-ack
+ 
++  iommus:
++    maxItems: 1
++
+   power-domains:
+     minItems: 1
+     maxItems: 3
+-- 
+2.50.1
+

@@ -1,0 +1,117 @@
+From 209408a4a0ff6e9090492d1012bf99fcc276bb7d Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 13 Oct 2025 18:38:58 +0530
+Subject: [PATCH 14/20] FROMLIST: firmware: qcom_scm: Add a prep version of
+ auth_and_reset function
+
+For memory passed to TrustZone (TZ), it must either be part of a pool
+registered with TZ or explicitly registered via SHMbridge SMC calls.
+When Gunyah hypervisor is present, PAS SMC calls from Linux running at
+EL1 are trapped by Gunyah running @ EL2, which handles SHMbridge
+creation for both metadata and remoteproc carveout memory before
+invoking the calls to TZ.
+
+On SoCs running with a non-Gunyah-based hypervisor, Linux must take
+responsibility for creating the SHM bridge before invoking PAS SMC
+calls. For the auth_and_reset() call, the remoteproc carveout memory
+must first be registered with TZ via a SHMbridge SMC call and once
+authentication and reset are complete, the SHMbridge memory can be
+deregistered.
+
+Introduce qcom_scm_pas_prepare_and_auth_reset(), which sets up the SHM
+bridge over the remoteproc carveout memory when Linux operates at EL2.
+This behavior is indicated by a new field added to the PAS context data
+structure. The function then invokes the auth_and_reset SMC call.
+
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+
+Change-Id: Ie7bc86c96d84be6fc18ffcaa0ad5106ec98a9eb4
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20251013-kvm_rprocv5-v5-7-d609ed766061@oss.qualcomm.com/]
+---
+ drivers/firmware/qcom_scm.c            | 48 ++++++++++++++++++++++++++
+ include/linux/firmware/qcom/qcom_scm.h |  2 ++
+ 2 files changed, 50 insertions(+)
+
+diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+index 364e6a723d43..50351a7b47ea 100644
+--- a/drivers/firmware/qcom_scm.c
++++ b/drivers/firmware/qcom_scm.c
+@@ -698,6 +698,54 @@ int qcom_scm_pas_auth_and_reset(u32 pas_id)
+ }
+ EXPORT_SYMBOL_GPL(qcom_scm_pas_auth_and_reset);
+ 
++/**
++ * qcom_scm_pas_prepare_and_auth_reset() - Prepare, authenticate, and reset the
++ *					   remote processor
++ *
++ * @ctx:	Context saved during call to qcom_scm_pas_context_init()
++ *
++ * This function performs the necessary steps to prepare a PAS subsystem,
++ * authenticate it using the provided metadata, and initiate a reset sequence.
++ *
++ * It should be used when Linux is in control setting up the IOMMU hardware
++ * for remote subsystem during secure firmware loading processes. The preparation
++ * step sets up a shmbridge over the firmware memory before TrustZone accesses the
++ * firmware memory region for authentication. The authentication step verifies
++ * the integrity and authenticity of the firmware or configuration using secure
++ * metadata. Finally, the reset step ensures the subsystem starts in a clean and
++ * sane state.
++ *
++ * Return: 0 on success, negative errno on failure.
++ */
++int qcom_scm_pas_prepare_and_auth_reset(struct qcom_scm_pas_context *ctx)
++{
++	u64 handle;
++	int ret;
++
++	if (!ctx->has_iommu)
++		return qcom_scm_pas_auth_and_reset(ctx->pas_id);
++
++	/*
++	 * When Linux running @ EL1, Gunyah hypervisor running @ EL2 traps the
++	 * auth_and_reset call and create an shmbridge on the remote subsystem
++	 * memory region and then invokes a call to TrustZone to authenticate.
++	 * When Linux runs @ EL2 Linux must create the shmbridge itself and then
++	 * subsequently call TrustZone for authenticate and reset.
++	 */
++	ret = qcom_tzmem_shm_bridge_create(ctx->mem_phys, ctx->mem_size, &handle);
++	if (ret) {
++		dev_err(__scm->dev, "Failed to create shmbridge for PAS ID (%u): %d\n",
++			ctx->pas_id, ret);
++		return ret;
++	}
++
++	ret = qcom_scm_pas_auth_and_reset(ctx->pas_id);
++	qcom_tzmem_shm_bridge_delete(handle);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(qcom_scm_pas_prepare_and_auth_reset);
++
+ /**
+  * qcom_scm_pas_shutdown() - Shut down the remote processor
+  * @pas_id:	peripheral authentication service id
+diff --git a/include/linux/firmware/qcom/qcom_scm.h b/include/linux/firmware/qcom/qcom_scm.h
+index 5e0b9987129e..debd96e9038c 100644
+--- a/include/linux/firmware/qcom/qcom_scm.h
++++ b/include/linux/firmware/qcom/qcom_scm.h
+@@ -78,6 +78,7 @@ struct qcom_scm_pas_context {
+ 	phys_addr_t mem_phys;
+ 	size_t mem_size;
+ 	struct qcom_scm_pas_metadata *metadata;
++	bool has_iommu;
+ };
+ 
+ void *qcom_scm_pas_context_init(struct device *dev, u32 pas_id, phys_addr_t mem_phys,
+@@ -91,6 +92,7 @@ extern int qcom_scm_pas_mem_setup(u32 pas_id, phys_addr_t addr,
+ extern int qcom_scm_pas_auth_and_reset(u32 pas_id);
+ extern int qcom_scm_pas_shutdown(u32 pas_id);
+ extern bool qcom_scm_pas_supported(u32 pas_id);
++int qcom_scm_pas_prepare_and_auth_reset(struct qcom_scm_pas_context *ctx);
+ 
+ extern int qcom_scm_io_readl(phys_addr_t addr, unsigned int *val);
+ extern int qcom_scm_io_writel(phys_addr_t addr, unsigned int val);
+-- 
+2.50.1
+
