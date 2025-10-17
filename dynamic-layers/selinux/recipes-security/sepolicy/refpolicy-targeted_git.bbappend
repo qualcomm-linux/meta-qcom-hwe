@@ -46,7 +46,6 @@ SRC_URI:append:qcom = " file://apps/ \
             file://services/ \
             file://system/ \
             file://admin/ \
-            file://files/ \
 "
 
 RDEPENDS:${PN} += "\
@@ -57,6 +56,7 @@ RDEPENDS:${PN} += "\
 ENABLE_TEST_SEPOLICY ?= "y"
 SRC_URI:append:qcom = "\
             ${@bb.utils.contains('ENABLE_TEST_SEPOLICY', 'y', 'file://test/', '', d)} \
+            file://0994-QCLINUX-Enable-required-booleans-through-tunable-pol.patch \
             file://0995-QCLINUX-selinux-Add-se_debug-macro.patch \
             file://0996-QCLINUX-file_contexts.subs_dist-set-aliases-for-var-lib-seli.patch \
             file://0997-QCLINIUX-sepolicy-update-file_contexts.subs_dist-for-support.patch \
@@ -76,15 +76,6 @@ EXTRA_OEMAKE += "tc_sbindir=${STAGING_DIR_NATIVE}${base_sbindir_native}"
 #To Disable se_debug, Comment the below line.
 #
 EXTRA_OEMAKE += "SE_DEBUG=y"
-
-do_compile:qcom() {
-        if [ -f "${WORKDIR}/modules.conf" ] ; then
-                cp -f ${WORKDIR}/modules.conf ${S}/policy/modules.conf
-        fi
-        # oe_runmake conf
-        disable_policy_modules
-        oe_runmake policy
-}
 
 prepare_policy_store () {
         oe_runmake 'DESTDIR=${D}' 'prefix=${D}${prefix}' install
@@ -155,32 +146,12 @@ def get_machine(d):
                 if re.match(n, m):
                     return n
 
-def test_modules_list(d):
-    machine = get_machine(d)
-
-    target_to_policy_map = {
-        'qcm6490': ['qcm6490_test', 'qcs9100_test'],
-        'qcs9100': ['qcm6490_test', 'qcs9100_test'],
-        'qcs8300': ['qcm6490_test', 'qcs9100_test'],
-        'qcs615':  ['qcm6490_test', 'qcs9100_test'],
-        'qcm8550': ['qcm8550_test'],
-        'qcs8550': ['qcs8550_test'],
-    }
-
-    if machine in target_to_policy_map:
-        return target_to_policy_map[machine]
-    else:
-        return None
-
 def copy_target_policies(src_path, dest_path, src_folder, dest_folder, d):
     import shutil
     import os
 
     if src_folder is 'test':
         policy_modules = ["common_test"]
-        test_modules = test_modules_list(d)
-        if test_modules:
-            policy_modules += test_modules
 
     if policy_modules is None:
         return
