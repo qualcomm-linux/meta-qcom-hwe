@@ -321,4 +321,5 @@ SRC_URI:append = " \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-camss-for-qcs8275-iq-8.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-both-USB-controllers-o.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-fix-compilation-issue-for-QCS.patch \
+    file://qcs8275/0001-FROMLIST-arm64-dts-qcom-Add-nvmem-layout-for-eeprom-.patch \
     "
