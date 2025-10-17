@@ -320,4 +320,5 @@ SRC_URI:append = " \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-Bluetooth-support-on-Q.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-camss-for-qcs8275-iq-8.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-both-USB-controllers-o.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-fix-compilation-issue-for-QCS.patch \
     "
