@@ -1,0 +1,90 @@
+From 5632e5e1c20eb4629b01b7cc7675ca82355a347b Mon Sep 17 00:00:00 2001
+From: Abhinav Parihar <quic_parihar@quicinc.com>
+Date: Thu, 9 Oct 2025 09:34:49 +0530
+Subject: [PATCH] PENDING: misc: fastrpc: Return on argument copy failure
+
+If copying data from kernel to user space fails, the current code
+still tries to call the DSP and release resources. But if unmapping
+those resources fails, it can lead to resoursce leak and potential
+fault issues.
+
+Avoid this by not calling unmap and free in case of failure and rely
+on process exit for cleanup.
+
+Change-Id: I7baf60da186abb579ef5efdc7ff6626ec4f97713
+Signed-off-by: Abhinav Parihar <quic_parihar@quicinc.com>
+---
+ drivers/misc/fastrpc.c | 35 ++++++++++++++++++++---------------
+ 1 file changed, 20 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/misc/fastrpc.c b/drivers/misc/fastrpc.c
+index e03b55ce8bf9..ebed37f09273 100644
+--- a/drivers/misc/fastrpc.c
++++ b/drivers/misc/fastrpc.c
+@@ -2471,10 +2471,13 @@ static int fastrpc_req_mmap(struct fastrpc_user *fl, char __user *argp)
+ 			spin_unlock(&fl->lock);
+ 		}
+ 
+-		if (copy_to_user((void __user *)argp, &req, sizeof(req))) {
+-			err = -EFAULT;
+-			goto err_assign;
+-		}
++		if (copy_to_user((void __user *)argp, &req, sizeof(req)))
++			/*
++			 * The usercopy failed, but buf is already mapped
++			 * in the DSP and accessible for the current process.
++			 * Rely on the process exit path to do required cleanup.
++			 */
++			return -EFAULT;
+ 	} else {
+ 		err = fastrpc_map_create(fl, req.fd, req.vaddrin, req.size,
+ 				0, &map, true);
+@@ -2515,10 +2518,13 @@ static int fastrpc_req_mmap(struct fastrpc_user *fl, char __user *argp)
+ 		/* let the client know the address to use */
+ 		req.vaddrout = rsp_msg.vaddr;
+ 
+-		if (copy_to_user((void __user *)argp, &req, sizeof(req))) {
+-			err = -EFAULT;
+-			goto err_assign;
+-		}
++		if (copy_to_user((void __user *)argp, &req, sizeof(req)))
++			/*
++			 * The usercopy failed, but buf is already mapped
++			 * in the DSP and accessible for the current process.
++			 * Rely on the process exit path to do required cleanup.
++			 */
++			return -EFAULT;
+ 	}
+ 	return 0;
+ 
+@@ -2597,7 +2603,6 @@ static int fastrpc_req_mem_map(struct fastrpc_user *fl, char __user *argp)
+ 	struct fastrpc_invoke_v2 ioctl = {0};
+ 	struct fastrpc_mem_map_req_msg req_msg = { 0 };
+ 	struct fastrpc_mmap_rsp_msg rsp_msg = { 0 };
+-	struct fastrpc_mem_unmap req_unmap = { 0 };
+ 	struct fastrpc_phy_page pages = { 0 };
+ 	struct fastrpc_mem_map req;
+ 	struct device *dev = fl->sctx->dev;
+@@ -2655,13 +2660,13 @@ static int fastrpc_req_mem_map(struct fastrpc_user *fl, char __user *argp)
+ 	/* let the client know the address to use */
+ 	req.vaddrout = rsp_msg.vaddr;
+ 
+-	if (copy_to_user((void __user *)argp, &req, sizeof(req))) {
+-		/* unmap the memory and release the buffer */
+-		req_unmap.vaddr = (uintptr_t) rsp_msg.vaddr;
+-		req_unmap.length = map->len;
+-		fastrpc_req_mem_unmap_impl(fl, &req_unmap);
++	if (copy_to_user((void __user *)argp, &req, sizeof(req)))
++		/*
++		 * The usercopy failed, but map is already mapped
++		 * in the DSP and accessible for the current process.
++		 * Rely on the process exit path to do required cleanup.
++		 */
+ 		return -EFAULT;
+-	}
+ 
+ 	return 0;
+ 
+-- 
+2.34.1
+
