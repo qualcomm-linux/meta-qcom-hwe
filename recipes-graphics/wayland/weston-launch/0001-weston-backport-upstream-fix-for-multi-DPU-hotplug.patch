@@ -1,0 +1,163 @@
+From 8bcdf058a9bdc8fea0aea27959c6a8c1b5c8ce7f Mon Sep 17 00:00:00 2001
+From: Devanshi Bansal <devanshi@qti.qualcomm.com>
+Date: Thu, 25 Sep 2025 21:35:32 +0530
+Subject: [PATCH] weston: backport upstream fix for multi-DPU hotplug
+
+This patch backports the following commits from upstream MR !1428:
+b288e662d6be77cd565a1b08784aa89a3c84d51d: backend-drm: fix deinit unexpected connector
+66aaa41074f52fea58b68c1ef0d2ef02ef917161: backend-drm: fix drm add connector to unexpected drm device
+8b3becf524aceaa5a88d4e267c8f45c75ffe4ea0: backend-drm: fix drm find wrong connector
+
+MR link: https://gitlab.freedesktop.org/wayland/weston/-/merge_requests/1428
+
+Signed-off-by: Devanshi Bansal <devanshi@qti.qualcomm.com>
+Upstream-Status: Backport
+---
+ libweston/backend-drm/drm-internal.h |  2 +-
+ libweston/backend-drm/drm.c          | 31 +++++++++++++++++-----------
+ libweston/backend-drm/kms.c          |  3 ++-
+ 3 files changed, 22 insertions(+), 14 deletions(-)
+
+diff --git a/libweston/backend-drm/drm-internal.h b/libweston/backend-drm/drm-internal.h
+index 48bc243..8542bd0 100644
+--- a/libweston/backend-drm/drm-internal.h
++++ b/libweston/backend-drm/drm-internal.h
+@@ -775,7 +775,7 @@ struct drm_crtc *
+ drm_crtc_find(struct drm_device *device, uint32_t crtc_id);
+ 
+ struct drm_head *
+-drm_head_find_by_connector(struct drm_backend *backend, uint32_t connector_id);
++drm_head_find_by_connector(struct drm_backend *backend, struct drm_device *device, uint32_t connector_id);
+ 
+ uint64_t
+ drm_rotation_from_output_transform(struct drm_plane *plane,
+diff --git a/libweston/backend-drm/drm.c b/libweston/backend-drm/drm.c
+index 8cb58bf..30a8515 100644
+--- a/libweston/backend-drm/drm.c
++++ b/libweston/backend-drm/drm.c
+@@ -228,7 +228,7 @@ drm_crtc_find(struct drm_device *device, uint32_t crtc_id)
+ }
+ 
+ struct drm_head *
+-drm_head_find_by_connector(struct drm_backend *backend, uint32_t connector_id)
++drm_head_find_by_connector(struct drm_backend *backend, struct drm_device *device, uint32_t connector_id)
+ {
+ 	struct weston_head *base;
+ 	struct drm_head *head;
+@@ -238,19 +238,25 @@ drm_head_find_by_connector(struct drm_backend *backend, uint32_t connector_id)
+ 		head = to_drm_head(base);
+ 		if (!head)
+ 			continue;
+-		if (head->connector.connector_id == connector_id)
+-			return head;
++
++		if (head->connector.device != device)
++			continue;
++
++		if (head->connector.connector_id != connector_id)
++			continue;
++
++		return head;
+ 	}
+ 
+ 	return NULL;
+ }
+ 
+ static struct drm_writeback *
+-drm_writeback_find_by_connector(struct drm_backend *backend, uint32_t connector_id)
++drm_writeback_find_by_connector(struct drm_device *device, uint32_t connector_id)
+ {
+ 	struct drm_writeback *writeback;
+ 
+-	wl_list_for_each(writeback, &backend->drm->writeback_connector_list, link) {
++	wl_list_for_each(writeback, &device->writeback_connector_list, link) {
+ 		if (writeback->connector.connector_id == connector_id)
+ 			return writeback;
+ 	}
+@@ -2309,7 +2315,7 @@ drm_output_deinit(struct weston_output *base)
+ {
+ 	struct drm_output *output = to_drm_output(base);
+ 	struct drm_backend *b = output->backend;
+-	struct drm_device *device = b->drm;
++	struct drm_device *device = output->device;
+ 	struct drm_pending_state *pending;
+ 
+ 	if (!b->compositor->shutting_down) {
+@@ -3145,8 +3151,8 @@ drm_backend_update_connectors(struct drm_device *device,
+ 		if (!conn)
+ 			continue;
+ 
+-		head = drm_head_find_by_connector(b, connector_id);
+-		writeback = drm_writeback_find_by_connector(b, connector_id);
++		head = drm_head_find_by_connector(b, device, connector_id);
++		writeback = drm_writeback_find_by_connector(device, connector_id);
+ 
+ 		/* Connector can't be owned by both a head and a writeback, so
+ 		 * one of the searches must fail. */
+@@ -3159,7 +3165,7 @@ drm_backend_update_connectors(struct drm_device *device,
+ 		} else if (writeback) {
+ 			ret = drm_writeback_update_info(writeback, conn);
+ 		} else {
+-			ret = drm_backend_add_connector(b->drm, conn, drm_device);
++			ret = drm_backend_add_connector(device, conn, drm_device);
+ 		}
+ 
+ 		if (ret < 0)
+@@ -3223,13 +3229,14 @@ drm_connector_find_property_by_id(struct drm_connector *connector,
+ 
+ static void
+ drm_backend_update_conn_props(struct drm_backend *b,
++			      struct drm_device *device,
+ 			      uint32_t	connector_id,
+ 			      uint32_t property_id)
+ {
+ 	struct drm_head *head;
+ 	enum wdrm_connector_property conn_prop;
+ 
+-	head = drm_head_find_by_connector(b, connector_id);
++	head = drm_head_find_by_connector(b, device, connector_id);
+ 	if (!head) {
+ 		weston_log("DRM: failed to find head for connector id: %d.\n",
+ 			   connector_id);
+@@ -3303,7 +3310,7 @@ udev_drm_event(int fd, uint32_t mask, void *data)
+ 
+ 	if (udev_event_is_hotplug(b->drm, event)) {
+ 		if (udev_event_is_conn_prop_change(b, event, &conn_id, &prop_id))
+-			drm_backend_update_conn_props(b, conn_id, prop_id);
++			drm_backend_update_conn_props(b, b->drm, conn_id, prop_id);
+ 		else
+ 			drm_backend_update_connectors(b->drm, event);
+ 	}
+@@ -3311,7 +3318,7 @@ udev_drm_event(int fd, uint32_t mask, void *data)
+ 	wl_list_for_each(device, &b->kms_list, link) {
+ 		if (udev_event_is_hotplug(device, event)) {
+ 			if (udev_event_is_conn_prop_change(b, event, &conn_id, &prop_id))
+-				drm_backend_update_conn_props(b, conn_id, prop_id);
++				drm_backend_update_conn_props(b, device, conn_id, prop_id);
+ 			else
+ 				drm_backend_update_connectors(device, event);
+ 		}
+diff --git a/libweston/backend-drm/kms.c b/libweston/backend-drm/kms.c
+index ba1c169..3e93a9b 100644
+--- a/libweston/backend-drm/kms.c
++++ b/libweston/backend-drm/kms.c
+@@ -1099,6 +1099,7 @@ drm_connector_set_max_bpc(struct drm_connector *connector,
+ 	const struct drm_property_info *info;
+ 	struct drm_head *head;
+ 	struct drm_backend *backend = output->device->backend;
++	struct drm_device *device = output->device;
+ 	uint64_t max_bpc;
+ 	uint64_t a, b;
+ 
+@@ -1107,7 +1108,7 @@ drm_connector_set_max_bpc(struct drm_connector *connector,
+ 
+ 	if (output->max_bpc == 0) {
+ 		/* A value of 0 means that the current max_bpc must be programmed. */
+-		head = drm_head_find_by_connector(backend, connector->connector_id);
++		head = drm_head_find_by_connector(backend, device, connector->connector_id);
+ 		max_bpc = head->inherited_max_bpc;
+ 	} else {
+ 		info = &connector->props[WDRM_CONNECTOR_MAX_BPC];
+-- 
+2.34.1
+
