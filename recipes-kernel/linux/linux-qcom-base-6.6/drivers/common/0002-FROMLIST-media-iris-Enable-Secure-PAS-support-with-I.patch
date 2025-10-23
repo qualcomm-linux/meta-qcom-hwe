@@ -1,0 +1,327 @@
+From 888c9e1ae24394e23fc46cef65e44b53ff3737ac Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Tue, 19 Aug 2025 22:24:46 +0530
+Subject: [PATCH 2/2] FROMLIST: media: iris: Enable Secure PAS support with
+ IOMMU managed by Linux
+
+Most Qualcomm platforms feature a inhouse hypervisor (such as Gunyah
+or QHEE), which typically handles IOMMU configuration. This includes
+mapping memory regions and device memory resources for remote processors
+by intercepting qcom_scm_pas_auth_and_reset() calls. These mappings are
+later removed during teardown. Additionally, SHM bridge setup is required
+to enable memory protection for both remoteproc metadata and its memory
+regions.
+
+When the hypervisor is absent, the operating system must perform these
+configurations instead.
+
+Support for handling IOMMU and SHM setup in the absence of a hypervisor
+is now in place. Extend the Iris driver to enable this functionality on
+platforms where IOMMU is managed by Linux (i.e., non-Gunyah, non-QHEE).
+
+Additionally, the Iris driver must map the firmware and its required
+resources to the firmware SID, which is now specified via the device tree.
+
+Change-Id: Id07f6e3facba58cfd83e34dec5211590376f41e0
+Link: https://lore.kernel.org/lkml/20250819165447.4149674-12-mukesh.ojha@oss.qualcomm.com/
+Co-developed-by: Vikash Garodia <quic_vgarodia@quicinc.com>
+Signed-off-by: Vikash Garodia <quic_vgarodia@quicinc.com>
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20250819165447.4149674-12-mukesh.ojha@oss.qualcomm.com/]
+---
+ drivers/media/platform/qcom/iris/iris_core.c  |   9 +-
+ drivers/media/platform/qcom/iris/iris_core.h  |   6 +
+ .../media/platform/qcom/iris/iris_firmware.c  | 159 ++++++++++++++++--
+ .../media/platform/qcom/iris/iris_firmware.h  |   2 +
+ 4 files changed, 158 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/media/platform/qcom/iris/iris_core.c b/drivers/media/platform/qcom/iris/iris_core.c
+index 0fa0a3b549a2..57417d4d7e05 100644
+--- a/drivers/media/platform/qcom/iris/iris_core.c
++++ b/drivers/media/platform/qcom/iris/iris_core.c
+@@ -17,6 +17,7 @@ void iris_core_deinit(struct iris_core *core)
+ 	mutex_lock(&core->lock);
+ 	iris_fw_unload(core);
+ 	iris_vpu_power_off(core);
++	iris_fw_deinit(core);
+ 	iris_hfi_queues_deinit(core);
+ 	core->state = IRIS_CORE_DEINIT;
+ 	mutex_unlock(&core->lock);
+@@ -65,10 +66,14 @@ int iris_core_init(struct iris_core *core)
+ 	if (ret)
+ 		goto error_queue_deinit;
+ 
+-	ret = iris_fw_load(core);
++	ret = iris_fw_init(core);
+ 	if (ret)
+ 		goto error_power_off;
+ 
++	ret = iris_fw_load(core);
++	if (ret)
++		goto error_firmware_deinit;
++
+ 	ret = iris_vpu_boot_firmware(core);
+ 	if (ret)
+ 		goto error_unload_fw;
+@@ -83,6 +88,8 @@ int iris_core_init(struct iris_core *core)
+ 
+ error_unload_fw:
+ 	iris_fw_unload(core);
++error_firmware_deinit:
++	iris_fw_deinit(core);
+ error_power_off:
+ 	iris_vpu_power_off(core);
+ error_queue_deinit:
+diff --git a/drivers/media/platform/qcom/iris/iris_core.h b/drivers/media/platform/qcom/iris/iris_core.h
+index 9899fb19ccc6..bca90057e810 100644
+--- a/drivers/media/platform/qcom/iris/iris_core.h
++++ b/drivers/media/platform/qcom/iris/iris_core.h
+@@ -74,6 +74,12 @@ struct iris_core {
+ 	int					irq;
+ 	struct v4l2_device			v4l2_dev;
+ 	struct video_device			*vdev_dec;
++	bool					has_iommu;
++	struct video_firmware {
++		struct device *dev;
++		struct qcom_scm_pas_context *ctx;
++		struct iommu_domain *iommu_domain;
++	} fw;
+ 	const struct v4l2_file_operations	*iris_v4l2_file_ops;
+ 	const struct v4l2_ioctl_ops		*iris_v4l2_ioctl_ops;
+ 	const struct vb2_ops			*iris_vb2_ops;
+diff --git a/drivers/media/platform/qcom/iris/iris_firmware.c b/drivers/media/platform/qcom/iris/iris_firmware.c
+index 7c493b4a75db..23d755107a2d 100644
+--- a/drivers/media/platform/qcom/iris/iris_firmware.c
++++ b/drivers/media/platform/qcom/iris/iris_firmware.c
+@@ -3,10 +3,18 @@
+  * Copyright (c) 2022-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+  */
+ 
++#include <linux/device.h>
+ #include <linux/firmware.h>
+-#include <linux/firmware/qcom/qcom_scm.h>
++#include <linux/kernel.h>
++#include <linux/iommu.h>
++#include <linux/io.h>
++#include <linux/of.h>
+ #include <linux/of_address.h>
+ #include <linux/of_reserved_mem.h>
++#include <linux/platform_device.h>
++#include <linux/of_device.h>
++#include <linux/firmware/qcom/qcom_scm.h>
++#include <linux/sizes.h>
+ #include <linux/soc/qcom/mdt_loader.h>
+ 
+ #include "iris_core.h"
+@@ -17,15 +25,14 @@
+ static int iris_load_fw_to_memory(struct iris_core *core, const char *fw_name)
+ {
+ 	u32 pas_id = core->iris_platform_data->pas_id;
++	struct qcom_scm_pas_context *ctx;
+ 	const struct firmware *firmware = NULL;
+ 	struct device *dev = core->dev;
+-	struct reserved_mem *rmem;
+-	struct device_node *node;
+-	phys_addr_t mem_phys;
+-	size_t res_size;
+-	ssize_t fw_size;
+-	void *mem_virt;
+-	int ret;
++	struct reserved_mem *rmem = NULL;
++	struct device_node *node = NULL;
++	ssize_t fw_size = 0;
++	void *mem_virt = NULL;
++	int ret = 0;
+ 
+ 	if (strlen(fw_name) >= MAX_FIRMWARE_NAME_SIZE - 4)
+ 		return -EINVAL;
+@@ -39,36 +46,67 @@ static int iris_load_fw_to_memory(struct iris_core *core, const char *fw_name)
+ 	if (!rmem)
+ 		return -EINVAL;
+ 
+-	mem_phys = rmem->base;
+-	res_size = rmem->size;
++	if (core->has_iommu)
++		dev = core->fw.dev;
++
++	ctx = qcom_scm_pas_context_init(dev, pas_id, rmem->base, rmem->size);
++	if (!ctx)
++		return -ENOMEM;
++
++	ctx->has_iommu = core->has_iommu;
+ 
+ 	ret = request_firmware(&firmware, fw_name, dev);
+ 	if (ret)
+ 		return ret;
+ 
+ 	fw_size = qcom_mdt_get_size(firmware);
+-	if (fw_size < 0 || res_size < (size_t)fw_size) {
++	if (fw_size < 0 || rmem->size < (size_t)fw_size) {
+ 		ret = -EINVAL;
+ 		goto err_release_fw;
+ 	}
+ 
+-	mem_virt = memremap(mem_phys, res_size, MEMREMAP_WC);
++	mem_virt = memremap(rmem->base, rmem->size, MEMREMAP_WC);
+ 	if (!mem_virt)
+ 		goto err_release_fw;
+ 
+-	ret = qcom_mdt_load(dev, firmware, fw_name,
+-			    pas_id, mem_virt, mem_phys, res_size, NULL);
++	ret = qcom_mdt_pas_load(ctx, firmware, fw_name, mem_virt, NULL);
++	qcom_scm_pas_metadata_release(ctx);
+ 	if (ret)
+ 		goto err_mem_unmap;
+ 
+-	ret = qcom_scm_pas_auth_and_reset(pas_id);
++	if (core->has_iommu) {
++		ret = iommu_map(core->fw.iommu_domain, 0, rmem->base, rmem->size,
++				IOMMU_READ | IOMMU_WRITE | IOMMU_PRIV, GFP_KERNEL);
++		if (ret)
++			goto err_mem_unmap;
++
++		/*
++		 * Firmware has no support for resource table for now, so, lets
++		 * pass NULL and zero for input resource table and input resource
++		 * table respectively.
++		 */
++		ret = qcom_mdt_pas_map_devmem_rscs(ctx, core->fw.iommu_domain, NULL, 0);
++		if (ret)
++			goto err_unmap_carveout;
++	}
++
++	ret = qcom_scm_pas_prepare_and_auth_reset(ctx);
+ 	if (ret)
+-		goto err_mem_unmap;
++		goto err_unmap_devmem_rscs;
++
++	core->fw.ctx = ctx;
+ 
+ 	return ret;
+ 
++err_unmap_devmem_rscs:
++	if (core->has_iommu)
++		qcom_mdt_pas_unmap_devmem_rscs(ctx, core->fw.iommu_domain);
++err_unmap_carveout:
++	if (core->has_iommu)
++		iommu_unmap(core->fw.iommu_domain, 0, rmem->size);
+ err_mem_unmap:
+ 	memunmap(mem_virt);
++
+ err_release_fw:
+ 	release_firmware(firmware);
+ 
+@@ -107,10 +145,97 @@ int iris_fw_load(struct iris_core *core)
+ 
+ int iris_fw_unload(struct iris_core *core)
+ {
+-	return qcom_scm_pas_shutdown(core->iris_platform_data->pas_id);
++	struct qcom_scm_pas_context *ctx;
++	int ret;
++
++	ctx = core->fw.ctx;
++	ret = qcom_scm_pas_shutdown(ctx->pas_id);
++	if (core->has_iommu) {
++		iommu_unmap(core->fw.iommu_domain, 0, ctx->mem_size);
++		qcom_mdt_pas_unmap_devmem_rscs(ctx, core->fw.iommu_domain);
++	}
++
++	return ret;
+ }
+ 
+ int iris_set_hw_state(struct iris_core *core, bool resume)
+ {
+ 	return qcom_scm_set_remote_state(resume, 0);
+ }
++
++int iris_fw_init(struct iris_core *core)
++{
++	struct platform_device_info info;
++	struct iommu_domain *iommu_dom;
++	struct platform_device *pdev;
++	struct device_node *np;
++	int ret;
++
++	np = of_get_child_by_name(core->dev->of_node, "video-firmware");
++	if (!np)
++		return 0;
++
++	core->has_iommu = true;
++	memset(&info, 0, sizeof(info));
++	info.fwnode = &np->fwnode;
++	info.parent = core->dev;
++	info.name = np->name;
++	info.dma_mask = DMA_BIT_MASK(32);
++
++	pdev = platform_device_register_full(&info);
++	if (IS_ERR(pdev)) {
++		of_node_put(np);
++		return PTR_ERR(pdev);
++	}
++
++	pdev->dev.of_node = np;
++
++	ret = of_dma_configure(&pdev->dev, np, true);
++	if (ret) {
++		dev_err(core->dev, "failed to allocate domain\n");
++		goto err_unregister;
++	}
++
++	core->fw.dev = &pdev->dev;
++
++	iommu_dom = iommu_get_domain_for_dev(core->fw.dev);
++	if (!iommu_dom) {
++		dev_err(core->fw.dev, "Failed to get iommu domain\n");
++		ret = -EINVAL;
++		goto err_iommu_free;
++	}
++
++	ret = iommu_attach_device(iommu_dom, core->fw.dev);
++	if (ret) {
++		dev_err(core->fw.dev, "could not attach device\n");
++		goto err_iommu_free;
++	}
++
++	core->fw.iommu_domain = iommu_dom;
++
++	of_node_put(np);
++
++	return 0;
++
++err_iommu_free:
++	iommu_domain_free(iommu_dom);
++err_unregister:
++	platform_device_unregister(pdev);
++	of_node_put(np);
++	return ret;
++}
++
++void iris_fw_deinit(struct iris_core *core)
++{
++	struct iommu_domain *iommu_dom;
++
++	if (!core->has_iommu)
++		return;
++
++	iommu_dom = core->fw.iommu_domain;
++	iommu_detach_device(iommu_dom, core->fw.dev);
++	iommu_domain_free(iommu_dom);
++
++	core->fw.iommu_domain = NULL;
++	platform_device_unregister(to_platform_device(core->fw.dev));
++}
+diff --git a/drivers/media/platform/qcom/iris/iris_firmware.h b/drivers/media/platform/qcom/iris/iris_firmware.h
+index e833ecd34887..adde46109966 100644
+--- a/drivers/media/platform/qcom/iris/iris_firmware.h
++++ b/drivers/media/platform/qcom/iris/iris_firmware.h
+@@ -11,5 +11,7 @@ struct iris_core;
+ int iris_fw_load(struct iris_core *core);
+ int iris_fw_unload(struct iris_core *core);
+ int iris_set_hw_state(struct iris_core *core, bool resume);
++int iris_fw_init(struct iris_core *core);
++void iris_fw_deinit(struct iris_core *core);
+ 
+ #endif
+-- 
+2.50.1
+
