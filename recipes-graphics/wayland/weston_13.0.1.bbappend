@@ -58,12 +58,8 @@ PACKAGECONFIG:qcom = " \
                  ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'x11 xwayland', '', d)} \
                  "
 
-
-PACKAGECONFIG:append:qcm6490 = "kms rdp screenshare"
-
-PACKAGECONFIG:append:qcs9100 = "kms"
-PACKAGECONFIG:append:qcs8300 = "kms"
-PACKAGECONFIG:append:qcs615  = "kms"
+#Enable KMS RDP Screenshare for all chipsets
+PACKAGECONFIG:append= "kms rdp screenshare"
 
 # Weston on SDM
 PACKAGECONFIG[sdm] = "-Dbackend-sdm=true,-Dbackend-sdm=false"
