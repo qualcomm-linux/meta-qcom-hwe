@@ -1,0 +1,31 @@
+From 1273a18d10e387e330a3c005e52a6979a1b6338d Mon Sep 17 00:00:00 2001
+From: Komal Bajaj <komal.bajaj@oss.qualcomm.com>
+Date: Wed, 3 Sep 2025 15:02:54 +0530
+Subject: [PATCH] QCLINUX: arm64: dts: qcom: Add board-id and msm-id for
+ Rb3Gen2 ptz mezz
+
+Add board-id and msm-id for Rb3Gen2 platforms to support ptz-mezz.
+
+Change-Id: I2430fe529d30998afbcb6698aabe613f6bd25e89
+Signed-off-by: Komal Bajaj <komal.bajaj@oss.qualcomm.com>
+---
+ arch/arm64/boot/dts/qcom/qcs6490-addons-rb3gen2-ptz-mezz.dts | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs6490-addons-rb3gen2-ptz-mezz.dts b/arch/arm64/boot/dts/qcom/qcs6490-addons-rb3gen2-ptz-mezz.dts
+index 56318c608b53..f1d0aa965d52 100644
+--- a/arch/arm64/boot/dts/qcom/qcs6490-addons-rb3gen2-ptz-mezz.dts
++++ b/arch/arm64/boot/dts/qcom/qcs6490-addons-rb3gen2-ptz-mezz.dts
+@@ -12,6 +12,9 @@
+ / {
+ 	model = "Qualcomm Technologies, Inc. Robotics RB3gen2 addons ptz mezz platform";
+ 	compatible = "qcom,qcs6490-addons-rb3gen2-ptz-mezz", "qcom,qcm6490";
++
++	qcom,msm-id = <497 0x10000>, <498 0x10000>, <475 0x10000>, <515 0x10000>;
++	qcom,board-id = <32 0xA>, <32 0x60A>;
+ };
+ 
+ &spmi_bus {
+-- 
+2.34.1
+

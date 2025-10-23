@@ -22,6 +22,7 @@ SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=kernel \
            ${@bb.utils.contains('DISTRO_FEATURES', 'smack', ' file://smack_debug.cfg', '', d)} \
            file://0001-QCLINUX-Add-support-to-compile-msm_display.ko.patch \
            file://0002-PENDING-misc-fastrpc-Return-on-argument-copy-failure.patch \
+           file://0003-QCLINUX-arm64-dts-qcom-Add-board-id-and-msm-id-for-R.patch \
            "
 
 S = "${WORKDIR}/kernel"
