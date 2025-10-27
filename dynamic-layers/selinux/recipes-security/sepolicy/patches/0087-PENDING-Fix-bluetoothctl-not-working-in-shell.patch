@@ -28,7 +28,7 @@ index 6067df4b8..fdccb0b17 100644
  /usr/bin/hciattach	--	gen_context(system_u:object_r:bluetooth_exec_t,s0)
  /usr/bin/hcid	--	gen_context(system_u:object_r:bluetooth_exec_t,s0)
 diff --git a/policy/modules/services/bluetooth.te b/policy/modules/services/bluetooth.te
-index 7b8953719..370abc7d2 100644
+index 7b8953719..0bba0fec1 100644
 --- a/policy/modules/services/bluetooth.te
 +++ b/policy/modules/services/bluetooth.te
 @@ -184,6 +184,15 @@ allow bluetooth_helper_t bluetooth_t:socket { read write };
@@ -41,7 +41,7 @@ index 7b8953719..370abc7d2 100644
 +ssh_use_sshd_pidfds(bluetooth_helper_t)
 +userdom_use_user_ptys(bluetooth_helper_t)
 +userdom_use_user_ttys(bluetooth_helper_t)
-+allow bluetooth_helper_t self:bluetooth_socket { ioctl write listen accept };
++allow bluetooth_helper_t self:bluetooth_socket { ioctl write listen accept connect };
 +allow bluetooth_helper_t self:capability net_raw;
 +
  manage_dirs_pattern(bluetooth_helper_t, bluetooth_helper_tmp_t, bluetooth_helper_tmp_t)
