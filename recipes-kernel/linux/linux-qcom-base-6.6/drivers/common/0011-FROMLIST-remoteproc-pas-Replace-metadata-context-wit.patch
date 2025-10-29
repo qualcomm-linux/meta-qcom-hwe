@@ -1,0 +1,262 @@
+From c2d83928da1a95c748ce6384997bd4e910fe5ce2 Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 13 Oct 2025 18:08:21 +0530
+Subject: [PATCH 11/20] FROMLIST: remoteproc: pas: Replace metadata context
+ with PAS context structure
+
+As a superset of the existing metadata context, the PAS context
+structure enables both remoteproc and non-remoteproc subsystems to
+better support scenarios where the SoC runs with or without the Gunyah
+hypervisor. To reflect this, relevant SCM and metadata functions are
+updated to incorporate PAS context awareness.
+
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+
+Change-Id: Ic01850b922a3eb46c28c2156b687bd935181ea30
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20251013-kvm_rprocv5-v5-4-d609ed766061@oss.qualcomm.com/]
+---
+ drivers/firmware/qcom_scm.c            | 32 ++++++++++++----------
+ drivers/remoteproc/qcom_q6v5_pas.c     | 37 ++++++++++++++++++--------
+ drivers/soc/qcom/mdt_loader.c          |  4 +--
+ include/linux/firmware/qcom/qcom_scm.h |  4 +--
+ include/linux/soc/qcom/mdt_loader.h    |  6 ++---
+ 5 files changed, 51 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+index ba959411a266..364e6a723d43 100644
+--- a/drivers/firmware/qcom_scm.c
++++ b/drivers/firmware/qcom_scm.c
+@@ -527,7 +527,7 @@ EXPORT_SYMBOL_GPL(qcom_scm_pas_context_init);
+  *		and optional blob of data used for authenticating the metadata
+  *		and the rest of the firmware
+  * @size:	size of the metadata
+- * @ctx:	optional metadata context
++ * @ctx:	optional pas context
+  *
+  * Return: 0 on success.
+  *
+@@ -536,8 +536,9 @@ EXPORT_SYMBOL_GPL(qcom_scm_pas_context_init);
+  * qcom_scm_pas_metadata_release() by the caller.
+  */
+ int qcom_scm_pas_init_image(u32 pas_id, const void *metadata, size_t size,
+-			    struct qcom_scm_pas_metadata *ctx)
++			    struct qcom_scm_pas_context *ctx)
+ {
++	struct qcom_scm_pas_metadata *mdt_ctx;
+ 	dma_addr_t mdata_phys;
+ 	void *mdata_buf;
+ 	int ret;
+@@ -589,10 +590,11 @@ int qcom_scm_pas_init_image(u32 pas_id, const void *metadata, size_t size,
+ out:
+ 	if (ret < 0 || !ctx) {
+ 		dma_free_coherent(__scm->dev, size, mdata_buf, mdata_phys);
+-	} else if (ctx) {
+-		ctx->ptr = mdata_buf;
+-		ctx->phys = mdata_phys;
+-		ctx->size = size;
++	} else if (ctx && ctx->metadata) {
++		mdt_ctx = ctx->metadata;
++		mdt_ctx->ptr = mdata_buf;
++		mdt_ctx->phys = mdata_phys;
++		mdt_ctx->size = size;
+ 	}
+ 
+ 	return ret ? : res.result[0];
+@@ -601,18 +603,20 @@ EXPORT_SYMBOL_GPL(qcom_scm_pas_init_image);
+ 
+ /**
+  * qcom_scm_pas_metadata_release() - release metadata context
+- * @ctx:	metadata context
++ * @ctx:	pas context
+  */
+-void qcom_scm_pas_metadata_release(struct qcom_scm_pas_metadata *ctx)
++void qcom_scm_pas_metadata_release(struct qcom_scm_pas_context *ctx)
+ {
+-	if (!ctx->ptr)
+-		return;
++	struct qcom_scm_pas_metadata *mdt_ctx;
+ 
+-	dma_free_coherent(__scm->dev, ctx->size, ctx->ptr, ctx->phys);
++	mdt_ctx = ctx->metadata;
++	if (!mdt_ctx->ptr)
++		return;
+ 
+-	ctx->ptr = NULL;
+-	ctx->phys = 0;
+-	ctx->size = 0;
++	dma_free_coherent(__scm->dev, mdt_ctx->size, mdt_ctx->ptr, mdt_ctx->phys);
++	mdt_ctx->ptr = NULL;
++	mdt_ctx->phys = 0;
++	mdt_ctx->size = 0;
+ }
+ EXPORT_SYMBOL_GPL(qcom_scm_pas_metadata_release);
+ 
+diff --git a/drivers/remoteproc/qcom_q6v5_pas.c b/drivers/remoteproc/qcom_q6v5_pas.c
+index fb2e5d914055..fdea4aefccd8 100644
+--- a/drivers/remoteproc/qcom_q6v5_pas.c
++++ b/drivers/remoteproc/qcom_q6v5_pas.c
+@@ -102,8 +102,8 @@ struct qcom_adsp {
+ 	struct qcom_rproc_ssr ssr_subdev;
+ 	struct qcom_sysmon *sysmon;
+ 
+-	struct qcom_scm_pas_metadata pas_metadata;
+-	struct qcom_scm_pas_metadata dtb_pas_metadata;
++	struct qcom_scm_pas_context *pas_ctx;
++	struct qcom_scm_pas_context *dtb_pas_ctx;
+ };
+ 
+ static void adsp_segment_dump(struct rproc *rproc, struct rproc_dump_segment *segment,
+@@ -195,9 +195,9 @@ static int adsp_unprepare(struct rproc *rproc)
+ 	 * auth_and_reset() was successful, but in other cases clean it up
+ 	 * here.
+ 	 */
+-	qcom_scm_pas_metadata_release(&adsp->pas_metadata);
++	qcom_scm_pas_metadata_release(adsp->pas_ctx);
+ 	if (adsp->dtb_pas_id)
+-		qcom_scm_pas_metadata_release(&adsp->dtb_pas_metadata);
++		qcom_scm_pas_metadata_release(adsp->dtb_pas_ctx);
+ 
+ 	return 0;
+ }
+@@ -220,7 +220,7 @@ static int adsp_load(struct rproc *rproc, const struct firmware *fw)
+ 
+ 		ret = qcom_mdt_pas_init(adsp->dev, adsp->dtb_firmware, adsp->dtb_firmware_name,
+ 					adsp->dtb_pas_id, adsp->dtb_mem_phys,
+-					&adsp->dtb_pas_metadata);
++					adsp->dtb_pas_ctx);
+ 		if (ret)
+ 			goto release_dtb_firmware;
+ 
+@@ -235,7 +235,7 @@ static int adsp_load(struct rproc *rproc, const struct firmware *fw)
+ 	return 0;
+ 
+ release_dtb_metadata:
+-	qcom_scm_pas_metadata_release(&adsp->dtb_pas_metadata);
++	qcom_scm_pas_metadata_release(adsp->dtb_pas_ctx);
+ 
+ release_dtb_firmware:
+ 	release_firmware(adsp->dtb_firmware);
+@@ -286,7 +286,7 @@ static int adsp_start(struct rproc *rproc)
+ 	}
+ 
+ 	ret = qcom_mdt_pas_init(adsp->dev, adsp->firmware, rproc->firmware, adsp->pas_id,
+-				adsp->mem_phys, &adsp->pas_metadata);
++				adsp->mem_phys, adsp->pas_ctx);
+ 	if (ret)
+ 		goto disable_px_supply;
+ 
+@@ -312,9 +312,9 @@ static int adsp_start(struct rproc *rproc)
+ 		goto release_pas_metadata;
+ 	}
+ 
+-	qcom_scm_pas_metadata_release(&adsp->pas_metadata);
++	qcom_scm_pas_metadata_release(adsp->pas_ctx);
+ 	if (adsp->dtb_pas_id)
+-		qcom_scm_pas_metadata_release(&adsp->dtb_pas_metadata);
++		qcom_scm_pas_metadata_release(adsp->dtb_pas_ctx);
+ 
+ 	/* Remove pointer to the loaded firmware, only valid in adsp_load() & adsp_start() */
+ 	adsp->firmware = NULL;
+@@ -322,9 +322,9 @@ static int adsp_start(struct rproc *rproc)
+ 	return 0;
+ 
+ release_pas_metadata:
+-	qcom_scm_pas_metadata_release(&adsp->pas_metadata);
++	qcom_scm_pas_metadata_release(adsp->pas_ctx);
+ 	if (adsp->dtb_pas_id)
+-		qcom_scm_pas_metadata_release(&adsp->dtb_pas_metadata);
++		qcom_scm_pas_metadata_release(adsp->dtb_pas_ctx);
+ disable_px_supply:
+ 	if (adsp->px_supply)
+ 		regulator_disable(adsp->px_supply);
+@@ -744,6 +744,21 @@ static int adsp_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	qcom_add_ssr_subdev(rproc, &adsp->ssr_subdev, desc->ssr_name);
++
++	adsp->pas_ctx = qcom_scm_pas_context_init(adsp->dev, adsp->pas_id, adsp->mem_phys,
++						  adsp->mem_size);
++	if (IS_ERR(adsp->pas_ctx)) {
++		ret = PTR_ERR(adsp->pas_ctx);
++		goto detach_proxy_pds;
++	}
++
++	adsp->dtb_pas_ctx = qcom_scm_pas_context_init(adsp->dev, adsp->dtb_pas_id,
++						      adsp->dtb_mem_phys, adsp->dtb_mem_size);
++	if (IS_ERR(adsp->dtb_pas_ctx)) {
++		ret = PTR_ERR(adsp->dtb_pas_ctx);
++		goto detach_proxy_pds;
++	}
++
+ 	ret = rproc_add(rproc);
+ 	if (ret)
+ 		goto detach_proxy_pds;
+diff --git a/drivers/soc/qcom/mdt_loader.c b/drivers/soc/qcom/mdt_loader.c
+index 0afecda0bfaa..4fab01f06d3f 100644
+--- a/drivers/soc/qcom/mdt_loader.c
++++ b/drivers/soc/qcom/mdt_loader.c
+@@ -236,13 +236,13 @@ EXPORT_SYMBOL_GPL(qcom_mdt_read_metadata);
+  * @fw_name:	name of the firmware, for construction of segment file names
+  * @pas_id:	PAS identifier
+  * @mem_phys:	physical address of allocated memory region
+- * @ctx:	PAS metadata context, to be released by caller
++ * @ctx:	PAS context, ctx->metadata to be released by caller
+  *
+  * Returns 0 on success, negative errno otherwise.
+  */
+ int qcom_mdt_pas_init(struct device *dev, const struct firmware *fw,
+ 		      const char *fw_name, int pas_id, phys_addr_t mem_phys,
+-		      struct qcom_scm_pas_metadata *ctx)
++		      struct qcom_scm_pas_context *ctx)
+ {
+ 	const struct elf32_phdr *phdrs;
+ 	const struct elf32_phdr *phdr;
+diff --git a/include/linux/firmware/qcom/qcom_scm.h b/include/linux/firmware/qcom/qcom_scm.h
+index 5415e64279e4..5e0b9987129e 100644
+--- a/include/linux/firmware/qcom/qcom_scm.h
++++ b/include/linux/firmware/qcom/qcom_scm.h
+@@ -84,8 +84,8 @@ void *qcom_scm_pas_context_init(struct device *dev, u32 pas_id, phys_addr_t mem_
+ 				size_t mem_size);
+ extern int qcom_scm_pas_init_image(u32 pas_id, const void *metadata,
+ 				   size_t size,
+-				   struct qcom_scm_pas_metadata *ctx);
+-extern void qcom_scm_pas_metadata_release(struct qcom_scm_pas_metadata *ctx);
++				   struct qcom_scm_pas_context *ctx);
++extern void qcom_scm_pas_metadata_release(struct qcom_scm_pas_context *ctx);
+ extern int qcom_scm_pas_mem_setup(u32 pas_id, phys_addr_t addr,
+ 				  phys_addr_t size);
+ extern int qcom_scm_pas_auth_and_reset(u32 pas_id);
+diff --git a/include/linux/soc/qcom/mdt_loader.h b/include/linux/soc/qcom/mdt_loader.h
+index 9e8e60421192..939b93dafa02 100644
+--- a/include/linux/soc/qcom/mdt_loader.h
++++ b/include/linux/soc/qcom/mdt_loader.h
+@@ -10,14 +10,14 @@
+ 
+ struct device;
+ struct firmware;
+-struct qcom_scm_pas_metadata;
++struct qcom_scm_pas_context;
+ 
+ #if IS_ENABLED(CONFIG_QCOM_MDT_LOADER)
+ 
+ ssize_t qcom_mdt_get_size(const struct firmware *fw);
+ int qcom_mdt_pas_init(struct device *dev, const struct firmware *fw,
+ 		      const char *fw_name, int pas_id, phys_addr_t mem_phys,
+-		      struct qcom_scm_pas_metadata *pas_metadata_ctx);
++		      struct qcom_scm_pas_context *ctx);
+ int qcom_mdt_load(struct device *dev, const struct firmware *fw,
+ 		  const char *fw_name, int pas_id, void *mem_region,
+ 		  phys_addr_t mem_phys, size_t mem_size,
+@@ -39,7 +39,7 @@ static inline ssize_t qcom_mdt_get_size(const struct firmware *fw)
+ 
+ static inline int qcom_mdt_pas_init(struct device *dev, const struct firmware *fw,
+ 				    const char *fw_name, int pas_id, phys_addr_t mem_phys,
+-				    struct qcom_scm_pas_metadata *pas_metadata_ctx)
++				    struct qcom_scm_pas_context *ctx)
+ {
+ 	return -ENODEV;
+ }
+-- 
+2.50.1
+

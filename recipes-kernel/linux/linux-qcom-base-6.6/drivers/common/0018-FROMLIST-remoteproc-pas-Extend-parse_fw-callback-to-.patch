@@ -1,0 +1,129 @@
+From 99087cd8dc0f8598a3efedf0cc3778270bafdfd7 Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 13 Oct 2025 19:06:33 +0530
+Subject: [PATCH 18/20] FROMLIST: remoteproc: pas: Extend parse_fw callback to
+ fetch resources via SMC call
+
+Qualcomm remote processor may rely on static and dynamic resources for
+it to be functional. For most of the Qualcomm SoCs, when run with Gunyah
+or older QHEE hypervisor, all the resources whether it is static or
+dynamic, is managed by the hypervisor. Dynamic resources if it is
+present for a remote processor will always be coming from secure world
+via SMC call while static resources may be present in remote processor
+firmware binary or it may be coming from SMC call along with dynamic
+resources.
+
+Remoteproc already has method like rproc_elf_load_rsc_table() to check
+firmware binary has resources or not and if it is not having then we
+pass NULL and zero as input resource table and its size argument
+respectively to qcom_scm_pas_get_rsc_table() and while it has resource
+present then it should pass the present resources to Trustzone(TZ) so that
+it could authenticate the present resources and append dynamic resource
+to return in output_rt argument along with authenticated resources.
+
+Extend parse_fw callback to include SMC call to get resources from
+Trustzone and to leverage resource table parsing and mapping and
+unmapping code from the remoteproc framework.
+
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+
+Change-Id: I98e28620370f202dfed00f5f1738daa5eaf6099d
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20251013-kvm_rprocv5-v5-11-d609ed766061@oss.qualcomm.com/]
+---
+ drivers/remoteproc/qcom_q6v5_pas.c | 60 +++++++++++++++++++++++++++++-
+ 1 file changed, 58 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/remoteproc/qcom_q6v5_pas.c b/drivers/remoteproc/qcom_q6v5_pas.c
+index f6410c739477..87e229637924 100644
+--- a/drivers/remoteproc/qcom_q6v5_pas.c
++++ b/drivers/remoteproc/qcom_q6v5_pas.c
+@@ -32,6 +32,7 @@
+ #include "remoteproc_internal.h"
+ 
+ #define ADSP_DECRYPT_SHUTDOWN_DELAY_MS	100
++#define MAX_RSCTABLE_SIZE	SZ_16K
+ 
+ struct adsp_data {
+ 	int crash_reason_smem;
+@@ -396,12 +397,67 @@ static unsigned long adsp_panic(struct rproc *rproc)
+ 	return qcom_q6v5_panic(&adsp->q6v5);
+ }
+ 
++static int qcom_pas_parse_firmware(struct rproc *rproc, const struct firmware *fw)
++{
++	size_t output_rt_size = MAX_RSCTABLE_SIZE;
++	struct qcom_adsp *pas = rproc->priv;
++	struct resource_table *table = NULL;
++	void *output_rt;
++	size_t table_sz;
++	int ret;
++
++	ret = qcom_register_dump_segments(rproc, fw);
++	if (ret) {
++		dev_err(pas->dev, "Error in registering dump segments\n");
++		return ret;
++	}
++
++	if (!rproc->has_iommu)
++		return ret;
++
++	ret = rproc_elf_load_rsc_table(rproc, fw);
++	if (ret)
++		dev_info(&rproc->dev, "Error in loading resource table from firmware\n");
++
++	table = rproc->table_ptr;
++	table_sz = rproc->table_sz;
++
++	/*
++	 * Qualcomm remote processor may rely on static and dynamic resources for
++	 * it to be functional. For most of the Qualcomm SoCs, when run with Gunyah
++	 * or older QHEE hypervisor, all the resources whether it is static or dynamic,
++	 * is managed by present hypervisor. Dynamic resources if it is present for
++	 * a remote processor will always be coming from secure world via SMC call
++	 * while static resources may be present in remote processor firmware binary
++	 * or it may be coming from SMC call along with dynamic resources.
++	 *
++	 * Here, we call rproc_elf_load_rsc_table() to check firmware binary has resources
++	 * or not and if it is not having then we pass NULL and zero as input resource
++	 * table pointer and size respectively to the argument of qcom_scm_pas_get_rsc_table()
++	 * and this is even true for Qualcomm remote processor who does follow remoteproc
++	 * framework.
++	 */
++	ret = qcom_scm_pas_get_rsc_table(pas->pas_ctx, table, table_sz, &output_rt,
++					 &output_rt_size);
++	if (ret) {
++		dev_err(pas->dev, "Error in getting resource table: %d\n", ret);
++		return ret;
++	}
++
++	kfree(rproc->cached_table);
++	rproc->cached_table = output_rt;
++	rproc->table_ptr = rproc->cached_table;
++	rproc->table_sz = output_rt_size;
++
++	return ret;
++}
++
+ static const struct rproc_ops adsp_ops = {
+ 	.unprepare = adsp_unprepare,
+ 	.start = adsp_start,
+ 	.stop = adsp_stop,
+ 	.da_to_va = adsp_da_to_va,
+-	.parse_fw = qcom_register_dump_segments,
++	.parse_fw = qcom_pas_parse_firmware,
+ 	.load = adsp_load,
+ 	.panic = adsp_panic,
+ };
+@@ -411,7 +467,7 @@ static const struct rproc_ops adsp_minidump_ops = {
+ 	.start = adsp_start,
+ 	.stop = adsp_stop,
+ 	.da_to_va = adsp_da_to_va,
+-	.parse_fw = qcom_register_dump_segments,
++	.parse_fw = qcom_pas_parse_firmware,
+ 	.load = adsp_load,
+ 	.panic = adsp_panic,
+ 	.coredump = adsp_minidump,
+-- 
+2.50.1
+

@@ -108,6 +108,7 @@ SRC_URI:append = " \
     file://qcs9100/0002-PENDING-arm64-dts-qcom-qcs9xxx-Update-memory-map-for.patch \
     file://qcs9100/0003-FROMLIST-arm64-dts-qcom-sa8775p-ride-enable-video.patch \
     file://qcs9100/0012-UPSTREAM-arm64-dts-qcom-sa8775p-ride-add-anx7625-DSI-to-DP-bridge-nodes.patch \
+    file://qcs9100/0020-FROMLIST-arm64-dts-qcom-Add-EL2-overlay-for-Lemans.patch \
     "
 
 # qcs615 dtsi patches

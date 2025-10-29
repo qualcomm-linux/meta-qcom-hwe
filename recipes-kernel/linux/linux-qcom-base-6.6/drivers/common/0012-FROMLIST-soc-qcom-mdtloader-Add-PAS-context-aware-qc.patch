@@ -1,0 +1,155 @@
+From 7184188502f8a21650ecfdb909bc9d46fe0f10a6 Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 13 Oct 2025 18:33:19 +0530
+Subject: [PATCH 12/20] FROMLIST: soc: qcom: mdtloader: Add PAS context aware
+ qcom_mdt_pas_load() function
+
+Introduce a new PAS context-aware function, qcom_mdt_pas_load(), for
+remote processor drivers. This function utilizes the PAS context
+pointer returned from qcom_scm_pas_ctx_init() to perform firmware
+metadata verification and memory setup via SMC calls.
+
+The qcom_mdt_pas_load() and qcom_mdt_load() functions are largely
+similar, but the former is designed for clients using the PAS
+context-based data structure. Over time, all users of qcom_mdt_load()
+can be migrated to use qcom_mdt_pas_load() for consistency and
+improved abstraction.
+
+As the remoteproc PAS driver (qcom_q6v5_pas) has already adopted the
+PAS context-based approach, update it to use qcom_mdt_pas_load().
+
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+
+Change-Id: I8f89e9d7ea37de980e19eb612e232d72236ee5e1
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20251013-kvm_rprocv5-v5-5-d609ed766061@oss.qualcomm.com/]
+---
+ drivers/remoteproc/qcom_q6v5_pas.c  | 25 +++++-----------------
+ drivers/soc/qcom/mdt_loader.c       | 32 +++++++++++++++++++++++++++++
+ include/linux/soc/qcom/mdt_loader.h | 11 ++++++++++
+ 3 files changed, 48 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/remoteproc/qcom_q6v5_pas.c b/drivers/remoteproc/qcom_q6v5_pas.c
+index fdea4aefccd8..f6410c739477 100644
+--- a/drivers/remoteproc/qcom_q6v5_pas.c
++++ b/drivers/remoteproc/qcom_q6v5_pas.c
+@@ -218,16 +218,9 @@ static int adsp_load(struct rproc *rproc, const struct firmware *fw)
+ 			return ret;
+ 		}
+ 
+-		ret = qcom_mdt_pas_init(adsp->dev, adsp->dtb_firmware, adsp->dtb_firmware_name,
+-					adsp->dtb_pas_id, adsp->dtb_mem_phys,
+-					adsp->dtb_pas_ctx);
+-		if (ret)
+-			goto release_dtb_firmware;
+-
+-		ret = qcom_mdt_load_no_init(adsp->dev, adsp->dtb_firmware, adsp->dtb_firmware_name,
+-					    adsp->dtb_pas_id, adsp->dtb_mem_region,
+-					    adsp->dtb_mem_phys, adsp->dtb_mem_size,
+-					    &adsp->dtb_mem_reloc);
++		ret = qcom_mdt_pas_load(adsp->dtb_pas_ctx, adsp->dtb_firmware,
++					adsp->dtb_firmware_name, adsp->dtb_mem_region,
++					&adsp->dtb_mem_reloc);
+ 		if (ret)
+ 			goto release_dtb_metadata;
+ 	}
+@@ -236,8 +229,6 @@ static int adsp_load(struct rproc *rproc, const struct firmware *fw)
+ 
+ release_dtb_metadata:
+ 	qcom_scm_pas_metadata_release(adsp->dtb_pas_ctx);
+-
+-release_dtb_firmware:
+ 	release_firmware(adsp->dtb_firmware);
+ 
+ 	return ret;
+@@ -285,14 +276,8 @@ static int adsp_start(struct rproc *rproc)
+ 		}
+ 	}
+ 
+-	ret = qcom_mdt_pas_init(adsp->dev, adsp->firmware, rproc->firmware, adsp->pas_id,
+-				adsp->mem_phys, adsp->pas_ctx);
+-	if (ret)
+-		goto disable_px_supply;
+-
+-	ret = qcom_mdt_load_no_init(adsp->dev, adsp->firmware, rproc->firmware, adsp->pas_id,
+-				    adsp->mem_region, adsp->mem_phys, adsp->mem_size,
+-				    &adsp->mem_reloc);
++	ret = qcom_mdt_pas_load(adsp->pas_ctx, adsp->firmware, rproc->firmware,
++				adsp->mem_region, &adsp->mem_reloc);
+ 	if (ret)
+ 		goto release_pas_metadata;
+ 
+diff --git a/drivers/soc/qcom/mdt_loader.c b/drivers/soc/qcom/mdt_loader.c
+index 4fab01f06d3f..ea0ae7ce4726 100644
+--- a/drivers/soc/qcom/mdt_loader.c
++++ b/drivers/soc/qcom/mdt_loader.c
+@@ -490,5 +490,37 @@ int qcom_mdt_load_no_init(struct device *dev, const struct firmware *fw,
+ }
+ EXPORT_SYMBOL_GPL(qcom_mdt_load_no_init);
+ 
++/**
++ * qcom_mdt_pas_load - Loads and authenticates the metadata of the firmware
++ * (typically contained in the .mdt file), followed by loading the actual
++ * firmware segments (e.g., .bXX files). Authentication of the segments done
++ * by a separate call.
++ *
++ * The PAS context must be initialized using qcom_scm_pas_context_init()
++ * prior to invoking this function.
++ *
++ * @ctx:        Pointer to the PAS (Peripheral Authentication Service) context
++ * @fw:         Firmware object representing the .mdt file
++ * @firmware:   Name of the firmware used to construct segment file names
++ * @mem_region: Memory region allocated for loading the firmware
++ * @reloc_base: Physical address adjusted after relocation
++ *
++ * Return: 0 on success or a negative error code on failure.
++ */
++int qcom_mdt_pas_load(struct qcom_scm_pas_context *ctx, const struct firmware *fw,
++		      const char *firmware, void *mem_region, phys_addr_t *reloc_base)
++{
++	int ret;
++
++	ret = qcom_mdt_pas_init(ctx->dev, fw, firmware, ctx->pas_id, ctx->mem_phys,
++				ctx);
++	if (ret)
++		return ret;
++
++	return __qcom_mdt_load(ctx->dev, fw, firmware, ctx->pas_id,  mem_region,
++			       ctx->mem_phys, ctx->mem_size, reloc_base, false);
++}
++EXPORT_SYMBOL_GPL(qcom_mdt_pas_load);
++
+ MODULE_DESCRIPTION("Firmware parser for Qualcomm MDT format");
+ MODULE_LICENSE("GPL v2");
+diff --git a/include/linux/soc/qcom/mdt_loader.h b/include/linux/soc/qcom/mdt_loader.h
+index 939b93dafa02..905bcdabc189 100644
+--- a/include/linux/soc/qcom/mdt_loader.h
++++ b/include/linux/soc/qcom/mdt_loader.h
+@@ -23,6 +23,10 @@ int qcom_mdt_load(struct device *dev, const struct firmware *fw,
+ 		  phys_addr_t mem_phys, size_t mem_size,
+ 		  phys_addr_t *reloc_base);
+ 
++int qcom_mdt_pas_load(struct qcom_scm_pas_context *ctx, const struct firmware *fw,
++		      const char *firmware, void *mem_region,
++		      phys_addr_t *reloc_base);
++
+ int qcom_mdt_load_no_init(struct device *dev, const struct firmware *fw,
+ 			  const char *fw_name, int pas_id, void *mem_region,
+ 			  phys_addr_t mem_phys, size_t mem_size,
+@@ -52,6 +56,13 @@ static inline int qcom_mdt_load(struct device *dev, const struct firmware *fw,
+ 	return -ENODEV;
+ }
+ 
++static inline int qcom_mdt_pas_load(struct qcom_scm_pas_context *ctx,
++				    const struct firmware *fw, const char *firmware,
++				    void *mem_region, phys_addr_t *reloc_base)
++{
++	return -ENODEV;
++}
++
+ static inline int qcom_mdt_load_no_init(struct device *dev,
+ 					const struct firmware *fw,
+ 					const char *fw_name, int pas_id,
+-- 
+2.50.1
+

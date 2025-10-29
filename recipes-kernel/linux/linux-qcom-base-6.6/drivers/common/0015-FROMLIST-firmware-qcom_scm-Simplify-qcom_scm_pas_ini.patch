@@ -1,0 +1,109 @@
+From 5ec9af16d7e01cb08ad9e381cc1aab88adf46cf9 Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 13 Oct 2025 18:55:33 +0530
+Subject: [PATCH 15/20] FROMLIST: firmware: qcom_scm: Simplify
+ qcom_scm_pas_init_image()
+
+Simplify qcom_scm_pas_init_image() by making the memory allocation,
+copy and free operations done in a separate function than the actual
+SMC call.
+
+Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+
+Change-Id: I4195b08006a6c642ca788be697ef2ecca4200319
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20251013-kvm_rprocv5-v5-8-d609ed766061@oss.qualcomm.com/]
+---
+ drivers/firmware/qcom_scm.c | 58 +++++++++++++++++++++----------------
+ 1 file changed, 33 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+index 50351a7b47ea..3def7e422e66 100644
+--- a/drivers/firmware/qcom_scm.c
++++ b/drivers/firmware/qcom_scm.c
+@@ -518,6 +518,37 @@ void *qcom_scm_pas_context_init(struct device *dev, u32 pas_id, phys_addr_t mem_
+ }
+ EXPORT_SYMBOL_GPL(qcom_scm_pas_context_init);
+ 
++static int __qcom_scm_pas_init_image(u32 pas_id, dma_addr_t mdata_phys, void *metadata,
++				     size_t size, struct qcom_scm_res *res)
++{
++	struct qcom_scm_desc desc = {
++		.svc = QCOM_SCM_SVC_PIL,
++		.cmd = QCOM_SCM_PIL_PAS_INIT_IMAGE,
++		.arginfo = QCOM_SCM_ARGS(2, QCOM_SCM_VAL, QCOM_SCM_RW),
++		.args[0] = pas_id,
++		.owner = ARM_SMCCC_OWNER_SIP,
++	};
++	int ret;
++
++	ret = qcom_scm_clk_enable();
++	if (ret)
++		return ret;
++
++	ret = qcom_scm_bw_enable();
++	if (ret)
++		goto disable_clk;
++
++	desc.args[1] = mdata_phys;
++
++	ret = qcom_scm_call(__scm->dev, &desc, res);
++	qcom_scm_bw_disable();
++
++disable_clk:
++	qcom_scm_clk_disable();
++
++	return ret;
++}
++
+ /**
+  * qcom_scm_pas_init_image() - Initialize peripheral authentication service
+  *			       state machine for a given peripheral, using the
+@@ -539,17 +570,10 @@ int qcom_scm_pas_init_image(u32 pas_id, const void *metadata, size_t size,
+ 			    struct qcom_scm_pas_context *ctx)
+ {
+ 	struct qcom_scm_pas_metadata *mdt_ctx;
++	struct qcom_scm_res res;
+ 	dma_addr_t mdata_phys;
+ 	void *mdata_buf;
+ 	int ret;
+-	struct qcom_scm_desc desc = {
+-		.svc = QCOM_SCM_SVC_PIL,
+-		.cmd = QCOM_SCM_PIL_PAS_INIT_IMAGE,
+-		.arginfo = QCOM_SCM_ARGS(2, QCOM_SCM_VAL, QCOM_SCM_RW),
+-		.args[0] = pas_id,
+-		.owner = ARM_SMCCC_OWNER_SIP,
+-	};
+-	struct qcom_scm_res res;
+ 
+ 	/*
+ 	 * During the scm call memory protection will be enabled for the meta
+@@ -571,23 +595,7 @@ int qcom_scm_pas_init_image(u32 pas_id, const void *metadata, size_t size,
+ 	}
+ 	memcpy(mdata_buf, metadata, size);
+ 
+-	ret = qcom_scm_clk_enable();
+-	if (ret)
+-		goto out;
+-
+-	ret = qcom_scm_bw_enable();
+-	if (ret)
+-		goto disable_clk;
+-
+-	desc.args[1] = mdata_phys;
+-
+-	ret = qcom_scm_call(__scm->dev, &desc, &res);
+-	qcom_scm_bw_disable();
+-
+-disable_clk:
+-	qcom_scm_clk_disable();
+-
+-out:
++	ret = __qcom_scm_pas_init_image(pas_id, mdata_phys, mdata_buf, size, &res);
+ 	if (ret < 0 || !ctx) {
+ 		dma_free_coherent(__scm->dev, size, mdata_buf, mdata_phys);
+ 	} else if (ctx && ctx->metadata) {
+-- 
+2.50.1
+
