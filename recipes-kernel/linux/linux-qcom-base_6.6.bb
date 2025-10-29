@@ -30,8 +30,8 @@ KERNEL_CONFIG_FRAGMENTS:append = " ${@oe.utils.vartrue('DEBUG_BUILD', '${WORKDIR
 
 S = "${WORKDIR}/git"
 
-# 6.6.106
-SRCREV = "60a9e718726fa7019ae00916e4b1c52498da5b60"
+# 6.6.110
+SRCREV = "e617101e562654c7d59ed5cfcd30f610f1f64411"
 PV = "6.6+git${SRCPV}"
 
 KERNEL_CONFIG ??= "defconfig"
