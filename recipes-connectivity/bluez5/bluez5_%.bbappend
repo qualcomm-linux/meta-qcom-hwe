@@ -48,6 +48,7 @@ SRC_URI:append:qcom = " file://0001-Setting-default-values-in-main.conf.patch \
                         file://0042-UPSTREAM-obex-Publish-SDP-record-for-Phonebook-Acces.patch \
                         file://0043-UPSTREAM-obex-Add-base-implementation-for-get_mas_in.patch \
                         file://0044-UPSTREAM-obex-Add-supported-features-tag-in-MAP-Clie.patch \
+                        file://0045-Backport-bluez5-Setting-default-adapter-status.patch \
 "
 
 #Include obex to support obex related profiles like OPP, FTP, MAP, PBAP

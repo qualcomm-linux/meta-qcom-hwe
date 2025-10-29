@@ -1,0 +1,32 @@
+From 1318c6263c31e81bb53fe3b08541284ea093487f Mon Sep 17 00:00:00 2001
+From: Shuai Zhang <quic_shuaz@quicinc.com>
+Date: Tue, 4 Nov 2025 09:58:12 +0800
+Subject: [PATCH v1] Backport: bluez5: Setting default adapter status
+
+There is an SSR (Subsystem Restart) issue during recovery
+when using BT over USB. After the system recovers from SSR,
+the default BT adapter status remains OFF, causing BT to stay disabled.
+
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/bluetooth/bluez.git/tree/src/main.conf]
+
+Signed-off-by: Shuai Zhang <quic_shuaz@quicinc.com>
+---
+ src/main.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/main.conf b/src/main.conf
+index ab3ca53..4fa272a 100644
+--- a/src/main.conf
++++ b/src/main.conf
+@@ -325,7 +325,7 @@ KeySize = 0
+ # AutoEnable defines option to enable all controllers when they are found.
+ # This includes adapters present on start as well as adapters that are plugged
+ # in later on. Defaults to 'true'.
+-AutoEnable=false
++AutoEnable=true
+ 
+ # Audio devices that were disconnected due to suspend will be reconnected on
+ # resume. ResumeDelay determines the delay between when the controller
+-- 
+2.34.1
+
