@@ -63,16 +63,16 @@ do_compile() {
             cmdline="$cmdline root=${QCOM_BOOTIMG_ROOTFS} rw rootwait"
         fi
 
+        console="ttynull"
         if [ ! -z "${SERIAL_CONSOLES}" ]; then
             tmp="${SERIAL_CONSOLES}"
-            console=""
             for entry in $tmp ; do
                 baudrate=`echo $entry | sed 's/\;.*//'`
                 tty=`echo $entry | sed -e 's/^[0-9]*\;//' -e 's/\;.*//'`
                 console="$tty","$baudrate"n8
             done
-            cmdline="$cmdline console=$console"
         fi
+        cmdline="$cmdline console=$console"
 
         if [ -n "${KERNEL_CMDLINE_EXTRA}" ]; then
             cmdline="$cmdline ${KERNEL_CMDLINE_EXTRA}"
