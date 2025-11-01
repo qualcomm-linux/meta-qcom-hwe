@@ -1,18 +1,17 @@
-inherit qprebuilt native
+inherit qprebuilt
 
 LICENSE          = "Qualcomm-Technologies-Inc.-Proprietary"
 LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f27f1a1e6089308a49b403"
 
-DESCRIPTION = "Chicdk Autogen"
+DESCRIPTION = "Camx Autogen"
 
-# Required for native build
-DEPENDS:class-native += "libxml-simple-perl-native"
-
-QCS9100_SHA256SUM = "8b1c68edc69552edee8dde65b0a55178c88bb3e1735628645ce1f34495b5e1cc"
-QCS8300_SHA256SUM = "9671e70905038c82a49cb1fec60002dd400b84c4cf0d417922af7c369964b0ae"
+QCS9100_SHA256SUM = "d7beeb979eeeaf5c9916e5af7de95fbe97e51e13f42d5937307271c3e512aa00"
+QCS8300_SHA256SUM = "fec7b88beac994b53bd5ef1bad2ad93b8f286d190a97b2fbe2485c03eba274bc"
+QCS615_SHA256SUM = "958cb2242373f32b780a057d6331e75b8e63740c6c81ef29ec5e99f9ba334d52"
 
 SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"
 SRC_URI[qcs8300.sha256sum] = "${QCS8300_SHA256SUM}"
+SRC_URI[qcs615.sha256sum] = "${QCS615_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"
 
