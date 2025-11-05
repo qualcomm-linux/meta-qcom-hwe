@@ -33,6 +33,7 @@ corenet_tcp_bind_all_unreserved_ports(sysadm_t)
 init_use_script_fds(sysadm_t)
 qcom_weston_etc_execute(sysadm_t)
 init_dbus_chat_script(sysadm_t)
+corenet_tcp_bind_generic_node(sysadm_t)
 
 # Required for ostree
 kernel_manage_unlabeled_files(sysadm_t)
