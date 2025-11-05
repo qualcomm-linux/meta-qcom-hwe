@@ -1,0 +1,81 @@
+From 432b0fb3cf4ad9dcd3c0ce25fa414a7d01965cb0 Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Fri, 24 Oct 2025 14:04:29 +0530
+Subject: [PATCH 1/2] PENDING: firmware: scm: Fix mem-abort in start stop test
+
+There is a irregularity in the way the memory is allocated for resource
+table remoteproc framework in our recent resource table SMC
+implementation like later use device managed one and former uses the raw
+version which could result in below issue of list corruption.
+
+~# echo stop > /sys/class/remoteproc/remoteproc0/state
+~# cat /sys/class/remoteproc/remoteproc0/state
+offline
+root@qcs9100-ride-sx:~# echo start > /sys/class/remoteproc/remoteproc0/state
+[   77.303019] Unable to handle kernel paging request at virtual address ffff000099f30000
+[   77.311153] Mem abort info:
+
+[...]
+
+[   77.373701] Internal error: Oops: 0000000096000007 [#1] PREEMPT SMP
+[   77.617163] Call trace:
+[   77.619683]  __list_add_valid_or_report+0x24/0xb8
+[   77.624516]  add_dr+0x54/0x108
+[   77.627661]  devm_kmalloc+0xc8/0x140
+[   77.631340]  qcom_scm_pas_get_rsc_table+0x48/0xb8
+[   77.636173]  qcom_pas_parse_firmware+0xb4/0x128 [qcom_q6v5_pas]
+[   77.642267]  rproc_boot+0x160/0x590
+[   77.645856]  state_store+0x48/0x118
+[   77.649444]  dev_attr_store+0x20/0x40
+[   77.653212]  sysfs_kf_write+0x4c/0x68
+[   77.656986]  kernfs_fop_write_iter+0x13c/0x1d8
+[   77.661556]  vfs_write+0x1c8/0x320
+[   77.665052]  ksys_write+0x7c/0x120
+[   77.668546]  __arm64_sys_write+0x24/0x38
+[   77.672583]  invoke_syscall+0x50/0x128
+[   77.676443]  el0_svc_common.constprop.0+0xc8/0xf0
+[   77.681282]  do_el0_svc+0x24/0x38
+[   77.684688]  el0_svc+0x38/0x108
+[   77.687921]  el0t_64_sync_handler+0x120/0x130
+[   77.692394]  el0t_64_sync+0x190/0x198
+[   77.696161] Code: b4000242 f9400442 eb01005f 54000261 (f9400041)
+[   77.702423] ---[ end trace 0000000000000000 ]---
+[   77.738536] pstore: backend (efi_pstore) writing error (-5)
+[   77.744262] Kernel panic - not syncing: Oops: Fatal exception
+[   77.750159] SMP: stopping secondary CPUs
+[   77.955184] Kernel Offset: disabled
+[   77.958766] CPU features: 0x1,00000000,70028143,150072ab
+[   77.964222] Memory Limit: none
+
+Change-Id: I311628c93a573f1517449e60adf5a852fc644f24
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ drivers/firmware/qcom_scm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/firmware/qcom_scm.c b/drivers/firmware/qcom_scm.c
+index 5e3e9c93be45..3acc0122a238 100644
+--- a/drivers/firmware/qcom_scm.c
++++ b/drivers/firmware/qcom_scm.c
+@@ -849,7 +849,7 @@ int qcom_scm_pas_get_rsc_table(struct qcom_scm_pas_context *ctx, void *input_rt,
+ 	int ret;
+ 
+ 	do {
+-		*output_rt = devm_kzalloc(ctx->dev, *output_rt_size, GFP_KERNEL);
++		*output_rt = kzalloc(*output_rt_size, GFP_KERNEL);
+ 		if (!*output_rt)
+ 			return -ENOMEM;
+ 
+@@ -857,7 +857,7 @@ int qcom_scm_pas_get_rsc_table(struct qcom_scm_pas_context *ctx, void *input_rt,
+ 						   input_rt_size, output_rt,
+ 						   output_rt_size);
+ 		if (ret)
+-			devm_kfree(ctx->dev, *output_rt);
++			kfree(*output_rt);
+ 
+ 	} while (ret == -EAGAIN);
+ 
+-- 
+2.50.1
+

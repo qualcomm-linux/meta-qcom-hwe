@@ -519,4 +519,6 @@ SRC_URI:append = " \
     file://common/0017-FROMLIST-firmware-qcom_scm-Add-qcom_scm_pas_get_rsc_.patch \
     file://common/0018-FROMLIST-remoteproc-pas-Extend-parse_fw-callback-to-.patch \
     file://common/0019-FROMLIST-remoteproc-qcom-pas-Enable-Secure-PAS-suppo.patch \
+    file://common/0001-PENDING-firmware-scm-Fix-mem-abort-in-start-stop-tes.patch \
+    file://common/0002-FROMLIST-soc-qcom-mdt_loader-Add-helper-functions-to.patch \
 "
