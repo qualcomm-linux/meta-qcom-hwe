@@ -235,6 +235,7 @@ SRC_URI:append = " \
     file://qcs8300/0005-FROMLIST-arm64-dts-qcom-qcs8300-ride-Enable-Adreno-6.patch \
     file://qcs8300/0001-UPSTREAM-arm64-dts-qcom-qcs8300-ride-Enable-second-U.patch \
     file://qcs8300/0005-FROMLIST-arm64-dts-qcom-qcs8300-ride-enable-video.patch \
+    file://qcs8300/0001-UPSTREAM-arm64-dts-qcom-Move-RPMHCC-clocks-.patch \
     "
 # qcs9075 board dts patches
 SRC_URI:append = " \
