@@ -41,6 +41,10 @@ do_install:append:qcs8300() {
     install -m 0644 ${S}/qcs8275/iq8_8275_evk/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/iq8_8275_evk/acdb_cal.acdb
     install -m 0644 ${S}/qcs8275/iq8_8275_evk/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/iq8_8275_evk/workspaceFileXml.qwsp
 
+    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/monza_monaco
+    install -m 0644 ${S}/qcs8275/monza_monaco/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/monza_monaco/acdb_cal.acdb
+    install -m 0644 ${S}/qcs8275/monza_monaco/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/monza_monaco/workspaceFileXml.qwsp
+
     mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/qcs8300_ridesx
     install -m 0644 ${S}/qcs8300/qcs8300_ridesx/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcs8300_ridesx/acdb_cal.acdb
     install -m 0644 ${S}/qcs8300/qcs8300_ridesx/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/qcs8300_ridesx/workspaceFileXml.qwsp
