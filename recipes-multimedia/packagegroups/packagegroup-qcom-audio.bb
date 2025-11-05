@@ -39,10 +39,6 @@ PIPEWIRE_PKGS = " \
     pipewire-spa-tools \
 "
 
-PULSEAUDIO_PKGS:append:qcom-custom-bsp = " \
-    pulseaudio-module-pal-card \
-    pulseaudio-module-pal-voiceui-card \
-"
 RDEPENDS:${PN}:append:qcom-base-bsp = ' \
     alsa-utils-alsaucm \
     alsa-utils-aplay \
