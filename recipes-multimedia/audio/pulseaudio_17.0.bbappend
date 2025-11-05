@@ -4,8 +4,6 @@ SRC_URI += "file://pulseaudio/system_custom.pa \
             file://pulseaudio/system.pa \
             file://pulseaudio/pulseaudio.service \
             file://pulseaudio/pulseaudio_custom.service \
-            file://pulseaudio/0001-Support-for-compress-offload-playback-usecase.patch \
-            file://pulseaudio/0002-Propagate-port-change-events-to-all-devices.patch \
             file://pulseaudio/0003-libpulse-Initialize-channel-map-for-7-8-channel-audi.patch \
             file://pulseaudio/0004-pulsecore-Update-desired-sample-spec-for-requested-c.patch \
            "
