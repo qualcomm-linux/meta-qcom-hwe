@@ -7,9 +7,11 @@ DESCRIPTION = "Sensors-api Library"
 
 DEPENDS += "glib-2.0 property-vault fastrpc syslog-plumber protobuf qcom-sensinghub"
 
-QCM6490_SHA256SUM = "806879f895cd76382772a93e491e9c16377208fc65138d8d072b7cddcd502938"
+QCM6490_SHA256SUM = "9d8da25e55affca045bacb2c4902b0efc0e7ce9828414d3a9d72ac10723da51b"
+QCS615_SHA256SUM = "1a50f71ce30409f1db406bc07d4ec58d154389019407be8c52a5c9b91335b7b4"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
+SRC_URI[qcs615.sha256sum] = "${QCS615_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"
 
