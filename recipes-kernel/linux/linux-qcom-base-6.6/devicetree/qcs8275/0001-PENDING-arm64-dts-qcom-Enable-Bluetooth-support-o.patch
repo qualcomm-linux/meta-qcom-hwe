@@ -1,0 +1,48 @@
+From 55eddacd81f1609a98de664d7ed9a48c3def500d Mon Sep 17 00:00:00 2001
+From: Shuai Zhang <quic_shuaz@quicinc.com>
+Date: Wed, 12 Nov 2025 10:51:10 +0800
+Subject: [PATCH v1] PENDING: arm64: dts: qcom: Enable Bluetooth support on
+ Monaco EVK board
+
+Enable Bluetooth support on Monaco EVK board.
+
+Signed-off-by: Shuai Zhang <quic_shuaz@quicinc.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/monaco-evk.dts | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/monaco-evk.dts b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+index 35a23b8b2abe..203ccbf6fc7f 100644
+--- a/arch/arm64/boot/dts/qcom/monaco-evk.dts
++++ b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+@@ -22,6 +22,7 @@ aliases {
+ 		ethernet0 = &ethernet0;
+ 		i2c1 = &i2c1;
+ 		serial0 = &uart7;
++		serial1 = &uart2;
+ 	};
+ 
+ 	chosen {
+@@ -425,6 +426,18 @@ &uart7 {
+ 	status = "okay";
+ };
+ 
++&uart2 {
++	pinctrl-names = "default";
++	status = "okay";
++
++	/* HS UART Instance */
++	bluetooth: bluetooth {
++		compatible = "qcom,wcn6855-bt";
++		pinctrl-names = "default";
++		max-speed = <3200000>;
++	};
++};
++
+ &ufs_mem_hc {
+ 	reset-gpios = <&tlmm 133 GPIO_ACTIVE_LOW>;
+ 	vcc-supply = <&vreg_l8a>;
+-- 
+2.34.1
+
