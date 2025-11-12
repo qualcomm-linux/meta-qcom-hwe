@@ -1,0 +1,68 @@
+From 7e422fccc6eb224831e149c214a7a533211cef14 Mon Sep 17 00:00:00 2001
+From: Shuai Zhang <quic_shuaz@quicinc.com>
+Date: Wed, 12 Nov 2025 17:19:50 +0800
+Subject: [PATCH v1] FROMLIST: driver: bluetooth: btqca: Add WCN6855 firmware
+ priority selection feature
+
+For WCN6855: download wcnhpbtfwxx.tlv and wcnhpnvxx.xxx;
+if they do not exist, download hpbtfwxx.tlv and hpnvxx.xxx instead.
+
+Signed-off-by: Shuai Zhang <quic_shuaz@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20251112074638.1592864-1-quic_shuaz@quicinc.com/]
+---
+ drivers/bluetooth/btqca.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/bluetooth/btqca.c b/drivers/bluetooth/btqca.c
+index 178f90facd85..ae132d597aad 100644
+--- a/drivers/bluetooth/btqca.c
++++ b/drivers/bluetooth/btqca.c
+@@ -866,7 +866,7 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 			break;
+ 		case QCA_WCN6855:
+ 			snprintf(config.fwname, sizeof(config.fwname),
+-				 "qca/hpbtfw%02x.tlv", rom_ver);
++				 "qca/wcnhpbtfw%02x.tlv", rom_ver);
+ 			break;
+ 		case QCA_WCN7850:
+ 			snprintf(config.fwname, sizeof(config.fwname),
+@@ -879,6 +879,13 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 	}
+ 
+ 	err = qca_download_firmware(hdev, &config, soc_type, rom_ver);
++
++	if (!rampatch_name && err < 0 && soc_type == QCA_WCN6855) {
++		snprintf(config.fwname, sizeof(config.fwname),
++			 "qca/hpbtfw%02x.tlv", rom_ver);
++		err = qca_download_firmware(hdev, &config, soc_type, rom_ver);
++	}
++
+ 	if (err < 0) {
+ 		bt_dev_err(hdev, "QCA Failed to download patch (%d)", err);
+ 		return err;
+@@ -932,7 +939,7 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 		case QCA_WCN6855:
+ 			qca_read_fw_board_id(hdev, &boardid);
+ 			qca_get_nvm_name_by_board(config.fwname, sizeof(config.fwname),
+-						  "hpnv", soc_type, ver, rom_ver, boardid);
++						  "wcnhpnv", soc_type, ver, rom_ver, boardid);
+ 			break;
+ 		case QCA_WCN7850:
+ 			qca_get_nvm_name_by_board(config.fwname, sizeof(config.fwname),
+@@ -945,6 +952,13 @@ int qca_uart_setup(struct hci_dev *hdev, uint8_t baudrate,
+ 	}
+ 
+ 	err = qca_download_firmware(hdev, &config, soc_type, rom_ver);
++
++	if (!firmware_name && err < 0 && soc_type == QCA_WCN6855) {
++		qca_get_nvm_name_by_board(config.fwname, sizeof(config.fwname),
++					  "hpnv", soc_type, ver, rom_ver, boardid);
++		err = qca_download_firmware(hdev, &config, soc_type, rom_ver);
++	}
++
+ 	if (err < 0) {
+ 		bt_dev_err(hdev, "QCA Failed to download NVM (%d)", err);
+ 		return err;
+-- 
+2.34.1
+

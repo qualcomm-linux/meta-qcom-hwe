@@ -526,4 +526,5 @@ SRC_URI:append = " \
     file://common/0001-FROMGIT-ASoC-qcom-sc8280xp-set-card-driver-name-from.patch \
     file://common/0002-BACKPORT-FROMGIT-ASoC-qcom-sc8280xp-Fix-sound-card-d.patch \
     file://common/0003-BACKPORT-FROMGIT-ASoC-qcom-sc8280xp-Enable-DAI-forma.patch \
+    file://common/0149-FROMLIST-driver-bluetooth-btqca-Add-WCN6855-firmw.patch \
 "
