@@ -1,12 +1,9 @@
 # For Kodiak
 ACTION=="add", ATTR{soc_id}=="497|498|575", \
                RUN+="/bin/sh -c '/sbin/modprobe camera_qcm6490'"
-# For Lemans
-ACTION=="add", ATTR{soc_id}=="534|667|676", \
+# For Lemans & Monaco
+ACTION=="add", ATTR{soc_id}=="534|667|676|606|675|674", \
                RUN+="/bin/sh -c '/sbin/modprobe camera_qcs9100'"
-# For Monaco
-ACTION=="add", ATTR{soc_id}=="606|675|674", \
-               RUN+="/bin/sh -c '/sbin/modprobe camera_qcs8300'"
 # For Talos
 ACTION=="add", ATTR{soc_id}=="377|680", \
                RUN+="/bin/sh -c '/sbin/modprobe camera_qcs615'"
