@@ -64,14 +64,19 @@ do_compile() {
     elif [ "${SOC_FAM}" = "qcs9100" ]; then
         if [ "${TARGET_BOARD}" = "qcs9100-ride-sx" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs9100-ride-sx-camera
+            oe_runmake ${EXTRA_OEMAKE} qcs9100-ride-sx-camera-el2
         elif [ "${TARGET_BOARD}" = "qcs9075-ride-sx" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs9075-ride-sx-camera
+            oe_runmake ${EXTRA_OEMAKE} qcs9075-ride-sx-camera-el2
         elif [ "${TARGET_BOARD}" = "qcs9075-rb8-core-kit" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk
+            oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk-el2
         elif [ "${TARGET_BOARD}" = "qcs9075-iq-9075-evk" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk
+            oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk-el2
         elif [ "${TARGET_BOARD}" = "qcs9075-iq-9075-evk-ifp" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk
+            oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk-el2
         fi
     elif [ "${SOC_FAM}" = "qcs8300" ]; then
         if [ "${TARGET_BOARD}" = "qcs8300-ride-sx" ]; then
