@@ -1,0 +1,36 @@
+From 098c3a9cd02914c2fe288a22cc65d1fc903963aa Mon Sep 17 00:00:00 2001
+From: Saurav Kumar <sauravk@qti.qualcomm.com>
+Date: Thu, 6 Nov 2025 16:56:04 +0530
+Subject: [PATCH] QCLINUX: pipewire: Add dependency of audio service to
+ Pipewire.
+
+-- update pipewire service to start post audio service and update restart time.
+
+Signed-off-by: Saurav Kumar <sauravk@qti.qualcomm.com>
+---
+ src/daemon/systemd/system/pipewire.service.in | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/daemon/systemd/system/pipewire.service.in b/src/daemon/systemd/system/pipewire.service.in
+index dc8db3f8f..a61e13915 100644
+--- a/src/daemon/systemd/system/pipewire.service.in
++++ b/src/daemon/systemd/system/pipewire.service.in
+@@ -13,6 +13,7 @@ Description=PipeWire Multimedia Service
+ # After=pipewire.socket is not needed, as it is already implicit in the
+ # socket-service relationship, see systemd.socket(5).
+ Requires=pipewire.socket
++After=sound.target adsprpcd_audiopd.service
+ 
+ [Service]
+ LockPersonality=yes
+@@ -25,6 +26,7 @@ Type=simple
+ AmbientCapabilities=CAP_SYS_NICE
+ ExecStart=@PW_BINARY@
+ Restart=on-failure
++RestartSec=3
+ RuntimeDirectory=pipewire
+ RuntimeDirectoryPreserve=yes
+ User=pipewire
+-- 
+2.34.1
+
