@@ -1,7 +1,8 @@
 # To include downstream GPU Firmware.
-GPUFW_DATE = "250908"
+GPU_COMPONENT = "component/gfx-adreno.le.0.0"
+GPUFW_DATE = "250908/prebuilt_yocto"
 SRC_URI[adreno.sha256sum] = "02974d294597994a255f7aca6d6d61422fb44f11bd4cf6064e183c3888ea9def"
-SRC_URI += "${FW_ARTIFACTORY}/gfx-adreno.le.0.0/${GPUFW_DATE}/prebuilt_yocto/qcom-adreno_1.838.1_armv8-2a.tar.gz;name=adreno;subdir=adreno"
+SRC_URI += "${FW_ARTIFACTORY}/${GPU_COMPONENT}/${GPUFW_DATE}/qcom-adreno_1.838.1_armv8-2a.tar.gz;name=adreno;subdir=adreno"
 
 do_install:append:qcom (){
     install -d ${D}${FIRMWARE_UPDATES_DIR}
