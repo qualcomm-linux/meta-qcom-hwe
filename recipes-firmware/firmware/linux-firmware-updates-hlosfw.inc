@@ -13,14 +13,19 @@ QCS9100_VPU_SHA256SUM ?= "9d3dc8fb72a3ace8034e2623d5ab2298089027a2228af30f44f59d
 QCS8300_VPU_SHA256SUM ?= "f963bb2116d338e407676039724d42fa6242be91214ad16a4c4e635e8bc180a5"
 QCS615_VPU_SHA256SUM  ?= "1247a5585346408a82bdd44f248676bed22be70dfd481d938c40ce8e2448200c"
 
+QCM6490_SRC_URI ?= "https://${HLOSFW_ARTIFACTORY}/${QCM6490_UFS_BIN_PATH}/QCM6490_fw.zip;name=QCM6490_fw"
+QCS9100_SRC_URI ?= "https://${HLOSFW_ARTIFACTORY}/${QCS9100_UFS_BIN_PATH}/QCS9100_fw.zip;name=QCS9100_fw"
+QCS8300_SRC_URI ?= "https://${HLOSFW_ARTIFACTORY}/${QCS8300_UFS_BIN_PATH}/QCS8300_fw.zip;name=QCS8300_fw"
+QCS615_SRC_URI  ?= "https://${HLOSFW_ARTIFACTORY}/${QCS615_CMN_BIN_PATH}/QCS615_fw.zip;name=QCS615_fw"
+
 SRC_URI[QCM6490_fw.sha256sum] = "${QCM6490_VPU_SHA256SUM}"
 SRC_URI[QCS9100_fw.sha256sum] = "${QCS9100_VPU_SHA256SUM}"
 SRC_URI[QCS8300_fw.sha256sum] = "${QCS8300_VPU_SHA256SUM}"
 SRC_URI[QCS615_fw.sha256sum] = "${QCS615_VPU_SHA256SUM}"
-SRC_URI += "https://${HLOSFW_ARTIFACTORY}/${QCM6490_UFS_BIN_PATH}/QCM6490_fw.zip;name=QCM6490_fw"
-SRC_URI += "https://${HLOSFW_ARTIFACTORY}/${QCS9100_UFS_BIN_PATH}/QCS9100_fw.zip;name=QCS9100_fw"
-SRC_URI += "https://${HLOSFW_ARTIFACTORY}/${QCS8300_UFS_BIN_PATH}/QCS8300_fw.zip;name=QCS8300_fw"
-SRC_URI += "https://${HLOSFW_ARTIFACTORY}/${QCS615_CMN_BIN_PATH}/QCS615_fw.zip;name=QCS615_fw"
+SRC_URI += "${QCM6490_SRC_URI}"
+SRC_URI += "${QCS9100_SRC_URI}"
+SRC_URI += "${QCS8300_SRC_URI}"
+SRC_URI += "${QCS615_SRC_URI}"
 
 def firmware_install(d, firmware, fw_path):
     import os
@@ -90,8 +95,9 @@ python do_firmware_install_extra () {
     if bb.utils.contains('DISTRO_FEATURES', 'usrmerge', True, False, d):
         lib_path = os.path.join(d.getVar('D'), 'lib')
         firm_path = os.path.join(d.getVar('D'), 'lib/firmware')
-        firm_path_usr = os.path.join(d.getVar('D'), 'usr/lib/firmware')
-        shutil.copytree(firm_path, firm_path_usr, dirs_exist_ok=True)
+        if os.path.isdir(firm_path):
+            firm_path_usr = os.path.join(d.getVar('D'), 'usr/lib/firmware')
+            shutil.copytree(firm_path, firm_path_usr, dirs_exist_ok=True)
         shutil.rmtree(lib_path)
 }
 addtask firmware_install_extra after do_install before do_package
