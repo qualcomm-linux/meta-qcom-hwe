@@ -9,3 +9,4 @@ FIRMWARE_UPDATES_DIR = "${nonarch_base_libdir}/firmware/updates"
 FW_ARTIFACTORY = "https://softwarecenter.qualcomm.com/download/software/chip/component"
 
 require linux-firmware-updates-gpu.inc
+require linux-firmware-updates-vpu.inc
