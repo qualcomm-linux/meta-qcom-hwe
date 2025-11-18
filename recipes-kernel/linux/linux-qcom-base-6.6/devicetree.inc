@@ -326,11 +326,11 @@ SRC_URI:append = " \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-fix-compilation-issue-for-QCS.patch \
     file://qcs8275/0001-FROMLIST-arm64-dts-qcom-Add-nvmem-layout-for-eeprom-.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-PCIe0-PCIe1-for-QCS827.patch \
+    file://qcs8275/0004-BACKPORT-FROMGIT-arm64-dts-qcom-qcs8300-Add-gpr-node.patch \
+    file://qcs8275/0005-FROMGIT-arm64-dts-qcom-qcs8275-iq-8275-evk-Add-sound.patch \
     "
 # monaco evk board dts patches
 SRC_URI:append = " \
     file://qcs8275/0001-FROMLIST-arm64-dts-qcom-qcs8300-Add-Monaco-EVK-board.patch \
     file://addons/0001-QCLINUX-arm64-dts-qcom-Add-msm-id-board-id-IQ8-pro-sku.patch \
-    file://qcs8275/0004-BACKPORT-FROMGIT-arm64-dts-qcom-qcs8300-Add-gpr-node.patch \
-    file://qcs8275/0005-FROMGIT-arm64-dts-qcom-qcs8275-iq-8275-evk-Add-sound.patch \
     "
