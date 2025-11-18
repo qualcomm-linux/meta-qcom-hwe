@@ -1,15 +1,26 @@
-# Audio firmware
-HLOSFW_ARTIFACTORY = "softwarecenter.qualcomm.com/download/software/chip/qualcomm_linux-spf-1-0/qualcomm-linux-spf-1-0_test_device_public"
+# To include downstream firmware provided by HLOSFW tars.
+HLOSFW_COMPONENT ?= "qualcomm_linux-spf-1-0/qualcomm-linux-spf-1-0_test_device_public"
+HLOSFW_BUILD_ID ?= "r1.0_00108.0"
+HLOSFW_ARTIFACTORY ?= "${FW_ARTIFACTORY}/${HLOSFW_COMPONENT}/${HLOSFW_BUILD_ID}"
 
-SRC_URI[QCM6490_fw.sha256sum] = "9f7651efc5a79f68d060e01e04ab6b807b5c185fded59d3d416c0d3b0f1a7b35"
-SRC_URI[QCS9100_fw.sha256sum] = "9d3dc8fb72a3ace8034e2623d5ab2298089027a2228af30f44f59d32560af0d3"
-SRC_URI[QCS8300_fw.sha256sum] = "f963bb2116d338e407676039724d42fa6242be91214ad16a4c4e635e8bc180a5"
-SRC_URI[QCS615_fw.sha256sum] = "1247a5585346408a82bdd44f248676bed22be70dfd481d938c40ce8e2448200c"
+QCM6490_UFS_BIN_PATH ?= "qcm6490-le-1-0/common/build/ufs/bin"
+QCS9100_UFS_BIN_PATH ?= "qcs9100-le-1-0/common/build/ufs/bin"
+QCS8300_UFS_BIN_PATH ?= "qcs8300-le-1-0/common/build/ufs/bin"
+QCS615_CMN_BIN_PATH ?= "qcs615-le-1-0/common/build/common/bin"
 
-SRC_URI += "https://${HLOSFW_ARTIFACTORY}/r1.0_00108.0/qcm6490-le-1-0/common/build/ufs/bin/QCM6490_fw.zip;name=QCM6490_fw"
-SRC_URI += "https://${HLOSFW_ARTIFACTORY}/r1.0_00108.0/qcs9100-le-1-0/common/build/ufs/bin/QCS9100_fw.zip;name=QCS9100_fw"
-SRC_URI += "https://${HLOSFW_ARTIFACTORY}/r1.0_00108.0/qcs8300-le-1-0/common/build/ufs/bin/QCS8300_fw.zip;name=QCS8300_fw"
-SRC_URI += "https://${HLOSFW_ARTIFACTORY}/r1.0_00108.0/qcs615-le-1-0/common/build/common/bin/QCS615_fw.zip;name=QCS615_fw"
+QCM6490_VPU_SHA256SUM ?= "9f7651efc5a79f68d060e01e04ab6b807b5c185fded59d3d416c0d3b0f1a7b35"
+QCS9100_VPU_SHA256SUM ?= "9d3dc8fb72a3ace8034e2623d5ab2298089027a2228af30f44f59d32560af0d3"
+QCS8300_VPU_SHA256SUM ?= "f963bb2116d338e407676039724d42fa6242be91214ad16a4c4e635e8bc180a5"
+QCS615_VPU_SHA256SUM  ?= "1247a5585346408a82bdd44f248676bed22be70dfd481d938c40ce8e2448200c"
+
+SRC_URI[QCM6490_fw.sha256sum] = "${QCM6490_VPU_SHA256SUM}"
+SRC_URI[QCS9100_fw.sha256sum] = "${QCS9100_VPU_SHA256SUM}"
+SRC_URI[QCS8300_fw.sha256sum] = "${QCS8300_VPU_SHA256SUM}"
+SRC_URI[QCS615_fw.sha256sum] = "${QCS615_VPU_SHA256SUM}"
+SRC_URI += "https://${HLOSFW_ARTIFACTORY}/${QCM6490_UFS_BIN_PATH}/QCM6490_fw.zip;name=QCM6490_fw"
+SRC_URI += "https://${HLOSFW_ARTIFACTORY}/${QCS9100_UFS_BIN_PATH}/QCS9100_fw.zip;name=QCS9100_fw"
+SRC_URI += "https://${HLOSFW_ARTIFACTORY}/${QCS8300_UFS_BIN_PATH}/QCS8300_fw.zip;name=QCS8300_fw"
+SRC_URI += "https://${HLOSFW_ARTIFACTORY}/${QCS615_CMN_BIN_PATH}/QCS615_fw.zip;name=QCS615_fw"
 
 def firmware_install(d, firmware, fw_path):
     import os
