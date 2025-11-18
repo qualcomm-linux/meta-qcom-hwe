@@ -327,3 +327,8 @@ SRC_URI:append = " \
     file://qcs8275/0001-FROMLIST-arm64-dts-qcom-Add-nvmem-layout-for-eeprom-.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-PCIe0-PCIe1-for-QCS827.patch \
     "
+# monaco evk board dts patches
+SRC_URI:append = " \
+    file://qcs8275/0001-FROMLIST-arm64-dts-qcom-qcs8300-Add-Monaco-EVK-board.patch \
+    file://addons/0001-QCLINUX-arm64-dts-qcom-Add-msm-id-board-id-IQ8-pro-sku.patch \
+    "
