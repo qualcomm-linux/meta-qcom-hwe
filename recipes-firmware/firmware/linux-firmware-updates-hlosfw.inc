@@ -13,10 +13,10 @@ QCS9100_VPU_SHA256SUM ?= "9d3dc8fb72a3ace8034e2623d5ab2298089027a2228af30f44f59d
 QCS8300_VPU_SHA256SUM ?= "f963bb2116d338e407676039724d42fa6242be91214ad16a4c4e635e8bc180a5"
 QCS615_VPU_SHA256SUM  ?= "1247a5585346408a82bdd44f248676bed22be70dfd481d938c40ce8e2448200c"
 
-QCM6490_SRC_URI ?= "https://${HLOSFW_ARTIFACTORY}/${QCM6490_UFS_BIN_PATH}/QCM6490_fw.zip;name=QCM6490_fw"
-QCS9100_SRC_URI ?= "https://${HLOSFW_ARTIFACTORY}/${QCS9100_UFS_BIN_PATH}/QCS9100_fw.zip;name=QCS9100_fw"
-QCS8300_SRC_URI ?= "https://${HLOSFW_ARTIFACTORY}/${QCS8300_UFS_BIN_PATH}/QCS8300_fw.zip;name=QCS8300_fw"
-QCS615_SRC_URI  ?= "https://${HLOSFW_ARTIFACTORY}/${QCS615_CMN_BIN_PATH}/QCS615_fw.zip;name=QCS615_fw"
+QCM6490_SRC_URI ?= "${HLOSFW_ARTIFACTORY}/${QCM6490_UFS_BIN_PATH}/QCM6490_fw.zip;name=QCM6490_fw"
+QCS9100_SRC_URI ?= "${HLOSFW_ARTIFACTORY}/${QCS9100_UFS_BIN_PATH}/QCS9100_fw.zip;name=QCS9100_fw"
+QCS8300_SRC_URI ?= "${HLOSFW_ARTIFACTORY}/${QCS8300_UFS_BIN_PATH}/QCS8300_fw.zip;name=QCS8300_fw"
+QCS615_SRC_URI  ?= "${HLOSFW_ARTIFACTORY}/${QCS615_CMN_BIN_PATH}/QCS615_fw.zip;name=QCS615_fw"
 
 SRC_URI[QCM6490_fw.sha256sum] = "${QCM6490_VPU_SHA256SUM}"
 SRC_URI[QCS9100_fw.sha256sum] = "${QCS9100_VPU_SHA256SUM}"
@@ -27,80 +27,27 @@ SRC_URI += "${QCS9100_SRC_URI}"
 SRC_URI += "${QCS8300_SRC_URI}"
 SRC_URI += "${QCS615_SRC_URI}"
 
-def firmware_install(d, firmware, fw_path):
-    import os
-    import shutil
-    import re
+do_install:append:qcom (){
+    install -d ${D}${FIRMWARE_UPDATES_DIR}
+    for dir in "${WORKDIR}"/*_fw/; do
+        [ -d "$dir" ] || continue
+        fwdir=$(basename "$dir")
+        bbdebug 1 "Processing firmware directory: ${fwdir}"
 
-    dstdir = d.getVar('S')
+        # Copy all except 'lib/firmware/updates'
+        [ -d "${WORKDIR}/$fwdir/lib/firmware" ] && \
+        find "${WORKDIR}/$fwdir/lib/firmware" -mindepth 1 -maxdepth 1 -type d ! -name "updates" \
+                -exec cp -r {} ${D}${FIRMWARE_UPDATES_DIR} \;
+        # remove split bins and '.mdt' format files
+        find ${D}${FIRMWARE_UPDATES_DIR} -type f -iregex '.*\.\(b[0-9][0-9]*[a-z]*\|mdt\)$' -delete
 
-    def find_file(root_folder, file_name):
-        for root, dir, files in os.walk(root_folder):
-            if file_name in files:
-                return os.path.join(root, file_name)
-        return None
-
-    filename = f'{firmware}.zip'
-    zipfile = find_file(fw_path, filename)
-
-    if zipfile:
-        if os.path.exists(zipfile):
-            shutil.unpack_archive(zipfile, dstdir)
-    else:
-        workdir = d.getVar('WORKDIR')
-        shutil.copytree(os.path.join(workdir, firmware), os.path.join(dstdir, firmware), symlinks=True, dirs_exist_ok=True)
-
-    D = d.getVar('D')
-    root = os.path.join(dstdir, firmware)
-    # skip mdt formats except for qca
-    skip_bnn = re.compile(
-        r'^(?!.*[/\\]qca[/\\])(?!.*\.bin$).*\.(b\d+[a-zA-Z]*|mdt)$',
-        re.IGNORECASE
-    )
-    def map_dest(rel):
-        if rel.startswith('lib/firmware/updates/'):
-            return rel
-        if rel.startswith('lib/firmware/'):
-            return rel.replace('lib/firmware/', 'lib/firmware/updates/', 1)
-        return rel
-    for dirpath, _, files in os.walk(root):
-        print(files)
-        for name in files:
-            if skip_bnn.search(name):  # skip .b<number> files
-                continue
-            src = os.path.join(dirpath, name)
-            rel = os.path.relpath(src, root)
-            # Remove files in /usr/lib/dsp, as the same are provided by dspso fw.
-            if rel.startswith('usr/lib/dsp/'):
-                continue
-
-            dst = os.path.join(D, map_dest(rel))
-            print(rel)
-            os.makedirs(os.path.dirname(dst), exist_ok=True)
-            if not os.path.exists(dst):
-                shutil.copy(src, dst)
-
-python do_firmware_install_extra () {
-    fw_file = d.getVar("HLOSFIRMWARE")
-    fw_path = d.getVar("WORKDIR")
-    import os
-    import shutil
-
-    for entry in os.scandir(fw_path):
-        if entry.is_dir() and entry.name.endswith('_fw'):
-            bb.debug(1, "Processing firmware directory: %s" % entry.name)
-            firmware_install(d, entry.name, fw_path)
-
-    # Move contents from /lib to /usr/lib if the usrmerge distro feature is enabled
-    if bb.utils.contains('DISTRO_FEATURES', 'usrmerge', True, False, d):
-        lib_path = os.path.join(d.getVar('D'), 'lib')
-        firm_path = os.path.join(d.getVar('D'), 'lib/firmware')
-        if os.path.isdir(firm_path):
-            firm_path_usr = os.path.join(d.getVar('D'), 'usr/lib/firmware')
-            shutil.copytree(firm_path, firm_path_usr, dirs_exist_ok=True)
-        shutil.rmtree(lib_path)
+        # When present handle 'lib/firmware/updates' separately
+        # Split bins and .mdt files of qca firmware are retained as they are still in use
+        [ -d "${WORKDIR}/$fwdir/lib/firmware/updates" ] && \
+        find "${WORKDIR}/$fwdir/lib/firmware/updates" -mindepth 1 -maxdepth 1 -type d \
+                -exec cp -r {} ${D}${FIRMWARE_UPDATES_DIR} \;
+    done
 }
-addtask firmware_install_extra after do_install before do_package
 
 PACKAGES:prepend = " \
     ${PN}-qcom-copyright \
@@ -198,8 +145,8 @@ FILES:${PN}-qca-qca2066-updates = " \
 SUMMARY:${PN}-qca-qca6698-updates = "QCA6698 firmware update files"
 FILES:${PN}-qca-qca6698-updates = " \
   ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpbtfw21.tlv* \
-  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b206* \
-  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b207* \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b2* \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b2* \
   ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.bin* \
 "
 # extra qca QCA6698 files in hlosfw tarball
