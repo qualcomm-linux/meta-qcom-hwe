@@ -19,6 +19,7 @@ RRECOMMENDS:${PN} = " \
     linux-firmware-qcom-sa8775p-generalpurpose \
     linux-firmware-qcom-sa8775p-qupv3fw \
     linux-firmware-qcom-vpu \
+    firmware-qcom-verinfo \
 "
 
 # Additional pkgs for custom-bsp builds
