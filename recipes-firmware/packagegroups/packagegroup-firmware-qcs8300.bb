@@ -24,13 +24,15 @@ RRECOMMENDS:${PN} = " \
 # Additional pkgs for custom-bsp builds
 RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     hexagon-dsp-binaries-qcs8300-updates \
-    linux-firmware-ath11k-qca6698aq-updates \
-    linux-firmware-ath11k-wcn6855-updates \
-    linux-firmware-qca-qca61x4-usb-updates \
     linux-firmware-qcom-qcs8300-audio-updates \
     linux-firmware-qcom-qcs8300-compute-updates \
     linux-firmware-qcom-qcs8300-generalpurpose-updates \
     linux-firmware-qcom-qcs8300-qupv3fw-updates \
-    linux-firmware-qcom-tzapps-updates \
     linux-firmware-qcom-qcs8300-verinfo \
+    linux-firmware-qcs8300-ath11k-qca6698aq-updates \
+    linux-firmware-qcs8300-ath11k-wcn6855-updates \
+    linux-firmware-qcs8300-qca-qca2066-updates \
+    linux-firmware-qcs8300-qca-qca61x4-usb-updates \
+    linux-firmware-qcs8300-qca-qca6698-updates \
+    linux-firmware-qcs8300-qcom-tzapps-updates \
 "
