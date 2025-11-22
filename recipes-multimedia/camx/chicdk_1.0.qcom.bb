@@ -21,8 +21,6 @@ FILES:${PN} = "\
     /usr/lib/* \
     /usr/bin/* \
     /usr/lib/rfsa/adsp/* \
-    /usr/include/* \
-    /lib/firmware/* \
     /system/etc/camera/*"
 FILES:${PN}-dev = ""
 
