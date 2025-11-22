@@ -28,13 +28,10 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-ath11k-qca6698aq-updates \
     linux-firmware-ath11k-wcn6855-updates \
     linux-firmware-qca-qca61x4-usb-updates \
-    linux-firmware-qcom-adreno-a660-updates \
-    linux-firmware-qcom-adreno-a663-updates \
     linux-firmware-qcom-sa8775p-audio-updates \
     linux-firmware-qcom-sa8775p-compute-updates \
     linux-firmware-qcom-sa8775p-generalpurpose-updates \
     linux-firmware-qcom-sa8775p-qupv3fw-updates \
     linux-firmware-qcom-tzapps-updates \
     linux-firmware-qcom-qcs9100-verinfo \
-    linux-firmware-qcom-vpu-updates \
 "

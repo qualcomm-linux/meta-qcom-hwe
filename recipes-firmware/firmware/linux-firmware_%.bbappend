@@ -7,6 +7,6 @@
 
 FIRMWARE_UPDATES_DIR = "${nonarch_base_libdir}/firmware/updates"
 
-require linux-firmware-updates-gpu.inc
-require linux-firmware-updates-vpu.inc
+# require linux-firmware-updates-gpu.inc
+# require linux-firmware-updates-vpu.inc
 require linux-firmware-updates-hlosfw.inc

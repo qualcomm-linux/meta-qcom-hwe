@@ -25,7 +25,6 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-ath11k-wcn6855-updates \
     linux-firmware-qcacld-wcn6855-updates \
     linux-firmware-qca-qca61x4-usb-updates \
-    linux-firmware-qcom-adreno-a660-updates \
     linux-firmware-qcom-qcm6490-audio-updates \
     linux-firmware-qcom-qcm6490-compute-updates \
     linux-firmware-qcom-qcm6490-qps615-updates \
@@ -34,5 +33,4 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-qcom-qcm6490-wlan-updates \
     linux-firmware-qcom-tzapps-updates \
     linux-firmware-qcom-qcm6490-verinfo \
-    linux-firmware-qcom-vpu-updates \
 "
