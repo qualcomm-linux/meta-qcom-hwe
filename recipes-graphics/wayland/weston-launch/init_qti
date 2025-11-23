@@ -126,7 +126,18 @@ case "$1" in
 
         echo "WESTON INITIALIZATION STARTUP"
 
-        weston --idle-time=0 --continue-without-input &
+        # Detect dual DPU for Lemans/RB8
+        if [ "$soc_id" == "676" ] || [ "$soc_id" == "667" ] || [ "$soc_id" == "534" ] || [ "$soc_id" == "619" ] || [ "$soc_id" == "533" ] || [ "$soc_id" == "535" ] || [ "$soc_id" == "532" ] || [ "$soc_id" == "656" ]; then
+            # Check if /dev/dri/card1 exists
+            if timeout 10 bash -c 'while [ ! -e /dev/dri/card1 ]; do sleep 1; done'; then
+                echo "card1 detected, lauching Weston with dual DPU"
+                weston --idle-time=0 --continue-without-input --additional-devices=card1 &
+            else
+                weston --idle-time=0 --continue-without-input &
+            fi
+        else
+            weston --idle-time=0 --continue-without-input &
+        fi
 
         # Wait for wayland socket node to be created with a maximum of 100 attempts.
         attempts=0

@@ -1,0 +1,48 @@
+####################################################################################################
+This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+####################################################################################################
+From b4bc4b9704102d4e6754706e5a5eb58683b6acca Mon Sep 17 00:00:00 2001
+From: Raghavender Reddy Bujala <rbujala@qti.qualcomm.com>
+Date: Tue, 12 Aug 2025 11:45:59 +0530
+Subject: [PATCH] QCLINUX: bluez5: HFP version upgrade to 1.8
+
+Signed-off-by: Raghavender Reddy Bujala <rbujala@qti.qualcomm.com>
+Upstream-Status: pending
+---
+ spa/plugins/bluez5/backend-native.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/spa/plugins/bluez5/backend-native.c b/spa/plugins/bluez5/backend-native.c
+index 94c5e1ced..a2786f8af 100644
+--- a/spa/plugins/bluez5/backend-native.c
++++ b/spa/plugins/bluez5/backend-native.c
+@@ -2469,9 +2469,9 @@ static int register_profile(struct impl *backend, const char *profile, const cha
+ 		dbus_message_iter_close_container(&it[2], &it[3]);
+ 		dbus_message_iter_close_container(&it[1], &it[2]);
+ 
+-		/* HFP version 1.7 */
++		/* HFP version 1.8 */
+ 		str = "Version";
+-		version = 0x0107;
++		version = 0x0108;
+ 		dbus_message_iter_open_container(&it[1], DBUS_TYPE_DICT_ENTRY, NULL, &it[2]);
+ 		dbus_message_iter_append_basic(&it[2], DBUS_TYPE_STRING, &str);
+ 		dbus_message_iter_open_container(&it[2], DBUS_TYPE_VARIANT, "q", &it[3]);
+@@ -2490,9 +2490,9 @@ static int register_profile(struct impl *backend, const char *profile, const cha
+ 		dbus_message_iter_close_container(&it[2], &it[3]);
+ 		dbus_message_iter_close_container(&it[1], &it[2]);
+ 
+-		/* HFP version 1.7 */
++		/* HFP version 1.8 */
+ 		str = "Version";
+-		version = 0x0107;
++		version = 0x0108;
+ 		dbus_message_iter_open_container(&it[1], DBUS_TYPE_DICT_ENTRY, NULL, &it[2]);
+ 		dbus_message_iter_append_basic(&it[2], DBUS_TYPE_STRING, &str);
+ 		dbus_message_iter_open_container(&it[2], DBUS_TYPE_VARIANT, "q", &it[3]);
+-- 
+2.34.1
+

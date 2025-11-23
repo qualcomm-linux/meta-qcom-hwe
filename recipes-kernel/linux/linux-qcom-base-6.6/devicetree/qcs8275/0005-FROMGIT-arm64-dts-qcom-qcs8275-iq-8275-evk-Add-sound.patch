@@ -1,0 +1,146 @@
+From 96dc544a7dc594b05131607e3349e3a036f4ae14 Mon Sep 17 00:00:00 2001
+From: Naman Patel <namapate@qti.qualcomm.com>
+Date: Tue, 12 Aug 2025 17:07:25 +0530
+Subject: [PATCH 5/5] FROMGIT: arm64: dts: qcom: qcs8275-iq-8275-evk: Add sound
+ card
+
+Add the sound card for qcs8275-iq-8275-evk board and verified playback
+functionality using the max98357a I2S speaker amplifier and I2S
+microphones. The max98357a speaker amplifier is connected via
+High-Speed MI2S HS0 interface, while the microphones utilize the
+Secondary MI2S interface and also enable required pin controller
+gpios for audio.
+
+Signed-off-by: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Signed-off-by: Umang Chheda <umang.chheda@oss.qualcomm.com>
+Link: https://lore.kernel.org/r/20250905192350.1223812-5-umang.chheda@oss.qualcomm.com
+Signed-off-by: Bjorn Andersson <andersson@kernel.org>
+Git-commit: bb12da95a183253b619ca1691d6fd320b7e445e9
+Git-repo: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git bb12da95a183253b619ca1691d6fd320b7e445e9]
+---
+ .../boot/dts/qcom/qcs8275-iq-8275-evk.dts     | 52 +++++++++++++++++++
+ arch/arm64/boot/dts/qcom/qcs8300.dtsi         | 37 +++++++++++++
+ 2 files changed, 89 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index a00a83582ad9..e0e984d28bd0 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -6,6 +6,7 @@
+ /dts-v1/;
+ 
+ #include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/sound/qcom,q6afe.h>
+ #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+ #include "qcs8300.dtsi"
+ #include "qcs8300-pmics.dtsi"
+@@ -40,6 +41,57 @@ sleep_clk: sleep-clk {
+ 			clock-frequency = <32000>;
+ 		};
+ 	};
++
++	dmic: audio-codec-1 {
++		compatible = "dmic-codec";
++		#sound-dai-cells = <0>;
++		num-channels = <1>;
++	};
++
++	max98357a: audio-codec-0 {
++		compatible = "maxim,max98357a";
++		#sound-dai-cells = <0>;
++	};
++
++	sound {
++		compatible = "qcom,qcs8275-sndcard";
++		model = "QCS8275-IQ8-EVK";
++
++		pinctrl-0 = <&hs0_mi2s_active>, <&mi2s1_active>;
++		pinctrl-names = "default";
++
++		hs0-mi2s-playback-dai-link {
++			link-name = "HS0 MI2S Playback";
++
++			codec {
++				sound-dai = <&max98357a>;
++			};
++
++			cpu {
++				sound-dai = <&q6apmbedai PRIMARY_MI2S_RX>;
++			};
++
++			platform {
++				sound-dai = <&q6apm>;
++			};
++	        };
++
++		sec-mi2s-capture-dai-link {
++			link-name = "Secondary MI2S Capture";
++
++			codec {
++				sound-dai = <&dmic>;
++			};
++
++			cpu {
++				sound-dai = <&q6apmbedai SECONDARY_MI2S_TX>;
++			};
++
++			platform {
++				sound-dai = <&q6apm>;
++			};
++		};
++	};
+ };
+ 
+ &apps_rsc {
+diff --git a/arch/arm64/boot/dts/qcom/qcs8300.dtsi b/arch/arm64/boot/dts/qcom/qcs8300.dtsi
+index 7e8aa75d74f2..47f3d64a8c35 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8300.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs8300.dtsi
+@@ -3655,6 +3655,43 @@ tlmm: pinctrl@f100000 {
+ 			#interrupt-cells = <2>;
+ 			wakeup-parent = <&pdc>;
+ 
++			hs0_mi2s_active: hs0-mi2s-active-state {
++				pins = "gpio106", "gpio107", "gpio108", "gpio109";
++				function = "hs0_mi2s";
++				drive-strength = <8>;
++				bias-disable;
++			};
++
++			mi2s1_active: mi2s1-active-state {
++				data0-pins {
++					pins = "gpio100";
++					function = "mi2s1_data0";
++					drive-strength = <8>;
++					bias-disable;
++				};
++
++				data1-pins {
++					pins = "gpio101";
++					function = "mi2s1_data1";
++					drive-strength = <8>;
++					bias-disable;
++				};
++
++				sclk-pins {
++					pins = "gpio98";
++					function = "mi2s1_sck";
++					drive-strength = <8>;
++					bias-disable;
++				};
++
++				ws-pins {
++					pins = "gpio99";
++					function = "mi2s1_ws";
++					drive-strength = <8>;
++					bias-disable;
++				};
++			};
++
+ 			qup_i2c0_data_clk: qup-i2c0-data-clk-state {
+ 				pins = "gpio17", "gpio18";
+ 				function = "qup0_se0";
+-- 
+2.34.1
+

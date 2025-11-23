@@ -5,9 +5,9 @@ SOC_FAMILY = "qcs8300"
 require conf/machine/include/qcom-base.inc
 
 # Additional Kernel cmdline parameters for debug builds
-DBG_CMDLINE = "${@oe.utils.conditional('DEBUG_BUILD','1','earlycon reboot=panic_warm page_owner=on qcom_scm.download_mode=1 slub_debug=FZP,zs_handle,zspage;FZPU','',d)}"
+DBG_CMDLINE = "${@oe.utils.conditional('DEBUG_BUILD','1','earlycon reboot=panic_warm page_owner=on qcom_scm.download_mode=1 slub_debug=FZP,zs_handle,zspage;FZPU nokaslr','',d)}"
 
-KERNEL_CMDLINE_EXTRA ?= "pcie_pme=nomsi net.ifnames=0 pci=noaer kpti=off kasan=off kasan.stacktrace=off swiotlb=128 ${DBG_CMDLINE} mitigations=auto rcupdate.rcu_expedited=1 rcu_nocbs=0-7 no-steal-acc arm64.nopauth fw_devlink.strict=1"
+KERNEL_CMDLINE_EXTRA ?= "pcie_aspm=off pcie_pme=nomsi net.ifnames=0 pci=noaer kpti=off kasan=off kasan.stacktrace=off swiotlb=128 ${DBG_CMDLINE} mitigations=auto rcupdate.rcu_expedited=1 rcu_nocbs=0-7 no-steal-acc arm64.nopauth"
 
 MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += " \
     fastrpc \

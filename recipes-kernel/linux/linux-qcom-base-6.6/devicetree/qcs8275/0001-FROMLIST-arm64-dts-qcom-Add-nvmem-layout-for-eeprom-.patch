@@ -1,0 +1,70 @@
+From a4f1f59571030bdc68208ab63613013fa951313c Mon Sep 17 00:00:00 2001
+From: Monish Chunara <quic_mchunara@quicinc.com>
+Date: Wed, 8 Oct 2025 19:37:13 +0530
+Subject: [PATCH] FROMLIST: arm64: dts: qcom: Add nvmem-layout for eeprom on
+ qcs8275
+
+Enable nvmem layout for eeprom on qcs8275-iq-8275-evk to be used by
+ethernet and other consumers for storing data.
+
+Signed-off-by: Monish Chunara <quic_mchunara@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250905192350.1223812-3-umang.chheda@oss.qualcomm.com/]
+---
+ .../boot/dts/qcom/qcs8275-iq-8275-evk.dts     | 27 +++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index c992e8dd79f8..a00a83582ad9 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -18,6 +18,7 @@ / {
+ 	qcom,board-id = <0x00010020 0>, <0x00010019 0>;
+ 
+ 	aliases {
++		i2c1 = &i2c1;
+ 		serial0 = &uart7;
+ 		serial1 = &uart2;
+ 	};
+@@ -258,6 +259,25 @@ hd3ss3220_ep: endpoint {
+ 	};
+ };
+ 
++&i2c1 {
++	pinctrl-0 = <&qup_i2c1_default>;
++	pinctrl-names = "default";
++
++	status = "okay";
++
++	eeprom0: eeprom@50 {
++		compatible = "atmel,24c256";
++		reg = <0x50>;
++		pagesize = <64>;
++
++		nvmem-layout {
++			compatible = "fixed-layout";
++			#address-cells = <1>;
++			#size-cells = <1>;
++		};
++	};
++};
++
+ &i2c15 {
+ 	pinctrl-0 = <&qup_i2c15_default>;
+ 	pinctrl-names = "default";
+@@ -409,6 +429,13 @@ qup_i2c0_default: qup-i2c0-state {
+ 		bias-pull-up;
+ 	};
+ 
++	qup_i2c1_default: qup-i2c1-state {
++		pins = "gpio19", "gpio20";
++		function = "qup0_se1";
++		drive-strength = <2>;
++		bias-pull-up;
++	};
++
+ 	qup_i2c15_default: qup-i2c15-state {
+ 		pins = "gpio91", "gpio92";
+ 		function = "qup1_se7";
+-- 
+2.34.1
+

@@ -1,7 +1,7 @@
-From 06e70da335f7478ea35c2fa4b8d725f33ddfa0a0 Mon Sep 17 00:00:00 2001
+From f2b8dfe08f99f78400d506ab288ad2e9b136fc5b Mon Sep 17 00:00:00 2001
 From: Swati Agarwal <quic_swatagar@quicinc.com>
 Date: Fri, 28 Feb 2025 13:55:01 +0530
-Subject: [PATCH 1/1] PENDING: usb: dwc3: qcom:: Add DWC3 glue callbacks for
+Subject: [PATCH] PENDING: usb: dwc3: qcom:: Add DWC3 glue callbacks for
  Qualcomm SoCs
 
 Add DWC3 glue callbacks for Qualcomm SoCs.
@@ -10,14 +10,14 @@ Change-Id: If22254f01ac846863c263bdb3b5df39b8bd59b17
 Signed-off-by: Swati Agarwal <quic_swatagar@quicinc.com>
 Upstream-Status: Pending
 ---
- drivers/usb/dwc3/core.c      | 186 ++++++----
+ drivers/usb/dwc3/core.c      | 186 +++++++---
  drivers/usb/dwc3/core.h      |  80 ++++-
  drivers/usb/dwc3/drd.c       |  16 +
- drivers/usb/dwc3/dwc3-qcom.c | 654 ++++++++++++++++++++++++++---------
- 4 files changed, 704 insertions(+), 232 deletions(-)
+ drivers/usb/dwc3/dwc3-qcom.c | 659 ++++++++++++++++++++++++++---------
+ 4 files changed, 708 insertions(+), 233 deletions(-)
 
 diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 30404461ef7d..7b4c3c60bc9c 100644
+index b7eaad099309..071d3d4abd02 100644
 --- a/drivers/usb/dwc3/core.c
 +++ b/drivers/usb/dwc3/core.c
 @@ -154,7 +154,7 @@ static void __dwc3_set_mode(struct work_struct *work)
@@ -253,7 +253,7 @@ index 30404461ef7d..7b4c3c60bc9c 100644
  
  #ifdef CONFIG_PM
  static int dwc3_core_init_for_resume(struct dwc3 *dwc)
-@@ -2275,9 +2319,8 @@ static int dwc3_runtime_checks(struct dwc3 *dwc)
+@@ -2280,9 +2324,8 @@ static int dwc3_runtime_checks(struct dwc3 *dwc)
  	return 0;
  }
  
@@ -264,7 +264,7 @@ index 30404461ef7d..7b4c3c60bc9c 100644
  	int		ret;
  
  	if (dwc3_runtime_checks(dwc))
-@@ -2289,10 +2332,10 @@ static int dwc3_runtime_suspend(struct device *dev)
+@@ -2294,10 +2337,10 @@ static int dwc3_runtime_suspend(struct device *dev)
  
  	return 0;
  }
@@ -277,7 +277,7 @@ index 30404461ef7d..7b4c3c60bc9c 100644
  	int		ret;
  
  	ret = dwc3_resume_common(dwc, PMSG_AUTO_RESUME);
-@@ -2313,15 +2356,14 @@ static int dwc3_runtime_resume(struct device *dev)
+@@ -2318,15 +2361,14 @@ static int dwc3_runtime_resume(struct device *dev)
  		break;
  	}
  
@@ -296,7 +296,7 @@ index 30404461ef7d..7b4c3c60bc9c 100644
  	switch (dwc->current_dr_role) {
  	case DWC3_GCTL_PRTCAP_DEVICE:
  		if (dwc3_runtime_checks(dwc))
-@@ -2333,49 +2375,67 @@ static int dwc3_runtime_idle(struct device *dev)
+@@ -2338,49 +2380,67 @@ static int dwc3_runtime_idle(struct device *dev)
  		break;
  	}
  
@@ -378,7 +378,7 @@ index 30404461ef7d..7b4c3c60bc9c 100644
  	u32		reg;
  
  	if (dwc->current_dr_role == DWC3_GCTL_PRTCAP_HOST &&
-@@ -2385,21 +2445,31 @@ static void dwc3_complete(struct device *dev)
+@@ -2390,21 +2450,31 @@ static void dwc3_complete(struct device *dev)
  		dwc3_writel(dwc->regs, DWC3_GUCTL3, reg);
  	}
  }
@@ -421,7 +421,7 @@ index 30404461ef7d..7b4c3c60bc9c 100644
  };
  
  #ifdef CONFIG_OF
-@@ -2427,8 +2497,8 @@ MODULE_DEVICE_TABLE(acpi, dwc3_acpi_match);
+@@ -2432,8 +2502,8 @@ MODULE_DEVICE_TABLE(acpi, dwc3_acpi_match);
  #endif
  
  static struct platform_driver dwc3_driver = {
@@ -589,7 +589,7 @@ index 80bfe68cde62..620d4a64b460 100644
  	return 0;
  }
 diff --git a/drivers/usb/dwc3/dwc3-qcom.c b/drivers/usb/dwc3/dwc3-qcom.c
-index 82544374110b..ddd846b5c48d 100644
+index add808efb871..524d2d3ae43d 100644
 --- a/drivers/usb/dwc3/dwc3-qcom.c
 +++ b/drivers/usb/dwc3/dwc3-qcom.c
 @@ -49,14 +49,13 @@
@@ -1216,11 +1216,11 @@ index 82544374110b..ddd846b5c48d 100644
 -	ret = reset_control_deassert(qcom->resets);
 -	if (ret) {
 -		dev_err(&pdev->dev, "failed to deassert resets, err=%d\n", ret);
--		goto reset_assert;
+-		return ret;
 +		ret = reset_control_assert(qcom->resets);
 +		if (ret) {
 +			dev_err(&pdev->dev, "failed to assert resets, err=%d\n", ret);
-+			return ret;
++			goto reset_assert;
 +		}
 +
 +		usleep_range(10, 1000);
@@ -1279,7 +1279,7 @@ index 82544374110b..ddd846b5c48d 100644
  	}
  
  	/*
-@@ -910,55 +1100,79 @@ static int dwc3_qcom_probe(struct platform_device *pdev)
+@@ -910,81 +1100,142 @@ static int dwc3_qcom_probe(struct platform_device *pdev)
  	if (ignore_pipe_clk)
  		dwc3_qcom_select_utmi_clk(qcom);
  
@@ -1383,7 +1383,13 @@ index 82544374110b..ddd846b5c48d 100644
  clk_disable:
  	for (i = qcom->num_clocks - 1; i >= 0; i--) {
  		clk_disable_unprepare(qcom->clks[i]);
-@@ -972,21 +1186,57 @@ static int dwc3_qcom_probe(struct platform_device *pdev)
+ 		clk_put(qcom->clks[i]);
+ 	}
+-
++reset_assert:
++	reset_control_assert(qcom->resets);
+ 	return ret;
+ }
  
  static void dwc3_qcom_remove(struct platform_device *pdev)
  {
@@ -1449,12 +1455,14 @@ index 82544374110b..ddd846b5c48d 100644
  
  	for (i = qcom->num_clocks - 1; i >= 0; i--) {
  		clk_disable_unprepare(qcom->clks[i]);
-@@ -997,16 +1247,28 @@ static void dwc3_qcom_remove(struct platform_device *pdev)
- 	dwc3_qcom_interconnect_exit(qcom);
- 	reset_control_assert(qcom->resets);
+@@ -993,16 +1244,30 @@ static void dwc3_qcom_remove(struct platform_device *pdev)
+ 	qcom->num_clocks = 0;
  
+ 	dwc3_qcom_interconnect_exit(qcom);
 -	pm_runtime_allow(dev);
 -	pm_runtime_disable(dev);
++	reset_control_assert(qcom->resets);
++
 +	pm_runtime_allow(qcom->dev);
 +	pm_runtime_disable(qcom->dev);
 +	pm_runtime_dont_use_autosuspend(qcom->dev);
@@ -1481,7 +1489,7 @@ index 82544374110b..ddd846b5c48d 100644
  	ret = dwc3_qcom_suspend(qcom, wakeup);
  	if (ret)
  		return ret;
-@@ -1018,35 +1280,86 @@ static int __maybe_unused dwc3_qcom_pm_suspend(struct device *dev)
+@@ -1014,35 +1279,86 @@ static int __maybe_unused dwc3_qcom_pm_suspend(struct device *dev)
  
  static int __maybe_unused dwc3_qcom_pm_resume(struct device *dev)
  {
@@ -1572,7 +1580,7 @@ index 82544374110b..ddd846b5c48d 100644
  	SET_RUNTIME_PM_OPS(dwc3_qcom_runtime_suspend, dwc3_qcom_runtime_resume,
  			   NULL)
  };
-@@ -1059,9 +1372,6 @@ MODULE_DEVICE_TABLE(of, dwc3_qcom_of_match);
+@@ -1055,9 +1371,6 @@ MODULE_DEVICE_TABLE(of, dwc3_qcom_of_match);
  
  #ifdef CONFIG_ACPI
  static const struct dwc3_acpi_pdata sdm845_acpi_pdata = {
@@ -1582,7 +1590,7 @@ index 82544374110b..ddd846b5c48d 100644
  	.hs_phy_irq_index = 1,
  	.dp_hs_phy_irq_index = 4,
  	.dm_hs_phy_irq_index = 3,
-@@ -1069,9 +1379,6 @@ static const struct dwc3_acpi_pdata sdm845_acpi_pdata = {
+@@ -1065,9 +1378,6 @@ static const struct dwc3_acpi_pdata sdm845_acpi_pdata = {
  };
  
  static const struct dwc3_acpi_pdata sdm845_acpi_urs_pdata = {
@@ -1592,7 +1600,7 @@ index 82544374110b..ddd846b5c48d 100644
  	.hs_phy_irq_index = 1,
  	.dp_hs_phy_irq_index = 4,
  	.dm_hs_phy_irq_index = 3,
-@@ -1092,6 +1399,7 @@ MODULE_DEVICE_TABLE(acpi, dwc3_qcom_acpi_match);
+@@ -1088,6 +1398,7 @@ MODULE_DEVICE_TABLE(acpi, dwc3_qcom_acpi_match);
  static struct platform_driver dwc3_qcom_driver = {
  	.probe		= dwc3_qcom_probe,
  	.remove_new	= dwc3_qcom_remove,
@@ -1601,5 +1609,5 @@ index 82544374110b..ddd846b5c48d 100644
  		.name	= "dwc3-qcom",
  		.pm	= &dwc3_qcom_dev_pm_ops,
 -- 
-2.25.1
+2.17.1
 

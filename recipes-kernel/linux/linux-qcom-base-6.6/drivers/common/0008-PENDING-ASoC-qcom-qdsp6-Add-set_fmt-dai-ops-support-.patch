@@ -1,8 +1,8 @@
-From b2a07e343e68805808a9e65f6f5f468f64134a7b Mon Sep 17 00:00:00 2001
+From 50b141b41e6006a8edcaa851de0056352de90bd4 Mon Sep 17 00:00:00 2001
 From: Mohammad Rafi Shaik <quic_mohs@quicinc.com>
 Date: Sat, 8 Mar 2025 08:46:34 +0530
-Subject: [PATCH 8/8] PENDING: ASoC: qcom: qdsp6: Add set_fmt dai ops support
- for i2s
+Subject: [PATCH] PENDING: ASoC: qcom: qdsp6: Add set_fmt dai ops support for
+ i2s
 
 Add set_fmt dai ops support for i2s interface and
 update the lpaif_type for i2s module media settings.
@@ -11,12 +11,12 @@ Change-Id: Iff9ad4237467f770b5e43aaffd09263b0a6cb339
 Signed-off-by: Mohammad Rafi Shaik <quic_mohs@quicinc.com>
 Upstream-Status: Pending
 ---
- sound/soc/qcom/qdsp6/audioreach.c       | 2 ++
- sound/soc/qcom/qdsp6/q6apm-lpass-dais.c | 2 ++
- 2 files changed, 4 insertions(+)
+ sound/soc/qcom/qdsp6/audioreach.c       | 1 +
+ sound/soc/qcom/qdsp6/q6apm-lpass-dais.c | 1 +
+ 2 files changed, 2 insertions(+)
 
 diff --git a/sound/soc/qcom/qdsp6/audioreach.c b/sound/soc/qcom/qdsp6/audioreach.c
-index 5974c7929dd3..08e366b83496 100644
+index 3eab43e9efb3..08e366b83496 100644
 --- a/sound/soc/qcom/qdsp6/audioreach.c
 +++ b/sound/soc/qcom/qdsp6/audioreach.c
 @@ -1,5 +1,6 @@
@@ -26,16 +26,8 @@ index 5974c7929dd3..08e366b83496 100644
  
  #include <linux/kernel.h>
  #include <linux/slab.h>
-@@ -967,6 +968,7 @@ static int audioreach_i2s_set_media_format(struct q6apm_graph *graph,
- 	param_data->param_id = PARAM_ID_I2S_INTF_CFG;
- 	param_data->param_size = ic_sz - APM_MODULE_PARAM_DATA_SIZE;
- 
-+	intf_cfg->cfg.lpaif_type = module->hw_interface_type;
- 	intf_cfg->cfg.intf_idx = module->hw_interface_idx;
- 	intf_cfg->cfg.sd_line_idx = module->sd_line_idx;
- 
 diff --git a/sound/soc/qcom/qdsp6/q6apm-lpass-dais.c b/sound/soc/qcom/qdsp6/q6apm-lpass-dais.c
-index 6511f0a08de1..058b391a1c14 100644
+index 3813fe5e0181..a74a6e219a0d 100644
 --- a/sound/soc/qcom/qdsp6/q6apm-lpass-dais.c
 +++ b/sound/soc/qcom/qdsp6/q6apm-lpass-dais.c
 @@ -1,5 +1,6 @@
@@ -45,14 +37,6 @@ index 6511f0a08de1..058b391a1c14 100644
  
  #include <linux/err.h>
  #include <linux/init.h>
-@@ -254,6 +255,7 @@ static const struct snd_soc_dai_ops q6i2s_ops = {
- 	.shutdown	= q6apm_lpass_dai_shutdown,
- 	.set_channel_map  = q6dma_set_channel_map,
- 	.hw_params        = q6dma_hw_params,
-+	.set_fmt	= q6i2s_set_fmt,
- };
- 
- static const struct snd_soc_dai_ops q6hdmi_ops = {
 -- 
-2.34.1
+2.17.1
 

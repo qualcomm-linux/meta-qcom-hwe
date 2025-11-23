@@ -1,0 +1,119 @@
+From badb629f31c6e66b699fab9b2a3dbbf731ed076f Mon Sep 17 00:00:00 2001
+From: Nirmesh Kumar Singh <quic_nkumarsi@quicinc.com>
+Date: Mon, 25 Aug 2025 11:42:48 +0530
+Subject: [PATCH] PENDING: arm64: dts: qcom: add io expander and remoteproc
+ support
+
+add TCA9534 I2C-based IO expander and remoteproc instances
+for QCS8275 IQ8 EVK.
+
+Signed-off-by: Nirmesh Kumar Singh <quic_nkumarsi@quicinc.com>
+Upstream-Status: Pending
+---
+ .../boot/dts/qcom/qcs8275-iq-8275-evk.dts     | 78 +++++++++++++++++++
+ 1 file changed, 78 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index 778117458a38..34084e29a4bd 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -218,6 +218,62 @@ &gpi_dma1 {
+ 	status = "okay";
+ };
+ 
++&i2c15 {
++	pinctrl-0 = <&qup_i2c15_default>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	expander0: pca953x@38 {
++		compatible = "ti,tca9538";
++		#gpio-cells = <2>;
++		gpio-controller;
++		reg = <0x38>;
++	};
++
++	expander1: pca953x@39 {
++		compatible = "ti,tca9538";
++		#gpio-cells = <2>;
++		gpio-controller;
++		reg = <0x39>;
++	};
++
++	expander2: pca953x@3a {
++		compatible = "ti,tca9538";
++		#gpio-cells = <2>;
++		gpio-controller;
++		reg = <0x3a>;
++	};
++
++	expander3: pca953x@3b {
++		compatible = "ti,tca9538";
++		#gpio-cells = <2>;
++		gpio-controller;
++		reg = <0x3b>;
++	};
++
++	expander4: pca953x@3c {
++		compatible = "ti,tca9538";
++		#gpio-cells = <2>;
++		gpio-controller;
++		reg = <0x3c>;
++	};
++
++	expander5: pca953x@3d {
++		compatible = "ti,tca9538";
++		#gpio-cells = <2>;
++		gpio-controller;
++		reg = <0x3d>;
++	};
++
++	expander6: pca953x@3e {
++		compatible = "ti,tca9538";
++		#gpio-cells = <2>;
++		gpio-controller;
++		reg = <0x3e>;
++	};
++
++};
++
+ &qupv3_id_0 {
+ 	firmware-name = "qcom/qcs8300/qupv3fw.elf";
+ 	status = "okay";
+@@ -228,11 +284,33 @@ &qupv3_id_1 {
+ 	status = "okay";
+ };
+ 
++&remoteproc_adsp {
++	firmware-name = "qcom/qcs8300/adsp.mbn";
++	status = "okay";
++};
++
++&remoteproc_cdsp {
++	firmware-name = "qcom/qcs8300/cdsp0.mbn";
++	status = "okay";
++};
++
++&remoteproc_gpdsp {
++	firmware-name = "qcom/qcs8300/gpdsp0.mbn";
++	status = "okay";
++};
++
+ &tlmm {
+ 
+ 	dp_hot_plug_det: dp-hot-plug-det-state {
+ 	/* TODO: Add the required nodes once mdss_dp0 is available.*/
+ 	};
++
++	qup_i2c15_default: qup-i2c15-state {
++		pins = "gpio91", "gpio92";
++		function = "qup1_se7";
++		drive-strength = <2>;
++		bias-pull-up;
++	};
+ };
+ 
+ &uart7 {
+-- 
+2.34.1
+

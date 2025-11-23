@@ -2,14 +2,15 @@
 /var/log/messages
 /var/log/user.log
 {
-        rotate 4
-        size 1G
+        rotate 20
+        size 100M
         missingok
         dateext
         dateformat -%Y%m%d-%H%M%S
         copytruncate
         compress
         delaycompress
+        maxage 7
         sharedscripts
         postrotate
                 @BINDIR@/pkill -HUP rsyslogd 2> /dev/null || true

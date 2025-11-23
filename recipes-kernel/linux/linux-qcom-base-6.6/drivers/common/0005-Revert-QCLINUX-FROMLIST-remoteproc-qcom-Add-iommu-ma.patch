@@ -1,0 +1,111 @@
+From c8bd958384ac8e706c923455b290d2429e70a4ea Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Fri, 20 Jun 2025 15:03:44 +0530
+Subject: [PATCH 05/20] Revert "QCLINUX: FROMLIST: remoteproc: qcom: Add iommu
+ map_unmap helper function"
+
+This reverts commit 47dd0003da1c91a12040eb332f48e752fda75301 as they
+are longer required as we are going to follow newer approach of
+getting resource table from Secure world.
+
+Change-Id: I5a9bdf227dd6dfe5fa29119dcb8b9ffda70bb60d
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Inappropriate
+---
+ drivers/remoteproc/qcom_common.c | 52 --------------------------------
+ drivers/remoteproc/qcom_common.h |  3 --
+ 2 files changed, 55 deletions(-)
+
+diff --git a/drivers/remoteproc/qcom_common.c b/drivers/remoteproc/qcom_common.c
+index e907f7b3c0af..03e5f5d533eb 100644
+--- a/drivers/remoteproc/qcom_common.c
++++ b/drivers/remoteproc/qcom_common.c
+@@ -8,7 +8,6 @@
+  */
+ 
+ #include <linux/firmware.h>
+-#include <linux/iommu.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/notifier.h>
+@@ -34,8 +33,6 @@
+ #define MINIDUMP_SS_ENCR_DONE		('D' << 24 | 'O' << 16 | 'N' << 8 | 'E' << 0)
+ #define MINIDUMP_SS_ENABLED		('E' << 24 | 'N' << 16 | 'B' << 8 | 'L' << 0)
+ 
+-#define SID_MASK_DEFAULT	0xfUL
+-
+ /**
+  * struct minidump_region - Minidump region
+  * @name		: Name of the region to be dumped
+@@ -522,54 +519,5 @@ void qcom_remove_ssr_subdev(struct rproc *rproc, struct qcom_rproc_ssr *ssr)
+ }
+ EXPORT_SYMBOL_GPL(qcom_remove_ssr_subdev);
+ 
+-/**
+- * qcom_map_unmap_carveout() - iommu map and unmap carveout region
+- *
+- * @rproc:	rproc handle
+- * @mem_phys:	starting physical address of carveout region
+- * @mem_size:	size of carveout region
+- * @map:	if true, map otherwise, unmap
+- * @use_sid:	decision to append sid to iova
+- * @sid:	SID value
+- */
+-int qcom_map_unmap_carveout(struct rproc *rproc, phys_addr_t mem_phys, size_t mem_size,
+-			    bool map, bool use_sid, unsigned long sid)
+-{
+-	unsigned long iova = mem_phys;
+-	unsigned long sid_def_val;
+-	int ret = 0;
+-
+-	if (!rproc->has_iommu)
+-		return 0;
+-
+-	if (!rproc->domain)
+-		return -EINVAL;
+-
+-	/*
+-	 * Remote processor like ADSP supports up to 36 bit device
+-	 * address space and some of its clients like fastrpc uses
+-	 * upper 32-35 bits to keep lower 4 bits of its SID to use
+-	 * larger address space. To keep this consistent across other
+-	 * use cases add remoteproc SID configuration for firmware
+-	 * to IOMMU for carveouts.
+-	 */
+-	if (use_sid && sid) {
+-		sid_def_val = sid & SID_MASK_DEFAULT;
+-		iova |= ((uint64_t)sid_def_val << 32);
+-	}
+-
+-	if (map) {
+-		ret = iommu_map(rproc->domain, iova, mem_phys, mem_size,
+-				IOMMU_READ | IOMMU_WRITE, GFP_KERNEL);
+-		if (ret)
+-			dev_err(&rproc->dev, "Unable to map IOVA Memory, ret: %d\n", ret);
+-	} else {
+-		iommu_unmap(rproc->domain, iova, mem_size);
+-	}
+-
+-	return ret;
+-}
+-EXPORT_SYMBOL_GPL(qcom_map_unmap_carveout);
+-
+ MODULE_DESCRIPTION("Qualcomm Remoteproc helper driver");
+ MODULE_LICENSE("GPL v2");
+diff --git a/drivers/remoteproc/qcom_common.h b/drivers/remoteproc/qcom_common.h
+index 1e5fe5e48449..9ef4449052a9 100644
+--- a/drivers/remoteproc/qcom_common.h
++++ b/drivers/remoteproc/qcom_common.h
+@@ -52,9 +52,6 @@ void qcom_add_ssr_subdev(struct rproc *rproc, struct qcom_rproc_ssr *ssr,
+ 			 const char *ssr_name);
+ void qcom_remove_ssr_subdev(struct rproc *rproc, struct qcom_rproc_ssr *ssr);
+ 
+-int qcom_map_unmap_carveout(struct rproc *rproc, phys_addr_t mem_phys, size_t mem_size,
+-			    bool map, bool use_sid, unsigned long sid);
+-
+ #if IS_ENABLED(CONFIG_QCOM_SYSMON)
+ struct qcom_sysmon *qcom_add_sysmon_subdev(struct rproc *rproc,
+ 					   const char *name,
+-- 
+2.50.1
+

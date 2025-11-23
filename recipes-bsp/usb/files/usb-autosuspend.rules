@@ -3,63 +3,43 @@
 
 # Set autosuspend delay and control for specific USB devices
 ACTION=="add", SUBSYSTEM=="udc", KERNEL=="a600000.usb", \
-RUN+="/bin/sh -c 'echo 3000 > /sys/bus/platform/devices/a600000.usb/power/autosuspend_delay_ms'"
+RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/a600000.usb/power/control; \
+                  echo 3000 > /sys/bus/platform/devices/a600000.usb/power/autosuspend_delay_ms'"
+
+ACTION=="add", SUBSYSTEM=="udc", KERNEL=="a800000.usb", \
+RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/a800000.usb/power/control; \
+                  echo 1000 > /sys/bus/platform/devices/a800000.usb/power/autosuspend_delay_ms'"
+
+ACTION=="add", SUBSYSTEM=="udc", KERNEL=="a400000.usb", \
+RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/a400000.usb/power/control; \
+                  echo 1000 > /sys/bus/platform/devices/a400000.usb/power/autosuspend_delay_ms'"
+
+ACTION=="add", SUBSYSTEM=="udc", KERNEL=="8c00000.usb", \
+RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/8c00000.usb/power/control; \
+                  echo 1000 > /sys/bus/platform/devices/8c00000.usb/power/autosuspend_delay_ms'"
+
+ACTION=="add", SUBSYSTEM=="udc", KERNEL=="a400000.usb", \
+RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/a4f8800.usb/power/control; \
+                  echo 1000 > /sys/bus/platform/devices/a4f8800.usb/power/autosuspend_delay_ms'"
 
 ACTION=="add", SUBSYSTEM=="udc", KERNEL=="a600000.usb", \
-RUN+="/bin/sh -c 'echo on > /sys/bus/platform/devices/a600000.usb/power/control'"
+RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/a6f8800.usb/power/control; \
+                  echo 1000 > /sys/bus/platform/devices/a6f8800.usb/power/autosuspend_delay_ms'"
 
-# Power control and wakeup for xHCI controllers
-ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.0.auto", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/xhci-hcd.0.auto/power/control'"
-ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.0.auto", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/platform/devices/xhci-hcd.0.auto/power/wakeup'"
+ACTION=="add", SUBSYSTEM=="udc", KERNEL=="a800000.usb", \
+RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/a8f8800.usb/power/control; \
+                  echo 1000 > /sys/bus/platform/devices/a8f8800.usb/power/autosuspend_delay_ms'"
 
-ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.1.auto", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/xhci-hcd.1.auto/power/control'"
-ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.1.auto", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/platform/devices/xhci-hcd.1.auto/power/wakeup'"
+# Power control and wakeup for all xHCI controllers (xhci-hcd.0.auto to xhci-hcd.125.auto)
+ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.*.auto", \
+  RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/%k/power/control'"
 
-ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.2.auto", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/xhci-hcd.2.auto/power/control'"
-ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.2.auto", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/platform/devices/xhci-hcd.2.auto/power/wakeup'"
+ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.*.auto", \
+  RUN+="/bin/sh -c 'echo enabled > /sys/bus/platform/devices/%k/power/wakeup'"
 
-ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.3.auto", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/xhci-hcd.3.auto/power/control'"
-ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.3.auto", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/platform/devices/xhci-hcd.3.auto/power/wakeup'"
+# USB root hub and child device power management (usb0 to usb125)
+ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb[0-9]*/*", \
+  RUN+="/bin/sh -c 'echo auto > /sys/bus/usb/devices/%k/power/control'"
 
-ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.4.auto", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/platform/devices/xhci-hcd.4.auto/power/control'"
-ACTION=="bind", SUBSYSTEM=="platform", KERNEL=="xhci-hcd.4.auto", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/platform/devices/xhci-hcd.4.auto/power/wakeup'"
-
-# USB root hub power management
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb1/*", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/usb/devices/usb1/power/control'"
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb1/*", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/usb/devices/usb1/power/wakeup'"
-
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb2/*", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/usb/devices/usb2/power/control'"
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb2/*", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/usb/devices/usb2/power/wakeup'"
-
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb3/*", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/usb/devices/usb3/power/control'"
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb3/*", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/usb/devices/usb3/power/wakeup'"
-
-# Specific USB device path power management
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb1/1-1/*", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/usb/devices/usb1/1-1/power/control'"
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb1/1-1/*", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/usb/devices/usb1/1-1/power/wakeup'"
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb2/2-1/*", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/usb/devices/usb2/2-1/power/control'"
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb2/2-1/*", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/usb/devices/usb2/2-1/power/wakeup'"
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb3/3-1/*", \
-RUN+="/bin/sh -c 'echo auto > /sys/bus/usb/devices/usb3/3-1/power/control'"
-ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb3/3-1/*", \
-RUN+="/bin/sh -c 'echo enabled > /sys/bus/usb/devices/usb3/3-1/power/wakeup'"
+ACTION=="bind", SUBSYSTEM=="usb", ENV{DEVPATH}=="*/usb[0-9]*/*", \
+  RUN+="/bin/sh -c 'echo enabled > /sys/bus/usb/devices/%k/power/wakeup'"

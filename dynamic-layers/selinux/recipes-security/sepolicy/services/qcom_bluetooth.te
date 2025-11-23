@@ -86,10 +86,7 @@ allow qcom_bluetooth_t qcom_bluetooth_t:tcp_socket accept;
 kernel_request_load_module(qcom_bluetooth_t)
 allow qcom_bluetooth_t self:capability { dac_override };
 
-#Bluetooth Audio usecases
-pulseaudio_stream_connect(qcom_bluetooth_t)
 qcom_connect_to_btipc_src(qcom_bluetooth_t)
-qcom_pulseaudio_socket_connect(qcom_bluetooth_t)
 
 corecmd_exec_bin_files(qcom_bluetooth_t)
 files_read_usr_files(qcom_bluetooth_t)

@@ -1,0 +1,255 @@
+From 8100bee77ae82a41231baf75792f3c9ec7da7151 Mon Sep 17 00:00:00 2001
+From: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Date: Wed, 17 Sep 2025 14:22:27 +0530
+Subject: [PATCH] PENDING: arm64: dts: qcom: Enable both USB controllers on
+ QCS8275 IQ8 EVK
+
+Enable both USB controllers on  QCS8275 IQ8 EVK.
+
+Signed-off-by: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ .../boot/dts/qcom/qcs8275-iq-8275-evk.dts     | 187 +++++++++++++++++-
+ 1 file changed, 183 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index e8928e819004..477976d63e0d 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -223,6 +223,38 @@ &gpi_dma1 {
+ 	status = "okay";
+ };
+ 
++&i2c0 {
++	pinctrl-0 = <&qup_i2c0_default>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	hd3ss3220@67 {
++		compatible = "ti,hd3ss3220";
++		reg = <0x67>;
++		interrupts = < 45 IRQ_TYPE_EDGE_FALLING>;
++		wakeup-source;
++
++		connector@0 {
++			compatible = "usb-c-connector";
++			label = "USB-C";
++			data-role = "dual";
++			power-role = "dual";
++
++			ports {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				port@0 {
++					reg = <0>;
++					hd3ss3220_ep: endpoint {
++						remote-endpoint = <&usb_role_switch>;
++					};
++				};
++			};
++		};
++	};
++};
++
+ &i2c15 {
+ 	pinctrl-0 = <&qup_i2c15_default>;
+ 	pinctrl-names = "default";
+@@ -240,6 +272,13 @@ expander1: pca953x@39 {
+ 		#gpio-cells = <2>;
+ 		gpio-controller;
+ 		reg = <0x39>;
++
++		io-exp-hog2 {
++			gpio-hog;
++			gpios = <2 GPIO_ACTIVE_HIGH>;
++			output-low;
++			line-name = "io_exp_gpio2";
++		};
+ 	};
+ 
+ 	expander2: pca953x@3a {
+@@ -279,6 +318,16 @@ expander6: pca953x@3e {
+ 
+ };
+ 
++&pmm8620au_0_gpios {
++	usb2_id_det_default: usb2-id-det-default {
++		pins = "gpio9";
++		function = "normal";
++		input-enable;
++		bias-pull-up;
++		power-source = <0>;
++	};
++};
++
+ &qupv3_id_0 {
+ 	firmware-name = "qcom/qcs8300/qupv3fw.elf";
+ 	status = "okay";
+@@ -304,12 +353,59 @@ &remoteproc_gpdsp {
+ 	status = "okay";
+ };
+ 
++&soc {
++	connector_usb2: connector-usb2 {
++		compatible = "gpio-usb-b-connector";
++		id-gpio = <&pmm8620au_0_gpios 9 GPIO_ACTIVE_HIGH>;
++		vbus-supply = <&vbus_supply_regulator2>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&usb2_id_det_default>;
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				usb2_port_connector: endpoint {
++					remote-endpoint = <&usb2_port>;
++				};
++			};
++		};
++	};
++
++	vbus_supply_regulator_0: vbus_supply_regulator_0 {
++		compatible = "regulator-fixed";
++		regulator-name = "vbus_supply_0";
++		gpio = <&expander1 2 GPIO_ACTIVE_HIGH>;
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		enable-active-high;
++	};
++
++	vbus_supply_regulator2: vbus-supply-regulator2 {
++		compatible = "regulator-fixed";
++		regulator-name = "vbus_supply_2";
++		gpio = <&pmm8650au_1_gpios 7 GPIO_ACTIVE_HIGH>;
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-boot-on;
++		enable-active-high;
++	};
++};
++
+ &tlmm {
+ 
+ 	dp_hot_plug_det: dp-hot-plug-det-state {
+ 	/* TODO: Add the required nodes once mdss_dp0 is available.*/
+ 	};
+ 
++	qup_i2c0_default: qup-i2c0-state {
++		pins = "gpio17", "gpio18";
++		function = "qup0_se0";
++		drive-strength = <2>;
++		bias-pull-up;
++	};
++
+ 	qup_i2c15_default: qup-i2c15-state {
+ 		pins = "gpio91", "gpio92";
+ 		function = "qup1_se7";
+@@ -338,12 +434,48 @@ &ufs_mem_phy {
+ };
+ 
+ &usb_1 {
+-	status = "okay";
+-};
++	reg = <0x0 0x0a600000 0x0 0x20000>;
++
++	interrupts-extended = <&intc GIC_SPI 292 IRQ_TYPE_LEVEL_HIGH>,
++			      <&intc GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>,
++			      <&pdc 14 IRQ_TYPE_EDGE_BOTH>,
++			      <&pdc 15 IRQ_TYPE_EDGE_BOTH>,
++			      <&pdc 12 IRQ_TYPE_LEVEL_HIGH>;
++	interrupt-names = "dwc_usb3",
++			  "pwr_event",
++			  "dp_hs_phy_irq",
++			  "dm_hs_phy_irq",
++			  "ss_phy_irq";
++
++	iommus = <&apps_smmu 0x80 0x0>;
++	snps,dis_u2_susphy_quirk;
++	snps,dis_enblslpm_quirk;
++	phys = <&usb_1_hsphy>, <&usb_qmpphy>;
++	phy-names = "usb2-phy", "usb3-phy";
++	maximum-speed = "super-speed-plus";
+ 
+-&usb_1_dwc3 {
+ 	usb-role-switch;
+-	dr_mode = "peripheral";
++	dr_mode = "otg";
++
++	qcom,enable-rt;
++	wakeup-source;
++	maximum-speed = "super-speed";
++	vbus_dwc3-supply = <&vbus_supply_regulator_0>;
++	status = "okay";
++
++	ports {
++
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			reg = <0>;
++			usb_role_switch: endpoint {
++				remote-endpoint = <&hd3ss3220_ep>;
++			};
++		};
++
++	};
+ };
+ 
+ &usb_1_hsphy {
+@@ -360,3 +492,50 @@ &usb_qmpphy {
+ 
+ 	status = "okay";
+ };
++
++&usb_2 {
++	reg = <0x0 0x0a400000 0x0 0x200000>;
++
++	interrupts-extended = <&intc GIC_SPI 442 IRQ_TYPE_LEVEL_HIGH>,
++				<&intc GIC_SPI 444 IRQ_TYPE_LEVEL_HIGH>,
++				<&pdc 10 IRQ_TYPE_EDGE_BOTH>,
++				<&pdc 9 IRQ_TYPE_EDGE_BOTH>;
++	interrupt-names = "dwc_usb2",
++			"pwr_event",
++			"dp_hs_phy_irq",
++			"dm_hs_phy_irq";
++
++	iommus = <&apps_smmu 0x20 0x0>;
++	phys = <&usb_2_hsphy>;
++	phy-names = "usb2-phy";
++	maximum-speed = "high-speed";
++
++	dr_mode = "otg";
++	usb-role-switch;
++	qcom,enable-rt;
++	wakeup-source;
++
++	status = "okay";
++
++	ports {
++
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			reg = <0>;
++			usb2_port: endpoint {
++				remote-endpoint = <&usb2_port_connector>;
++			};
++		};
++
++	};
++};
++
++&usb_2_hsphy {
++	vdda-pll-supply = <&vreg_l7a>;
++	vdda18-supply = <&vreg_l7c>;
++	vdda33-supply = <&vreg_l9a>;
++
++	status = "okay";
++};
+-- 
+2.34.1
+

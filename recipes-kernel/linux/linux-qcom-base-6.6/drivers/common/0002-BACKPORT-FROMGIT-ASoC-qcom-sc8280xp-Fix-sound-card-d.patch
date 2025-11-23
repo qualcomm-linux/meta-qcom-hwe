@@ -1,0 +1,47 @@
+From 9df99fdaa288a9543f8ef5f98ee7b90e5bf1cf0f Mon Sep 17 00:00:00 2001
+From: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Date: Sun, 14 Sep 2025 18:45:49 +0530
+Subject: [PATCH 2/5] BACKPORT: FROMGIT: ASoC: qcom: sc8280xp: Fix sound card
+ driver name match data for QCS8275
+
+The QCS8275 board is based on Qualcomm's QCS8300 SoC family, and all
+supported firmware files are located in the qcs8300 directory. The
+sound topology and ALSA UCM configuration files have also been migrated
+from the qcs8275 directory to the actual SoC qcs8300 directory in
+linux-firmware. With the current setup, the sound topology fails
+to load, resulting in sound card registration failure.
+
+This patch updates the driver match data to use the correct driver name
+qcs8300 for the qcs8275-sndcard, ensuring that the sound card driver
+correctly loads the sound topology and ALSA UCM configuration files
+from the qcs8300 directory.
+
+Fixes: 34d340d48e595 ("ASoC: qcom: sc8280xp: Add support for QCS8275")
+Cc: stable@vger.kernel.org
+Signed-off-by: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Reviewed-by: Srinivas Kandagatla <srinivas.kandagatla@oss.qualcomm.com>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Link: https://patch.msgid.link/20250914131549.1198740-1-mohammad.rafi.shaik@oss.qualcomm.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Git-commit: c7a321e4e90e1bd072697bc050b9426e04cffc6a
+Git-repo: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git c7a321e4e90e1bd072697bc050b9426e04cffc6a]
+---
+ sound/soc/qcom/sc8280xp.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sound/soc/qcom/sc8280xp.c b/sound/soc/qcom/sc8280xp.c
+index f4e3c9eb4fd1..b1371b3e4bdb 100644
+--- a/sound/soc/qcom/sc8280xp.c
++++ b/sound/soc/qcom/sc8280xp.c
+@@ -157,6 +157,7 @@ static int sc8280xp_platform_probe(struct platform_device *pdev)
+ 
+ static const struct of_device_id snd_sc8280xp_dt_match[] = {
+ 	{.compatible = "qcom,sc8280xp-sndcard", "sc8280xp"},
++	{.compatible = "qcom,qcs8275-sndcard", "qcs8300"},
+ 	{}
+ };
+ 
+-- 
+2.34.1
+

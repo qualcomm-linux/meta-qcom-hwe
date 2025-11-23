@@ -108,6 +108,8 @@ SRC_URI:append = " \
     file://qcs9100/0002-PENDING-arm64-dts-qcom-qcs9xxx-Update-memory-map-for.patch \
     file://qcs9100/0003-FROMLIST-arm64-dts-qcom-sa8775p-ride-enable-video.patch \
     file://qcs9100/0012-UPSTREAM-arm64-dts-qcom-sa8775p-ride-add-anx7625-DSI-to-DP-bridge-nodes.patch \
+    file://qcs9100/0020-FROMLIST-arm64-dts-qcom-Add-EL2-overlay-for-Lemans.patch \
+    file://qcs9100/0004-PENDING-arm64-dts-qcom-Add-EL2-support-for-Iris-for-sa8775p.patch \
     "
 
 # qcs615 dtsi patches
@@ -234,6 +236,7 @@ SRC_URI:append = " \
     file://qcs8300/0005-FROMLIST-arm64-dts-qcom-qcs8300-ride-Enable-Adreno-6.patch \
     file://qcs8300/0001-UPSTREAM-arm64-dts-qcom-qcs8300-ride-Enable-second-U.patch \
     file://qcs8300/0005-FROMLIST-arm64-dts-qcom-qcs8300-ride-enable-video.patch \
+    file://qcs8300/0001-UPSTREAM-arm64-dts-qcom-Move-RPMHCC-clocks-.patch \
     "
 # qcs9075 board dts patches
 SRC_URI:append = " \
@@ -303,6 +306,7 @@ SRC_URI:append = " \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-Add-firmw.patch \
     file://qcs9075/0046-PENDING-arm64-dts-qcom-Add-sdcard-support-for-qcs907.patch \
     file://qcs9075/0047-PENDING-arm64-dts-qcom-Enable-vqmmc-voltage-switchin.patch \
+    file://qcs9075/0001-FROMLIST-arm64-dts-qcom-Add-nvmem-layout-for-eeprom-o.patch \
     "
 
 # qcs8275 board dts patches
@@ -314,4 +318,21 @@ SRC_URI:append = " \
     file://qcs8275/0001-QCLINUX-arm64-dts-fix-base-BSP-compilation-issue-for.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-usb0-support-on-QCS827.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-qcs8275-iq-8275-evk-Add-firmw.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-add-io-expander-and-remotepro.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Add-UFS-support-for-QCS8275-I.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-Bluetooth-support-on-Q.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-camss-for-qcs8275-iq-8.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-both-USB-controllers-o.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-fix-compilation-issue-for-QCS.patch \
+    file://qcs8275/0001-FROMLIST-arm64-dts-qcom-Add-nvmem-layout-for-eeprom-.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-PCIe0-PCIe1-for-QCS827.patch \
+    file://qcs8275/0004-BACKPORT-FROMGIT-arm64-dts-qcom-qcs8300-Add-gpr-node.patch \
+    file://qcs8275/0005-FROMGIT-arm64-dts-qcom-qcs8275-iq-8275-evk-Add-sound.patch \
+    "
+# monaco evk board dts patches
+SRC_URI:append = " \
+    file://qcs8275/0001-FROMLIST-arm64-dts-qcom-qcs8300-Add-Monaco-EVK-board.patch \
+    file://addons/0001-QCLINUX-arm64-dts-qcom-Add-msm-id-board-id-IQ8-pro-sku.patch \
+    file://qcs8275/0001-FROMGIT-arm64-dts-qcom-monaco-evk-Add-sound-card.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-Bluetooth-support-o.patch \
     "

@@ -7,9 +7,11 @@ DESCRIPTION = "Sensors-core Library"
 
 DEPENDS += "glib-2.0 property-vault qmi-framework syslog-plumber protobuf qcom-sensinghub qcom-sensors-utils qcom-sensors-lookup"
 
-QCM6490_SHA256SUM = "e0bb8d691f9a68676fe2c76ba22ade7a6b88d04aeda9bffe58f3dfc25c32c0b6"
+QCM6490_SHA256SUM = "b3c282c7cf31b33009820b01d7fcc0a1c6aafd417d375f8fc9b6f0885dbcc783"
+QCS615_SHA256SUM = "0b6c66d4c669c55818b847ab7dc18f1fcb75faab85623e9c5a79e83845d5353a"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
+SRC_URI[qcs615.sha256sum] = "${QCS615_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"
 

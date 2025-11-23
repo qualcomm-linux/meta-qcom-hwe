@@ -1,0 +1,32 @@
+From 6a6fdb7e3ca318aa0ed7301dfb0f842599a75835 Mon Sep 17 00:00:00 2001
+From: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Date: Mon, 15 Sep 2025 15:28:20 +0800
+Subject: [PATCH] PENDING: arm64: dts: qcom: Enable camss for
+ qcs8275-iq-8275-evk
+
+Enables camera driver for qcs8275 iq 8275 evk board.
+
+Signed-off-by: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index 34084e29a4bd..6b35ab370f3f 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -210,6 +210,10 @@ vreg_l9c: ldo9 {
+ 	};
+ };
+ 
++&camss {
++	status = "okay";
++};
++
+ &gpi_dma0 {
+ 	status = "okay";
+ };
+-- 
+2.34.1
+

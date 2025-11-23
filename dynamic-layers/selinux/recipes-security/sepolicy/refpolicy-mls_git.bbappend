@@ -138,7 +138,7 @@ EOF
         rm -rf ${D}${QCOM_STORE_ROOT}/final
 }
 
-COMPATIBLE_MACHINE = "qcm6490|qcs9100|qcs8300|qcs615"
+COMPATIBLE_MACHINE = "qcm6490|qcs9100|qcs8300|qcs615|sa535m"
 
 def get_machine(d):
     need_machine = (d.getVar('COMPATIBLE_MACHINE') or "").split("|")

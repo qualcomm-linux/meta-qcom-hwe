@@ -1,0 +1,30 @@
+From e40fc6bdca360ff6896e76b9c3709d7959da36af Mon Sep 17 00:00:00 2001
+From: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Date: Wed, 8 Oct 2025 12:16:46 +0530
+Subject: [PATCH] PENDING: arm64: dts: qcom: fix compilation issue for QCS8275
+ IQ8 EVK
+
+Fix compilation issue for QCS8275 IQ8 EVK by adding missing header file.
+
+Signed-off-by: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index 477976d63e0d..fac27e4ef559 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -8,6 +8,8 @@
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+ #include "qcs8300.dtsi"
++#include "qcs8300-pmics.dtsi"
++
+ / {
+ 	model = "Qualcomm Technologies, Inc. IQ 8275 EVK";
+ 	compatible = "qcom,qcs8275-iq-8275-evk", "qcom,qcs8275", "qcom,qcs8300";
+-- 
+2.34.1
+

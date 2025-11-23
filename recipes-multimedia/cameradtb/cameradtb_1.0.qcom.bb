@@ -18,10 +18,10 @@ S = "${WORKDIR}/vendor/qcom/opensource/camera-devicetree"
 DTC := "${KBUILD_OUTPUT}/scripts/dtc/dtc"
 KERNEL_INCLUDE := "${STAGING_KERNEL_DIR}/include/"
 
-COMPATIBLE_MACHINE = "qcm6490|qcs9100|qcs6490|qcs8300"
+COMPATIBLE_MACHINE = "qcm6490|qcs9100|qcs6490|qcs8300|qcs615"
 KODIAK_BOARD_NAMES = "qcm6490-idp|qcs6490-rb3gen2-vision-kit|qcs6490-rb3gen2-core-kit|"
 LEMANS_BOARD_NAMES = "qcs9100-ride-sx|qcs9075-ride-sx|qcs9075-rb8-core-kit|qcs9075-iq-9075-evk|qcs9075-iq-9075-evk-ifp|"
-MONACO_BOARD_NAMES = "qcs8300-ride-sx|qcs8275-iq-8275-evk|qcs8275-iq-8275-evk-ifp|qcs8275-iq-8275-evk-pro-sku"
+MONACO_BOARD_NAMES = "qcs8300-ride-sx|qcs8275-iq-8275-evk|qcs8275-iq-8275-evk-ifp|qcs8275-iq-8275-evk-pro-sku|monaco-monza"
 
 python get_soc_family() {
     need_machine = d.getVar('COMPATIBLE_MACHINE')
@@ -64,14 +64,19 @@ do_compile() {
     elif [ "${SOC_FAM}" = "qcs9100" ]; then
         if [ "${TARGET_BOARD}" = "qcs9100-ride-sx" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs9100-ride-sx-camera
+            oe_runmake ${EXTRA_OEMAKE} qcs9100-ride-sx-camera-el2
         elif [ "${TARGET_BOARD}" = "qcs9075-ride-sx" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs9075-ride-sx-camera
+            oe_runmake ${EXTRA_OEMAKE} qcs9075-ride-sx-camera-el2
         elif [ "${TARGET_BOARD}" = "qcs9075-rb8-core-kit" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk
+            oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk-el2
         elif [ "${TARGET_BOARD}" = "qcs9075-iq-9075-evk" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk
+            oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk-el2
         elif [ "${TARGET_BOARD}" = "qcs9075-iq-9075-evk-ifp" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk
+            oe_runmake ${EXTRA_OEMAKE} qcs9075-camera-iq-9075-evk-el2
         fi
     elif [ "${SOC_FAM}" = "qcs8300" ]; then
         if [ "${TARGET_BOARD}" = "qcs8300-ride-sx" ]; then
@@ -82,7 +87,11 @@ do_compile() {
             oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk
         elif [ "${TARGET_BOARD}" = "qcs8275-iq-8275-evk-pro-sku" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk-pro-sku
+        elif [ "${TARGET_BOARD}" = "monaco-monza" ]; then
+            oe_runmake ${EXTRA_OEMAKE} monaco-monza-camera
         fi
+    elif [ "${SOC_FAM}" = "qcs615" ]; then
+        oe_runmake ${EXTRA_OEMAKE} qcs615-camera
     else
         echo "Unknown SOC_FAM -> " ${SOC_FAM}
     fi

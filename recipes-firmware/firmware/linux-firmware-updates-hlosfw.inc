@@ -1,0 +1,303 @@
+# To include downstream firmware provided by HLOSFW tars.
+HLOSFW_COMPONENT ?= "qualcomm_linux-spf-1-0/qualcomm-linux-spf-1-0_test_device_public"
+HLOSFW_BUILD_ID ?= "r1.0_00108.0"
+HLOSFW_ARTIFACTORY ?= "${FW_ARTIFACTORY}/${HLOSFW_COMPONENT}/${HLOSFW_BUILD_ID}"
+
+QCM6490_UFS_BIN_PATH ?= "qcm6490-le-1-0/common/build/ufs/bin"
+QCS9100_UFS_BIN_PATH ?= "qcs9100-le-1-0/common/build/ufs/bin"
+QCS8300_UFS_BIN_PATH ?= "qcs8300-le-1-0/common/build/ufs/bin"
+QCS615_CMN_BIN_PATH ?= "qcs615-le-1-0/common/build/common/bin"
+
+QCM6490_VPU_SHA256SUM ?= "9f7651efc5a79f68d060e01e04ab6b807b5c185fded59d3d416c0d3b0f1a7b35"
+QCS9100_VPU_SHA256SUM ?= "9d3dc8fb72a3ace8034e2623d5ab2298089027a2228af30f44f59d32560af0d3"
+QCS8300_VPU_SHA256SUM ?= "f963bb2116d338e407676039724d42fa6242be91214ad16a4c4e635e8bc180a5"
+QCS615_VPU_SHA256SUM  ?= "1247a5585346408a82bdd44f248676bed22be70dfd481d938c40ce8e2448200c"
+
+QCM6490_SRC_URI ?= "${HLOSFW_ARTIFACTORY}/${QCM6490_UFS_BIN_PATH}/QCM6490_fw.zip;name=QCM6490_fw"
+QCS9100_SRC_URI ?= "${HLOSFW_ARTIFACTORY}/${QCS9100_UFS_BIN_PATH}/QCS9100_fw.zip;name=QCS9100_fw"
+QCS8300_SRC_URI ?= "${HLOSFW_ARTIFACTORY}/${QCS8300_UFS_BIN_PATH}/QCS8300_fw.zip;name=QCS8300_fw"
+QCS615_SRC_URI  ?= "${HLOSFW_ARTIFACTORY}/${QCS615_CMN_BIN_PATH}/QCS615_fw.zip;name=QCS615_fw"
+
+SRC_URI[QCM6490_fw.sha256sum] = "${QCM6490_VPU_SHA256SUM}"
+SRC_URI[QCS9100_fw.sha256sum] = "${QCS9100_VPU_SHA256SUM}"
+SRC_URI[QCS8300_fw.sha256sum] = "${QCS8300_VPU_SHA256SUM}"
+SRC_URI[QCS615_fw.sha256sum] = "${QCS615_VPU_SHA256SUM}"
+SRC_URI += "${QCM6490_SRC_URI}"
+SRC_URI += "${QCS9100_SRC_URI}"
+SRC_URI += "${QCS8300_SRC_URI}"
+SRC_URI += "${QCS615_SRC_URI}"
+
+do_install:append:qcom (){
+    install -d ${D}${FIRMWARE_UPDATES_DIR}
+    for dir in "${WORKDIR}"/*_fw/; do
+        [ -d "$dir" ] || continue
+        fwdir=$(basename "$dir")
+        bbdebug 1 "Processing firmware directory: ${fwdir}"
+
+        # Copy all except 'lib/firmware/updates'
+        [ -d "${WORKDIR}/$fwdir/lib/firmware" ] && \
+        find "${WORKDIR}/$fwdir/lib/firmware" -mindepth 1 -maxdepth 1 -type d ! -name "updates" \
+                -exec cp -r {} ${D}${FIRMWARE_UPDATES_DIR} \;
+        # remove split bins and '.mdt' format files
+        find ${D}${FIRMWARE_UPDATES_DIR} -type f -iregex '.*\.\(b[0-9][0-9]*[a-z]*\|mdt\)$' -delete
+
+        # When present handle 'lib/firmware/updates' separately
+        # Split bins and .mdt files of qca firmware are retained as they are still in use
+        [ -d "${WORKDIR}/$fwdir/lib/firmware/updates" ] && \
+        find "${WORKDIR}/$fwdir/lib/firmware/updates" -mindepth 1 -maxdepth 1 -type d \
+                -exec cp -r {} ${D}${FIRMWARE_UPDATES_DIR} \;
+    done
+}
+
+PACKAGES:prepend = " \
+    ${PN}-qcom-copyright \
+    ${PN}-ath11k-qca6698aq-updates \
+    ${PN}-ath11k-wcn6750-updates \
+    ${PN}-ath11k-wcn6855-updates \
+    ${PN}-qca-qca2066-updates \
+    ${PN}-qca-qca6698-updates \
+    ${PN}-qca-wcn6750-updates \
+    ${PN}-qca-qca61x4-usb-updates \
+    ${PN}-qcom-venus-5.4-updates \
+    ${PN}-qcom-qcm6490-audio-updates \
+    ${PN}-qcom-qcm6490-compute-updates \
+    ${PN}-qcom-qcm6490-qupv3fw-updates \
+    ${PN}-qcom-qcm6490-wifi-updates \
+    ${PN}-qcom-qcs8300-audio-updates \
+    ${PN}-qcom-qcs8300-compute-updates \
+    ${PN}-qcom-qcs8300-generalpurpose-updates \
+    ${PN}-qcom-qcs8300-qupv3fw-updates \
+    ${PN}-qcom-sa8775p-audio-updates \
+    ${PN}-qcom-sa8775p-compute-updates \
+    ${PN}-qcom-sa8775p-generalpurpose-updates \
+    ${PN}-qcom-sa8775p-qupv3fw-updates \
+"
+
+# These packages are not avalible in upstream
+# linux-firmware git but part of hlosfw tarballs.
+# Maintain as separate packages and add to the
+# list of packages to be built.
+
+PACKAGES:prepend = " \
+  ${PN}-qca-qca2066-hpbtfw-updates \
+  ${PN}-qca-ramps-updates \
+  ${PN}-qcacld-wcn6855-updates \
+  ${PN}-qcom-qcm6490-wlan-updates \
+  ${PN}-qcom-qcm6490-wlanhsp-updates \
+  ${PN}-qcom-qcm6490-qps615-updates \
+  ${PN}-qcom-qcs615-updates \
+  ${PN}-qcom-qcm6490-verinfo \
+  ${PN}-qcom-qcs9100-verinfo \
+  ${PN}-qcom-qcs8300-verinfo \
+  ${PN}-qcom-qcs615-verinfo \
+  ${PN}-qcom-tzapps-updates \
+"
+
+SUMMARY:${PN}-qcom-copyright = "QCOM copyright files overlay"
+FILES:${PN}-qcom-copyright = "Qualcomm-Technologies-Inc.-Proprietary"
+
+SUMMARY:${PN}-ath11k-qca6698aq-updates = "ATH11K QCA6698AQ firmware overlay"
+FILES:${PN}-ath11k-qca6698aq-updates = "${FIRMWARE_UPDATES_DIR}/ath11k/QCA6698AQ"
+
+SUMMARY:${PN}-ath11k-wcn6750-updates = "ATH11K WCN6750 firmware overlay"
+FILES:${PN}-ath11k-wcn6750-updates = "${FIRMWARE_UPDATES_DIR}/ath11k/WCN6750"
+
+SUMMARY:${PN}-ath11k-wcn6855-updates = "ATH11K WCN6855 firmware overlay"
+FILES:${PN}-ath11k-wcn6855-updates = "${FIRMWARE_UPDATES_DIR}/ath11k/WCN6855"
+
+SUMMARY:${PN}-qca-qca2066-updates = "QCA2066 firmware overlay"
+FILES:${PN}-qca-qca2066-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpbtfw21.tlv* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.bin* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.bin* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.301* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.302* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.301* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.302* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.309* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.309* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.30a* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.30a* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.b8c* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.b9f* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.ba0* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.ba1* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.ba2* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.ba3* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.ba4* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.baa* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.bb8* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.b10c* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21.b111* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.b8c* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.b9f* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.ba0* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.ba1* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.ba2* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.ba3* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.ba4* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.baa* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.bb8* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.b10c* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.b111* \
+"
+
+SUMMARY:${PN}-qca-qca6698-updates = "QCA6698 firmware update files"
+FILES:${PN}-qca-qca6698-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpbtfw21.tlv* \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b2* \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b2* \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.bin* \
+"
+# extra qca QCA6698 files in hlosfw tarball
+FILES:${PN}-qca-qca6698-updates += " \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_losslessg.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48K.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48Kg.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPOg.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPO.bin \
+  ${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_lossless.bin \
+"
+
+SUMMARY:${PN}-qca-wcn6750-updates = "QCA WCN6750 firmware update files"
+FILES:${PN}-qca-wcn6750-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qca/msbtfw11.mbn* \
+  ${FIRMWARE_UPDATES_DIR}/qca/msbtfw11.tlv* \
+  ${FIRMWARE_UPDATES_DIR}/qca/msnv11.bin* \
+  ${FIRMWARE_UPDATES_DIR}/qca/msnv11.b0a* \
+  ${FIRMWARE_UPDATES_DIR}/qca/msnv11.b09* \
+"
+
+SUMMARY:${PN}-qca-qca61x4-usb-updates = "QCA QCA61x4 USB firmware update files"
+FILES:${PN}-qca-qca61x4-usb = " \
+  ${FIRMWARE_UPDATES_DIR}/qca/nvm_usb_*.bin* \
+  ${FIRMWARE_UPDATES_DIR}/qca/rampatch_usb_*.bin* \
+"
+
+SUMMARY:${PN}-qcom-venus-5.4-updates = "QCOM venus 5.4 firmware overlay"
+FILES:${PN}-qcom-venus-5.4-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/venus-5.4/* \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-audio-updates = "QCOM qcom-qcm6490-audio firmware overlay"
+FILES:${PN}-qcom-qcm6490-audio-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/adsp*.* \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/battmgr.jsn \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qcs6490/QCS6490-RB3Gen2-tplg.bin* \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-compute-updates = "QCOM qcom-qcm6490-compute firmware overlay"
+FILES:${PN}-qcom-qcm6490-compute-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/cdsp*.* \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-qupv3fw-updates = "QCOM qcom-qcm6490-qupv3fw firmware overlay"
+FILES:${PN}-qcom-qcm6490-qupv3fw-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/qupv3fw.elf* \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-wifi-updates = "QCOM qcom-qcm6490-wifi firmware overlay"
+FILES:${PN}-qcom-qcm6490-wifi-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/wpss.mbn* \
+"
+
+SUMMARY:${PN}-qcom-qcs8300-audio-updates = "QCOM qcom-qcs8300-audio firmware overlay"
+FILES:${PN}-qcom-qcs8300-audio-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/adsp*.* \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/MONACO-EVK-tplg.bin* \
+"
+
+SUMMARY:${PN}-qcom-qcs8300-compute-updates = "QCOM qcom-qcs8300-compute firmware overlay"
+FILES:${PN}-qcom-qcs8300-compute-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/cdsp*.* \
+"
+
+SUMMARY:${PN}-qcom-qcs8300-generalpurpose-updates = "QCOM qcom-qcs8300-generalpurpose firmware overlay"
+FILES:${PN}-qcom-qcs8300-generalpurpose-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/gpdsp*.* \
+"
+
+SUMMARY:${PN}-qcom-qcs8300-qupv3fw-updates = "QCOM qcom-qcs8300-qupv3fw firmware overlay"
+FILES:${PN}-qcom-qcs8300-qupv3fw-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/qupv3fw.elf* \
+"
+
+SUMMARY:${PN}-qcom-sa8775p-audio-updates = "QCOM qcom-sa8775p-audio firmware overlay"
+FILES:${PN}-qcom-sa8775p-audio-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/adsp*.* \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qcs9100/LEMANS-EVK-tplg.bin* \
+"
+
+SUMMARY:${PN}-qcom-sa8775p-compute-updates = "QCOM qcom-sa8775p-compute firmware overlay"
+FILES:${PN}-qcom-sa8775p-compute-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/cdsp*.* \
+"
+
+SUMMARY:${PN}-qcom-sa8775p-generalpurpose-updates = "QCOM qcom-sa8775p-generalpurpose firmware overlay"
+FILES:${PN}-qcom-sa8775p-generalpurpose-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/gpdsp*.* \
+"
+
+SUMMARY:${PN}-qcom-sa8775p-qupv3fw-updates = "QCOM qcom-sa8775p-qupv3fw firmware overlay"
+FILES:${PN}-qcom-sa8775p-qupv3fw-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/qupv3fw.elf* \
+"
+
+SUMMARY:${PN}-qcacld-wcn6855-updates = "QCACLD WCN6855 firmware update files"
+FILES:${PN}-qcacld-wcn6855-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcacld/WCN6855/* \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-wlan-updates = "QCOM WLAN QCM6490 firmware update files"
+FILES:${PN}-qcom-qcm6490-wlan-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/bdwlan* \
+"
+SUMMARY:${PN}-qcom-tzapps-updates = "QCOM FD02C9DA firmware update files"
+FILES:${PN}-qcom-tzapps-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/FD02C9DA* \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-wlanhsp-updates = "QCOM QCM6490 Data firmware update files"
+FILES:${PN}-qcom-qcm6490-wlanhsp-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/Data* \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/regdb.* \
+"
+
+SUMMARY:${PN}-qcom-qcs615-updates = "QCOM QCS615 firmware update files"
+FILES:${PN}-qcom-qcs615-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qcs615* \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-qps615-updates = "QCOM QCM6490 QPS615 firmware update files"
+FILES:${PN}-qcom-qcm6490-qps615-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qcom/qps615.bin \
+"
+
+SUMMARY:${PN}-qca-ramps-updates = "QCOM QCA ramps firmware update files"
+FILES:${PN}-qca-ramps-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qca/ramps_0x00130201_030a.dfu \
+  ${FIRMWARE_UPDATES_DIR}/qca/ramps_0x00130201_gf_030a.dfu \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-verinfo = "QCOM HLOS Ver_Info.txt convenience link in overlay"
+FILES:${PN}-qcom-qcm6490-verinfo = "${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/Ver_Info.txt"
+
+SUMMARY:${PN}-qcom-qcs615-verinfo = "QCOM HLOS Ver_Info.txt convenience link in overlay"
+FILES:${PN}-qcom-qcs615-verinfo = "${FIRMWARE_UPDATES_DIR}/qcom/qcs615/Ver_Info.txt"
+
+SUMMARY:${PN}-qcom-qcs9100-verinfo = "QCOM HLOS Ver_Info.txt convenience link in overlay"
+FILES:${PN}-qcom-qcs9100-verinfo = " ${FIRMWARE_UPDATES_DIR}/qcom/qcs9100/Ver_Info.txt"
+
+SUMMARY:${PN}-qcom-qcs8300-verinfo = "QCOM HLOS Ver_Info.txt convenience link in overlay"
+FILES:${PN}-qcom-qcs8300-verinfo = "${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/Ver_Info.txt"
+
+SUMMARY:${PN}-qca-qca2066-hpbtfw-updates = "QCA firmware update files"
+FILES:${PN}-qca-qca2066-hpbtfw-updates = " \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpbtfw21* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv21_LPO* \
+  ${FIRMWARE_UPDATES_DIR}/qca/msbtfw11* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpbtfw20* \
+  ${FIRMWARE_UPDATES_DIR}/qca/hpnv20* \
+"

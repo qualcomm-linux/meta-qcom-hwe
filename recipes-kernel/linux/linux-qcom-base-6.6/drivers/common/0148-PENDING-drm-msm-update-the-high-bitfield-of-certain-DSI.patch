@@ -1,0 +1,136 @@
+From dffcfde70d557e0267d624abe3f7dafb60d8d30e Mon Sep 17 00:00:00 2001
+From: Ayushi Makhija <quic_amakhija@quicinc.com>
+Date: Tue, 29 Jul 2025 20:24:45 +0530
+Subject: [PATCH] PENDING: drm/msm: update the high bitfield of certain DSI registers
+
+Currently, the high bitfield of certain DSI registers
+do not align with the configuration of the SWI registers
+description. This can lead to wrong programming these DSI
+registers, for example for 4k resloution where H_TOTAL is
+taking 13 bits but software is programming only 12 bits
+because of the incorrect bitmask for H_TOTAL bitfeild,
+this is causing DSI FIFO errors. To resolve this issue,
+increase the high bitfield of the DSI registers from 12 bits
+to 16 bits in dsi.xml to match the SWI register configuration.
+
+Change-Id: Idec0c85e41892b31e8e866b474857c10b3943426
+Signed-off-by: Ayushi Makhija <quic_amakhija@quicinc.com>
+Upstream-Status: Backport [https://patchwork.kernel.org/project/linux-arm-msm/patch/20250730123938.1038640-1-quic_amakhija@quicinc.com/]
+---
+
+diff --git a/drivers/gpu/drm/msm/dsi/dsi.xml.h b/drivers/gpu/drm/msm/dsi/dsi.xml.h
+index a4a1546..2ad7e7b 100644
+--- a/drivers/gpu/drm/msm/dsi/dsi.xml.h
++++ b/drivers/gpu/drm/msm/dsi/dsi.xml.h
+@@ -245,13 +245,13 @@ static inline uint32_t DSI_VID_CFG1_RGB_SWAP(enum dsi_rgb_swap val)
+ }
+ 
+ #define REG_DSI_ACTIVE_H					0x00000020
+-#define DSI_ACTIVE_H_START__MASK				0x00000fff
++#define DSI_ACTIVE_H_START__MASK				0x0000ffff
+ #define DSI_ACTIVE_H_START__SHIFT				0
+ static inline uint32_t DSI_ACTIVE_H_START(uint32_t val)
+ {
+ 	return ((val) << DSI_ACTIVE_H_START__SHIFT) & DSI_ACTIVE_H_START__MASK;
+ }
+-#define DSI_ACTIVE_H_END__MASK					0x0fff0000
++#define DSI_ACTIVE_H_END__MASK					0xffff0000
+ #define DSI_ACTIVE_H_END__SHIFT					16
+ static inline uint32_t DSI_ACTIVE_H_END(uint32_t val)
+ {
+@@ -259,13 +259,13 @@ static inline uint32_t DSI_ACTIVE_H_END(uint32_t val)
+ }
+ 
+ #define REG_DSI_ACTIVE_V					0x00000024
+-#define DSI_ACTIVE_V_START__MASK				0x00000fff
++#define DSI_ACTIVE_V_START__MASK				0x0000ffff
+ #define DSI_ACTIVE_V_START__SHIFT				0
+ static inline uint32_t DSI_ACTIVE_V_START(uint32_t val)
+ {
+ 	return ((val) << DSI_ACTIVE_V_START__SHIFT) & DSI_ACTIVE_V_START__MASK;
+ }
+-#define DSI_ACTIVE_V_END__MASK					0x0fff0000
++#define DSI_ACTIVE_V_END__MASK					0xffff0000
+ #define DSI_ACTIVE_V_END__SHIFT					16
+ static inline uint32_t DSI_ACTIVE_V_END(uint32_t val)
+ {
+@@ -273,13 +273,13 @@ static inline uint32_t DSI_ACTIVE_V_END(uint32_t val)
+ }
+ 
+ #define REG_DSI_TOTAL						0x00000028
+-#define DSI_TOTAL_H_TOTAL__MASK					0x00000fff
++#define DSI_TOTAL_H_TOTAL__MASK					0x0000ffff
+ #define DSI_TOTAL_H_TOTAL__SHIFT				0
+ static inline uint32_t DSI_TOTAL_H_TOTAL(uint32_t val)
+ {
+ 	return ((val) << DSI_TOTAL_H_TOTAL__SHIFT) & DSI_TOTAL_H_TOTAL__MASK;
+ }
+-#define DSI_TOTAL_V_TOTAL__MASK					0x0fff0000
++#define DSI_TOTAL_V_TOTAL__MASK					0xffff0000
+ #define DSI_TOTAL_V_TOTAL__SHIFT				16
+ static inline uint32_t DSI_TOTAL_V_TOTAL(uint32_t val)
+ {
+@@ -287,13 +287,13 @@ static inline uint32_t DSI_TOTAL_V_TOTAL(uint32_t val)
+ }
+ 
+ #define REG_DSI_ACTIVE_HSYNC					0x0000002c
+-#define DSI_ACTIVE_HSYNC_START__MASK				0x00000fff
++#define DSI_ACTIVE_HSYNC_START__MASK				0x0000ffff
+ #define DSI_ACTIVE_HSYNC_START__SHIFT				0
+ static inline uint32_t DSI_ACTIVE_HSYNC_START(uint32_t val)
+ {
+ 	return ((val) << DSI_ACTIVE_HSYNC_START__SHIFT) & DSI_ACTIVE_HSYNC_START__MASK;
+ }
+-#define DSI_ACTIVE_HSYNC_END__MASK				0x0fff0000
++#define DSI_ACTIVE_HSYNC_END__MASK				0xffff0000
+ #define DSI_ACTIVE_HSYNC_END__SHIFT				16
+ static inline uint32_t DSI_ACTIVE_HSYNC_END(uint32_t val)
+ {
+@@ -301,13 +301,13 @@ static inline uint32_t DSI_ACTIVE_HSYNC_END(uint32_t val)
+ }
+ 
+ #define REG_DSI_ACTIVE_VSYNC_HPOS				0x00000030
+-#define DSI_ACTIVE_VSYNC_HPOS_START__MASK			0x00000fff
++#define DSI_ACTIVE_VSYNC_HPOS_START__MASK			0x0000ffff
+ #define DSI_ACTIVE_VSYNC_HPOS_START__SHIFT			0
+ static inline uint32_t DSI_ACTIVE_VSYNC_HPOS_START(uint32_t val)
+ {
+ 	return ((val) << DSI_ACTIVE_VSYNC_HPOS_START__SHIFT) & DSI_ACTIVE_VSYNC_HPOS_START__MASK;
+ }
+-#define DSI_ACTIVE_VSYNC_HPOS_END__MASK				0x0fff0000
++#define DSI_ACTIVE_VSYNC_HPOS_END__MASK				0xffff0000
+ #define DSI_ACTIVE_VSYNC_HPOS_END__SHIFT			16
+ static inline uint32_t DSI_ACTIVE_VSYNC_HPOS_END(uint32_t val)
+ {
+@@ -315,13 +315,13 @@ static inline uint32_t DSI_ACTIVE_VSYNC_HPOS_END(uint32_t val)
+ }
+ 
+ #define REG_DSI_ACTIVE_VSYNC_VPOS				0x00000034
+-#define DSI_ACTIVE_VSYNC_VPOS_START__MASK			0x00000fff
++#define DSI_ACTIVE_VSYNC_VPOS_START__MASK			0x0000ffff
+ #define DSI_ACTIVE_VSYNC_VPOS_START__SHIFT			0
+ static inline uint32_t DSI_ACTIVE_VSYNC_VPOS_START(uint32_t val)
+ {
+ 	return ((val) << DSI_ACTIVE_VSYNC_VPOS_START__SHIFT) & DSI_ACTIVE_VSYNC_VPOS_START__MASK;
+ }
+-#define DSI_ACTIVE_VSYNC_VPOS_END__MASK				0x0fff0000
++#define DSI_ACTIVE_VSYNC_VPOS_END__MASK				0xffff0000
+ #define DSI_ACTIVE_VSYNC_VPOS_END__SHIFT			16
+ static inline uint32_t DSI_ACTIVE_VSYNC_VPOS_END(uint32_t val)
+ {
+@@ -396,13 +396,13 @@ static inline uint32_t DSI_CMD_MDP_STREAM0_CTRL_WORD_COUNT(uint32_t val)
+ }
+ 
+ #define REG_DSI_CMD_MDP_STREAM0_TOTAL				0x00000058
+-#define DSI_CMD_MDP_STREAM0_TOTAL_H_TOTAL__MASK			0x00000fff
++#define DSI_CMD_MDP_STREAM0_TOTAL_H_TOTAL__MASK			0x0000ffff
+ #define DSI_CMD_MDP_STREAM0_TOTAL_H_TOTAL__SHIFT		0
+ static inline uint32_t DSI_CMD_MDP_STREAM0_TOTAL_H_TOTAL(uint32_t val)
+ {
+ 	return ((val) << DSI_CMD_MDP_STREAM0_TOTAL_H_TOTAL__SHIFT) & DSI_CMD_MDP_STREAM0_TOTAL_H_TOTAL__MASK;
+ }
+-#define DSI_CMD_MDP_STREAM0_TOTAL_V_TOTAL__MASK			0x0fff0000
++#define DSI_CMD_MDP_STREAM0_TOTAL_V_TOTAL__MASK			0xffff0000
+ #define DSI_CMD_MDP_STREAM0_TOTAL_V_TOTAL__SHIFT		16
+ static inline uint32_t DSI_CMD_MDP_STREAM0_TOTAL_V_TOTAL(uint32_t val)
+ {

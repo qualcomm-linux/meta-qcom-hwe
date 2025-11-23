@@ -501,4 +501,30 @@ SRC_URI:append = " \
     file://qcs615/0012-FROMLIST-drm-bridge_connector-stop-filtering-events-.patch \
     file://qcs615/0013-FROMLIST-drm-msm-dp-Add-support-for-sending-VCPF-pac.patch \
     file://qcs615/0014-FROMLIST-drm-msm-dp-use-stream_id-to-change-offsets-.patch \
+    file://common/0148-PENDING-drm-msm-update-the-high-bitfield-of-certain-DSI.patch \
+    file://common/0001-Revert-QCLINUX-FROMLIST-remoteproc-qcom-Enable-map-u.patch \
+    file://common/0002-Revert-QCLINUX-FROMLIST-remoteproc-qcom-Add-support-.patch \
+    file://common/0003-Revert-QCLINUX-FROMLIST-remoteproc-qcom-Add-support-.patch \
+    file://common/0004-Revert-QCLINUX-FROMLIST-remoteproc-qcom-Add-helper-f.patch \
+    file://common/0005-Revert-QCLINUX-FROMLIST-remoteproc-qcom-Add-iommu-ma.patch \
+    file://common/0007-UPSTREAM-firmware-qcom-tzmem-export-shm_bridge-creat.patch \
+    file://common/0009-FROMLIST-firmware-qcom_scm-Rename-peripheral-as-pas_.patch \
+    file://common/0010-FROMLIST-firmware-qcom_scm-Introduce-PAS-context-ini.patch \
+    file://common/0011-FROMLIST-remoteproc-pas-Replace-metadata-context-wit.patch \
+    file://common/0012-FROMLIST-soc-qcom-mdtloader-Add-PAS-context-aware-qc.patch \
+    file://common/0013-FROMLIST-soc-qcom-mdtloader-Remove-qcom_mdt_pas_init.patch \
+    file://common/0014-FROMLIST-firmware-qcom_scm-Add-a-prep-version-of-aut.patch \
+    file://common/0015-FROMLIST-firmware-qcom_scm-Simplify-qcom_scm_pas_ini.patch \
+    file://common/0016-FROMLIST-firmware-qcom_scm-Add-SHM-bridge-handling-f.patch \
+    file://common/0017-FROMLIST-firmware-qcom_scm-Add-qcom_scm_pas_get_rsc_.patch \
+    file://common/0018-FROMLIST-remoteproc-pas-Extend-parse_fw-callback-to-.patch \
+    file://common/0019-FROMLIST-remoteproc-qcom-pas-Enable-Secure-PAS-suppo.patch \
+    file://common/0001-PENDING-firmware-scm-Fix-mem-abort-in-start-stop-tes.patch \
+    file://common/0002-FROMLIST-soc-qcom-mdt_loader-Add-helper-functions-to.patch \
+    file://qcs615/0001-UPSTREAM-clk-qcom-gcc-qcs615-Update-the-SDCC-clock-t.patch \
+    file://common/0002-FROMLIST-media-iris-Enable-Secure-PAS-support-with-I.patch \
+    file://common/0001-FROMGIT-ASoC-qcom-sc8280xp-set-card-driver-name-from.patch \
+    file://common/0002-BACKPORT-FROMGIT-ASoC-qcom-sc8280xp-Fix-sound-card-d.patch \
+    file://common/0003-BACKPORT-FROMGIT-ASoC-qcom-sc8280xp-Enable-DAI-forma.patch \
+    file://common/0149-FROMLIST-driver-bluetooth-btqca-Add-WCN6855-firmw.patch \
 "

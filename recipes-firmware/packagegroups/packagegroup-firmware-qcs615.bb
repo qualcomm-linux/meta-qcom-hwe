@@ -4,14 +4,17 @@ inherit packagegroup
 
 RRECOMMENDS:${PN} += " \
     firmware-qcom-dspso \
-    firmware-qcom-hlosfw \
 "
 
 RRECOMMENDS:${PN}:append:qcom-base-bsp = " \
+    hexagon-dsp-binaries-qcom-qcs615-ride-adsp \
+    hexagon-dsp-binaries-qcom-qcs615-ride-cdsp \
     linux-firmware-ath11k-qca6698aq \
     linux-firmware-qca-qca6698 \
     linux-firmware-qcom-adreno-a630 \
     linux-firmware-qcom-qcs615-adreno \
+    linux-firmware-qcom-qcs615-audio \
+    linux-firmware-qcom-qcs615-compute \
     linux-firmware-qcom-venus-5.4 \
     linux-firmware-ath10k-qca9377 \
 "

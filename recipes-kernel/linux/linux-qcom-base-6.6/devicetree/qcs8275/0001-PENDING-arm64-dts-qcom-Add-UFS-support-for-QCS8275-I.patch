@@ -1,0 +1,52 @@
+From 0beb05e67920e58e5da34fe7a951a98505776a72 Mon Sep 17 00:00:00 2001
+From: Swati Agarwal <quic_swatagar@quicinc.com>
+Date: Tue, 8 Apr 2025 13:06:54 +0530
+Subject: [PATCH] PENDING: arm64: dts: qcom: Add UFS support for QCS8275 IQ8
+ EVK
+
+Add UFS support for QCS8275 IQ8 EVK board.
+
+Change-Id: Idda11a032a18ccc35a14b8b274aa8f74d4f7ac6a
+Signed-off-by: Swati Agarwal <quic_swatagar@quicinc.com>
+Upstream-Status: pending
+---
+ arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index 826b7f74c095..5550889ce792 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -5,6 +5,7 @@
+ 
+ /dts-v1/;
+ 
++#include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+ #include "qcs8300.dtsi"
+ / {
+@@ -307,6 +308,21 @@ &uart7 {
+ 	status = "okay";
+ };
+ 
++&ufs_mem_hc {
++	reset-gpios = <&tlmm 133 GPIO_ACTIVE_LOW>;
++	vcc-supply = <&vreg_l8a>;
++	vcc-max-microamp = <1100000>;
++	vccq-supply = <&vreg_l4c>;
++	vccq-max-microamp = <1200000>;
++	status = "okay";
++};
++
++&ufs_mem_phy {
++	vdda-phy-supply = <&vreg_l4a>;
++	vdda-pll-supply = <&vreg_l5a>;
++	status = "okay";
++};
++
+ &usb_1 {
+ 	status = "okay";
+ };
+-- 
+2.34.1
+

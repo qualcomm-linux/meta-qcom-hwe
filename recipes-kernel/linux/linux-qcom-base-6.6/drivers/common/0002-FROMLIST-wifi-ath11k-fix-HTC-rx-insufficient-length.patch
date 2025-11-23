@@ -1,4 +1,4 @@
-From 7cb75e4f105889444e2429931c8c19c86560502a Mon Sep 17 00:00:00 2001
+From 7ab0e6ceeeb6d915ab4a5dd3977ddc392da1cd4b Mon Sep 17 00:00:00 2001
 From: Miaoqing Pan <quic_miaoqing@quicinc.com>
 Date: Tue, 25 Feb 2025 12:13:40 +0800
 Subject: [PATCH] FROMLIST: wifi: ath11k: fix HTC rx insufficient length
@@ -34,7 +34,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/linux-wireless/2025031707203
  2 files changed, 20 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
-index 9d8efec46508..0ffee4a9b25f 100644
+index 39d9aad33bc6..e586e6765452 100644
 --- a/drivers/net/wireless/ath/ath11k/ce.c
 +++ b/drivers/net/wireless/ath/ath11k/ce.c
 @@ -1,7 +1,7 @@
@@ -46,7 +46,7 @@ index 9d8efec46508..0ffee4a9b25f 100644
   */
  
  #include "dp_rx.h"
-@@ -387,7 +387,7 @@ static int ath11k_ce_completed_recv_next(struct ath11k_ce_pipe *pipe,
+@@ -387,13 +387,25 @@ static int ath11k_ce_completed_recv_next(struct ath11k_ce_pipe *pipe,
  
  	ath11k_hal_srng_access_begin(ab, srng);
  
@@ -55,8 +55,7 @@ index 9d8efec46508..0ffee4a9b25f 100644
  	if (!desc) {
  		ret = -EIO;
  		goto err;
-@@ -397,6 +397,18 @@ static int ath11k_ce_completed_recv_next(struct ath11k_ce_pipe *pipe,
- 	dma_rmb();
+ 	}
  
  	*nbytes = ath11k_hal_ce_dst_status_get_length(desc);
 +	if (unlikely(*nbytes == 0)) {
@@ -75,7 +74,7 @@ index 9d8efec46508..0ffee4a9b25f 100644
  	*skb = pipe->dest_ring->skb[sw_index];
  	pipe->dest_ring->skb[sw_index] = NULL;
 diff --git a/drivers/net/wireless/ath/ath11k/hal.c b/drivers/net/wireless/ath/ath11k/hal.c
-index 8c02ad7287d9..f0df16b724e3 100644
+index e8ed0b4e965a..483d6b4fef3e 100644
 --- a/drivers/net/wireless/ath/ath11k/hal.c
 +++ b/drivers/net/wireless/ath/ath11k/hal.c
 @@ -602,7 +602,12 @@ u32 ath11k_hal_ce_dst_status_get_length(void *buf)
