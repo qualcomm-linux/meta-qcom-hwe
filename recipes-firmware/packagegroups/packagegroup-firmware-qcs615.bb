@@ -18,5 +18,5 @@ RRECOMMENDS:${PN} = " \
 
 RRECOMMENDS:${PN}:append = " \
     hexagon-dsp-binaries-qcs615-updates \
-    linux-firmware-qcom-qcs8300-verinfo \
+    linux-firmware-qcom-qcs615-verinfo \
 "
