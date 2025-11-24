@@ -1,0 +1,42 @@
+From 8a0a6725be367cd556966b1244afc2fdac637ed3 Mon Sep 17 00:00:00 2001
+From: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Date: Tue, 28 Oct 2025 07:09:59 +0530
+Subject: [PATCH 4/4] PENDING: usb-conn-gpio: Add LPM support when only ID pin
+ is present
+
+For supporting LPM scenarios where there is no VBUS pin and only ID pin
+is present then when no peripheral is connected, expectation is VBUS
+should be zero. So, with ID high in case of LPM, make VBUS as low equals
+to !ID.
+
+Signed-off-by: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ drivers/usb/common/usb-conn-gpio.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/common/usb-conn-gpio.c b/drivers/usb/common/usb-conn-gpio.c
+index 5f9ccd392b64..5ea93030d9be 100644
+--- a/drivers/usb/common/usb-conn-gpio.c
++++ b/drivers/usb/common/usb-conn-gpio.c
+@@ -66,7 +66,7 @@ struct usb_conn_info {
+  *
+  * In case we have only one of these signals:
+  * - VBUS only - we want to distinguish between [1] and [2], so ID is always 1
+- * - ID only - we want to distinguish between [1] and [4], so VBUS = ID
++ * - ID only - we want to distinguish between [2] and [3], so VBUS = !ID
+  */
+ static void usb_conn_detect_cable(struct work_struct *work)
+ {
+@@ -81,7 +81,7 @@ static void usb_conn_detect_cable(struct work_struct *work)
+ 	id = info->id_gpiod ?
+ 		gpiod_get_value_cansleep(info->id_gpiod) : 1;
+ 	vbus = info->vbus_gpiod ?
+-		gpiod_get_value_cansleep(info->vbus_gpiod) : id;
++		gpiod_get_value_cansleep(info->vbus_gpiod) : !id;
+ 
+ 	if (!id)
+ 		role = USB_ROLE_HOST;
+-- 
+2.34.1
+

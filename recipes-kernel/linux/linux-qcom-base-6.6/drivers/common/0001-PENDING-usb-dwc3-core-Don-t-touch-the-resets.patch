@@ -1,0 +1,113 @@
+From 753f453221a7a3c7cdd80b7422521e2556b3e253 Mon Sep 17 00:00:00 2001
+From: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Date: Tue, 28 Oct 2025 06:57:14 +0530
+Subject: [PATCH 1/4] PENDING: usb: dwc3: core: Don't touch the resets
+
+During a complete system suspend/resume cycle, due to USB GDSC power status
+PWRSTS_OFF_ON, causing dwc3_core_exit to assert the reset control, which
+leads to the USB GDSC getting stuck.
+
+When the DWC3 core is integrated with a glue layer, it's expected that the
+glue driver manages hardware interactions before and after core reset.
+Therefore, the glue layer should own and control the relevant resources.
+To support this, allow the platform or glue layer to indicate whether the
+core's reset logic should be skipped.
+
+Signed-off-by: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ drivers/usb/dwc3/core.c      | 10 ++++++----
+ drivers/usb/dwc3/core.h      |  1 +
+ drivers/usb/dwc3/dwc3-qcom.c | 33 ++++++++++++++++-----------------
+ 3 files changed, 23 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 071d3d4abd02..f99ce1e41928 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -1986,10 +1986,12 @@ int dwc3_probe(struct dwc3 *dwc,
+ 	if (IS_ERR(dwc->usb_psy))
+ 		return dev_err_probe(dev, PTR_ERR(dwc->usb_psy), "couldn't get usb power supply\n");
+ 
+-	dwc->reset = devm_reset_control_array_get_optional_shared(dev);
+-	if (IS_ERR(dwc->reset)) {
+-		ret = PTR_ERR(dwc->reset);
+-		goto err_put_psy;
++	if (glue_data && (!glue_data->ignore_resets)) {
++		dwc->reset = devm_reset_control_array_get_optional_shared(dev);
++		if (IS_ERR(dwc->reset)) {
++			ret = PTR_ERR(dwc->reset);
++			goto err_put_psy;
++		}
+ 	}
+ 
+ 	ret = dwc3_get_clocks(dwc);
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 266d36ca2e9b..6ccfb4923e29 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -1002,6 +1002,7 @@ struct dwc3_glue_ops {
+ struct dwc3_glue_data {
+ 	void			*glue_data;
+ 	struct dwc3_glue_ops	*ops;
++	bool ignore_resets;
+ };
+ 
+ /**
+diff --git a/drivers/usb/dwc3/dwc3-qcom.c b/drivers/usb/dwc3/dwc3-qcom.c
+index 524d2d3ae43d..193072ff3b76 100644
+--- a/drivers/usb/dwc3/dwc3-qcom.c
++++ b/drivers/usb/dwc3/dwc3-qcom.c
+@@ -865,6 +865,7 @@ static int dwc3_qcom_probe_core(struct platform_device *pdev, struct dwc3_qcom *
+ 	struct dwc3_glue_data qcom_glue_data = {
+ 		.glue_data	= qcom,
+ 		.ops		= &dwc3_qcom_glue_hooks,
++		.ignore_resets  = true,
+ 	};
+ 
+ 	ret = dwc3_probe(&qcom->dwc,
+@@ -1039,26 +1040,24 @@ static int dwc3_qcom_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	if (legacy_binding) {
+-		qcom->resets = devm_reset_control_array_get_optional_exclusive(dev);
+-		if (IS_ERR(qcom->resets)) {
+-			return dev_err_probe(&pdev->dev, PTR_ERR(qcom->resets),
+-					     "failed to get resets\n");
+-		}
++	qcom->resets = devm_reset_control_array_get_optional_exclusive(dev);
++	if (IS_ERR(qcom->resets)) {
++		return dev_err_probe(&pdev->dev, PTR_ERR(qcom->resets),
++					"failed to get resets\n");
++	}
+ 
+-		ret = reset_control_assert(qcom->resets);
+-		if (ret) {
+-			dev_err(&pdev->dev, "failed to assert resets, err=%d\n", ret);
+-			goto reset_assert;
+-		}
++	ret = reset_control_assert(qcom->resets);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to assert resets, err=%d\n", ret);
++		return ret;
++	}
+ 
+-		usleep_range(10, 1000);
++	usleep_range(10, 1000);
+ 
+-		ret = reset_control_deassert(qcom->resets);
+-		if (ret) {
+-			dev_err(&pdev->dev, "failed to deassert resets, err=%d\n", ret);
+-			goto reset_assert;
+-		}
++	ret = reset_control_deassert(qcom->resets);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to deassert resets, err=%d\n", ret);
++		goto reset_assert;
+ 	}
+ 
+ 	ret = dwc3_qcom_clk_init(qcom, of_clk_get_parent_count(np));
+-- 
+2.34.1
+
