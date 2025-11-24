@@ -15,8 +15,11 @@ RRECOMMENDS:${PN} = " \
     linux-firmware-ath10k-qca9377 \
     firmware-qcom-verinfo \
 "
+# conflicting pkgs between base and custom bsp.
+RRECOMMENDS:${PN}:remove:qcom-custom-bsp = "linux-firmware-qcom-venus-5.4"
 
-RRECOMMENDS:${PN}:append = " \
+# Additional pkgs for custom-bsp builds
+RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     hexagon-dsp-binaries-qcs615-updates \
     linux-firmware-qcom-qcs615-verinfo \
 "
