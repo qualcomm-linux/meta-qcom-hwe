@@ -1,0 +1,210 @@
+From c69437b806bdcbb153aa12974ffb237d02643dc9 Mon Sep 17 00:00:00 2001
+From: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Date: Wed, 19 Nov 2025 00:41:50 +0530
+Subject: [PATCH 1/5] PENDING: arm64: dts: qcom: Add Host mode support for USB1
+ and USB2 on QCS9075 IQ9 EVK
+
+Add Host mode support for USB1 and USB2 on QCS9075 IQ9 EVK.
+
+Signed-off-by: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ .../boot/dts/qcom/qcs9075-iq-9075-evk.dts     | 125 +++++++++++++++---
+ 1 file changed, 109 insertions(+), 16 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index 7774cc82186a..8bf58c2ca504 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -13,6 +13,7 @@
+ 
+ /delete-node/ &usb_0_dwc3;
+ /delete-node/ &usb_1_dwc3;
++/delete-node/ &usb_2_dwc3;
+ 
+ / {
+ 	model = "Qualcomm Technologies, Inc. IQ 9075 EVK";
+@@ -550,6 +551,7 @@ hd3ss3220@67 {
+ 		reg = <0x67>;
+ 		interrupt-parent = <&pmm8654au_2_gpios>;
+ 		interrupts = < 5 IRQ_TYPE_EDGE_FALLING>;
++		wakeup-source;
+ 
+ 		connector@0 {
+ 			compatible = "usb-c-connector";
+@@ -771,18 +773,17 @@ &pcie1_phy {
+ 	status = "okay";
+ };
+ 
+-&pmm8654au_1_gpios {
+-	usb2_en_state: usb2-en-state {
+-		pins = "gpio9";
++&pmm8654au_2_gpios {
++	usb0_intr_state: usb0-intr-state {
++		pins = "gpio5";
+ 		function = "normal";
+-		output-high;
++		input-enable;
++		bias-pull-up;
+ 		power-source = <0>;
+ 	};
+-};
+ 
+-&pmm8654au_2_gpios {
+-	usb0_intr_state: usb0-intr-state {
+-		pins = "gpio5";
++	usb2_id_det_default: usb2-id-det-default {
++		pins = "gpio11";
+ 		function = "normal";
+ 		input-enable;
+ 		bias-pull-up;
+@@ -886,6 +887,44 @@ &sleep_clk {
+ };
+ 
+ &soc {
++	connector_usb1: connector-usb1 {
++		compatible = "gpio-usb-b-connector";
++		id-gpio = <&tlmm 51 GPIO_ACTIVE_HIGH>;
++		vbus-supply = <&vbus_supply_regulator_1>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&usb1_id_det_default>;
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				usb1_port_connector: endpoint {
++					remote-endpoint = <&usb1_port>;
++				};
++			};
++		};
++	};
++
++	connector_usb2: connector-usb2 {
++		compatible = "gpio-usb-b-connector";
++		id-gpio = <&pmm8654au_2_gpios 11 GPIO_ACTIVE_HIGH>;
++		vbus-supply = <&vbus_supply_regulator_2>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&usb2_id_det_default>;
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			port@0 {
++				reg = <0>;
++				usb2_port_connector: endpoint {
++					remote-endpoint = <&usb2_port>;
++				};
++			};
++		};
++	};
++
+ 	vreg_sdc: regulator-sdc {
+ 		compatible = "regulator-gpio";
+ 
+@@ -920,7 +959,16 @@ vbus_supply_regulator_1: vbus_supply_regulator_1 {
+ 		regulator-max-microvolt = <5000000>;
+ 		regulator-boot-on;
+ 		enable-active-high;
+-		regulator-always-on;
++	};
++
++	vbus_supply_regulator_2: vbus-supply-regulator2 {
++		compatible = "regulator-fixed";
++		regulator-name = "vbus_supply_2";
++		gpio = <&pmm8654au_1_gpios 9 GPIO_ACTIVE_HIGH>;
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-boot-on;
++		enable-active-high;
+ 	};
+ };
+ 
+@@ -1376,6 +1424,13 @@ sd_cd: sd-cd-state {
+ 		function = "gpio";
+ 		bias-pull-up;
+ 	};
++
++	usb1_id_det_default: usb1-id-det-default {
++		pins = "gpio51";
++		function = "gpio";
++		drive-strength = <2>;
++		bias-pull-up;
++	};
+ };
+ 
+ &uart0 {
+@@ -1528,9 +1583,21 @@ &usb_1 {
+ 	maximum-speed = "super-speed";
+ 	dr_mode = "otg";
+ 	usb-role-switch;
+-	role-switch-default-mode = "host";
+-	vbus_dwc3-supply = <&vbus_supply_regulator_1>;
+ 	status = "okay";
++
++	ports {
++
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			reg = <0>;
++			usb1_port: endpoint {
++				remote-endpoint = <&usb1_port_connector>;
++			};
++		};
++
++	};
+ };
+ 
+ &usb_1_hsphy {
+@@ -1549,14 +1616,40 @@ &usb_1_qmpphy {
+ };
+ 
+ &usb_2 {
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&usb2_en_state>;
++	reg = <0x0 0x0a400000 0x0 0x200000>;
++	interrupts-extended = <&intc GIC_SPI 442 IRQ_TYPE_LEVEL_HIGH>,
++				<&intc GIC_SPI 444 IRQ_TYPE_LEVEL_HIGH>,
++				<&pdc 10 IRQ_TYPE_EDGE_BOTH>,
++				<&pdc 9 IRQ_TYPE_EDGE_BOTH>;
++	interrupt-names = "dwc_usb3",
++			"pwr_event",
++			"dp_hs_phy_irq",
++			"dm_hs_phy_irq";
++
++	iommus = <&apps_smmu 0x020 0x0>;
++	phys = <&usb_2_hsphy>;
++	phy-names = "usb2-phy";
++
++	dr_mode = "otg";
++	usb-role-switch;
++	qcom,enable-rt;
++	wakeup-source;
+ 
+ 	status = "okay";
+-};
+ 
+-&usb_2_dwc3 {
+-	dr_mode = "host";
++	ports {
++
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@0 {
++			reg = <0>;
++			usb2_port: endpoint {
++				remote-endpoint = <&usb2_port_connector>;
++			};
++		};
++
++	};
+ };
+ 
+ &usb_2_hsphy {
+-- 
+2.34.1
+
