@@ -25,13 +25,15 @@ RRECOMMENDS:${PN} = " \
 # Additional pkgs for custom-bsp builds
 RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     hexagon-dsp-binaries-qcs9100-updates \
-    linux-firmware-ath11k-qca6698aq-updates \
-    linux-firmware-ath11k-wcn6855-updates \
-    linux-firmware-qca-qca61x4-usb-updates \
+    linux-firmware-qcom-qcs9100-verinfo \
     linux-firmware-qcom-sa8775p-audio-updates \
     linux-firmware-qcom-sa8775p-compute-updates \
     linux-firmware-qcom-sa8775p-generalpurpose-updates \
     linux-firmware-qcom-sa8775p-qupv3fw-updates \
-    linux-firmware-qcom-tzapps-updates \
-    linux-firmware-qcom-qcs9100-verinfo \
+    linux-firmware-qcs9100-ath11k-qca6698aq-updates \
+    linux-firmware-qcs9100-ath11k-wcn6855-updates \
+    linux-firmware-qcs9100-qca-qca2066-updates \
+    linux-firmware-qcs9100-qca-qca61x4-usb-updates \
+    linux-firmware-qcs9100-qca-qca6698-updates \
+    linux-firmware-qcs9100-qcom-tzapps-updates \
 "
