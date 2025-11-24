@@ -30,11 +30,8 @@ do_install:append:qcom (){
         [ -d "${WORKDIR}/$fwdir/lib/firmware" ] && \
         find "${WORKDIR}/$fwdir/lib/firmware" -mindepth 1 -maxdepth 1 -type d ! -name "updates" \
                 -exec cp -r {} ${D}/${socdir}${FIRMWARE_UPDATES_DIR} \;
-        # remove split bins and '.mdt' format files
-        find ${D}/${socdir}${FIRMWARE_UPDATES_DIR} -type f -iregex '.*\.\(b[0-9][0-9]*[a-z]*\|mdt\)$' -delete
 
         # When present handle 'lib/firmware/updates' separately
-        # Split bins and .mdt files of qca firmware are retained as they are still in use
         [ -d "${WORKDIR}/$fwdir/lib/firmware/updates" ] && \
         find "${WORKDIR}/$fwdir/lib/firmware/updates" -mindepth 1 -maxdepth 1 -type d \
                 -exec cp -r {} ${D}/${socdir}${FIRMWARE_UPDATES_DIR} \;
@@ -85,6 +82,7 @@ QCM6490_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcom-qcm6490-wifi-updates \
   ${PN}-qcom-qcm6490-wlanhsp-updates \
   ${PN}-qcom-qcm6490-wlan-updates \
+  ${PN}-qcom-qcm6490-ipafw-updates \
 "
 
 QCS9100_HLOSFW_UPDATE_PACKAGES = " \
@@ -92,6 +90,7 @@ QCS9100_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcom-sa8775p-audio-updates \
   ${PN}-qcom-sa8775p-compute-updates \
   ${PN}-qcom-sa8775p-generalpurpose-updates \
+  ${PN}-qcom-sa8775p-ipafw-updates \
   ${PN}-qcom-sa8775p-qupv3fw-updates \
   ${PN}-qcs9100-ath11k-qca6698aq-updates \
   ${PN}-qcs9100-ath11k-wcn6855-updates \
@@ -105,6 +104,7 @@ QCS8300_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcom-qcs8300-audio-updates \
   ${PN}-qcom-qcs8300-compute-updates \
   ${PN}-qcom-qcs8300-generalpurpose-updates \
+  ${PN}-qcom-qcs8300-ipafw-updates \
   ${PN}-qcom-qcs8300-qupv3fw-updates \
   ${PN}-qcom-qcs8300-verinfo \
   ${PN}-qcs8300-ath11k-qca6698aq-updates \
@@ -264,9 +264,35 @@ FILES:${PN}-qcom-qcm6490-qupv3fw-updates = " \
   /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/qupv3fw.elf* \
 "
 
-SUMMARY:${PN}-qcom-qcm6490-wifi-updates = "QCOM qcom-qcm6490-wifi firmware overlay"
+SUMMARY:${PN}-qcom-qcm6490-wifi-updates = "QCM6490 QCOM wifi firmware overlay"
 FILES:${PN}-qcom-qcm6490-wifi-updates = " \
-  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/wpss.mbn* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/wpss.b* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/wpss.mdt \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/wpss.mbn \
+"
+
+SUMMARY:${PN}-qcom-qcm6490-ipafw-updates = "QCM6490 QCOM IPA firmware overlay"
+FILES:${PN}-qcom-qcm6490-ipafw-updates = " \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/ipa_fws.b* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/ipa_fws.mdt \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/loadalgota64.b* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/loadalgota64.mdt \
+"
+
+SUMMARY:${PN}-qcom-sa8775p-ipafw-updates = "QCS9100 QCOM IPA firmware overlay"
+FILES:${PN}-qcom-sa8775p-ipafw-updates = " \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/ipa_fws.b* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/ipa_fws.mdt \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/loadalgota64.b* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/loadalgota64.mdt \
+"
+
+SUMMARY:${PN}-qcom-qcs8300-ipafw-updates = "QCS8300 QCOM IPA firmware overlay"
+FILES:${PN}-qcom-qcs8300-ipafw-updates = " \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/ipa_fws.b* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/ipa_fws.mdt \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/loadalgota64.b* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/loadalgota64.mdt \
 "
 
 SUMMARY:${PN}-qcom-qcs8300-audio-updates = "QCOM qcom-qcs8300-audio firmware overlay"
