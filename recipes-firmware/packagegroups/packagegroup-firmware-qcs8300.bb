@@ -18,6 +18,7 @@ RRECOMMENDS:${PN} = " \
     linux-firmware-qcom-qcs8300-generalpurpose \
     linux-firmware-qcom-qcs8300-qupv3fw \
     linux-firmware-qcom-vpu \
+    firmware-qcom-verinfo \
 "
 
 # Additional pkgs for custom-bsp builds

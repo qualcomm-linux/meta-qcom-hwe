@@ -13,6 +13,7 @@ RRECOMMENDS:${PN} = " \
     linux-firmware-qcom-qcs615-compute \
     linux-firmware-qcom-venus-5.4 \
     linux-firmware-ath10k-qca9377 \
+    firmware-qcom-verinfo \
 "
 
 RRECOMMENDS:${PN}:append = " \

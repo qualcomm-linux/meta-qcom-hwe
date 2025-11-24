@@ -14,6 +14,7 @@ RRECOMMENDS:${PN} = " \
     linux-firmware-qcom-qcm6490-qupv3fw \
     linux-firmware-qcom-qcm6490-wifi \
     linux-firmware-qcom-vpu \
+    firmware-qcom-verinfo \
 "
 
 # Additional pkgs for custom-bsp builds
