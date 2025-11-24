@@ -1,0 +1,30 @@
+From 0f1f3faddafc1e6d7a5ce37304b3df5ffa86af16 Mon Sep 17 00:00:00 2001
+From: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Date: Tue, 18 Nov 2025 12:12:11 +0530
+Subject: [PATCH] PENDING: arm64: dts: qcom: Remove duplicate USB node on
+ QCS8275 IQ8 EVK
+
+Remove duplicate USB node on QCS8275 IQ8 EVK.
+
+Signed-off-by: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index a00a83582ad9..4660178b42c8 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -10,6 +10,8 @@
+ #include "qcs8300.dtsi"
+ #include "qcs8300-pmics.dtsi"
+ 
++/delete-node/ &usb_1_dwc3;
++/delete-node/ &usb_2_dwc3;
+ / {
+ 	model = "Qualcomm Technologies, Inc. IQ 8275 EVK";
+ 	compatible = "qcom,qcs8275-iq-8275-evk", "qcom,qcs8275", "qcom,qcs8300";
+-- 
+2.34.1
+

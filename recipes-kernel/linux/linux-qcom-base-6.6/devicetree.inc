@@ -335,4 +335,5 @@ SRC_URI:append = " \
     file://addons/0001-QCLINUX-arm64-dts-qcom-Add-msm-id-board-id-IQ8-pro-sku.patch \
     file://qcs8275/0001-FROMGIT-arm64-dts-qcom-monaco-evk-Add-sound-card.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-Bluetooth-support-o.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Remove-duplicate-USB-node-on-.patch \
     "
