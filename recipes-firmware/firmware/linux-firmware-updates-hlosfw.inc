@@ -117,6 +117,7 @@ QCS8300_HLOSFW_UPDATE_PACKAGES = " \
 
 QCS615_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcom-qcs615-updates \
+  ${PN}-qcom-qcs615-verinfo \
 "
 
 PACKAGES:prepend = " \
@@ -370,7 +371,10 @@ FILES:${PN}-qcom-qcm6490-wlanhsp-updates = " \
 
 SUMMARY:${PN}-qcom-qcs615-updates = "QCOM QCS615 firmware update files"
 FILES:${PN}-qcom-qcs615-updates = " \
-  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615* \
+  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/adsp* \
+  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/cdsp* \
+  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/loadalgota64.b* \
+  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/loadalgota64.mdt \
 "
 
 SUMMARY:${PN}-qcom-qcm6490-qps615-updates = "QCOM QCM6490 QPS615 firmware update files"
@@ -392,3 +396,6 @@ FILES:${PN}-qcom-qcs9100-verinfo = "/qcs9100${FIRMWARE_UPDATES_DIR}/qcom/qcs9100
 
 SUMMARY:${PN}-qcom-qcs8300-verinfo = "QCS8300 HLOS Ver_Info.txt convenience link in overlay"
 FILES:${PN}-qcom-qcs8300-verinfo = "/qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/Ver_Info.txt"
+
+SUMMARY:${PN}-qcom-qcs615-verinfo = "QCS615 HLOS Ver_Info.txt convenience link in overlay"
+FILES:${PN}-qcom-qcs615-verinfo = "/qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/Ver_Info.txt"
