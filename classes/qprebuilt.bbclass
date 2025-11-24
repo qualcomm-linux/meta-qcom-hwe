@@ -36,6 +36,11 @@ python qprebuilt_do_install() {
     if retval:
        bb.fatal("Errors in extracting prebuilt (%s)" % output)
 
+    # Stop no login license file from getting packaged
+    nologin_license_file = os.path.join(dest, "NO.LOGIN.BINARY.LICENSE.QTI.pdf")
+    if os.path.exists(nologin_license_file):
+        os.remove(nologin_license_file)
+
     # Stop change log from getting packaged
     if os.path.exists("%s/CHANGES" % dest):
         os.remove("%s/CHANGES" % dest)
