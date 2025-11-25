@@ -307,6 +307,7 @@ SRC_URI:append = " \
     file://qcs9075/0046-PENDING-arm64-dts-qcom-Add-sdcard-support-for-qcs907.patch \
     file://qcs9075/0047-PENDING-arm64-dts-qcom-Enable-vqmmc-voltage-switchin.patch \
     file://qcs9075/0001-FROMLIST-arm64-dts-qcom-Add-nvmem-layout-for-eeprom-o.patch \
+    file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-Host-mode-support.patch \
     "
 
 # qcs8275 board dts patches
@@ -335,4 +336,5 @@ SRC_URI:append = " \
     file://addons/0001-QCLINUX-arm64-dts-qcom-Add-msm-id-board-id-IQ8-pro-sku.patch \
     file://qcs8275/0001-FROMGIT-arm64-dts-qcom-monaco-evk-Add-sound-card.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-Bluetooth-support-o.patch \
+    file://qcs8275/0001-PENDING-arm64-dts-qcom-Remove-duplicate-USB-node-on-.patch \
     "

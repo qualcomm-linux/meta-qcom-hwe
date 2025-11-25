@@ -1,0 +1,43 @@
+From 48cddadeb6f28aae2733a58d456534f843468007 Mon Sep 17 00:00:00 2001
+From: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Date: Tue, 28 Oct 2025 07:07:03 +0530
+Subject: [PATCH 3/4] PENDING: usb-conn-gpio: Add support for creation of
+ multiple device node inside sysfs
+
+Fixed probe failure caused by duplicate "usb-charger" filenames when
+multiple USB controllers use the "gpio-usb-b-connector" by enabling
+multiple sysfs device nodes.
+
+Signed-off-by: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ drivers/usb/common/usb-conn-gpio.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/usb/common/usb-conn-gpio.c b/drivers/usb/common/usb-conn-gpio.c
+index 1096a884c8d7..5f9ccd392b64 100644
+--- a/drivers/usb/common/usb-conn-gpio.c
++++ b/drivers/usb/common/usb-conn-gpio.c
+@@ -30,6 +30,8 @@ static DEFINE_IDA(usb_conn_ida);
+ #define USB_CONN_IRQF	\
+ 	(IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING | IRQF_ONESHOT)
+ 
++static atomic_t device_counter = ATOMIC_INIT(0);
++
+ struct usb_conn_info {
+ 	struct device *dev;
+ 	int conn_id; /* store the IDA-allocated ID */
+@@ -164,6 +166,10 @@ static int usb_conn_psy_register(struct usb_conn_info *info)
+ 		.of_node = dev->of_node,
+ 	};
+ 
++	desc->name = devm_kmalloc(dev, sizeof(*desc), GFP_KERNEL);
++	snprintf((char *)desc->name, sizeof(*desc), "usb-charger%d", atomic_read(&device_counter));
++	atomic_inc(&device_counter);
++
+ 	info->conn_id = ida_alloc(&usb_conn_ida, GFP_KERNEL);
+ 	if (info->conn_id < 0)
+ 		return info->conn_id;
+-- 
+2.34.1
+
