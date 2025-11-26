@@ -1,0 +1,74 @@
+From 6b5cce849fa92df159b67d718dfb7574533c8015 Mon Sep 17 00:00:00 2001
+From: Jaeyoon Jung <jaeyoon.jung@lge.com>
+Date: Wed, 26 Nov 2025 16:14:55 +0900
+Subject: [PATCH] args: Use -1 instead of NULL for SOCKET
+
+Otherwise it ends up failed when building with musl as below:
+../../../audio/opensource/args/acdb/ats/./transports/tcpip/linux/src/ats_server.cpp:94:8: error: cannot initialize a variable of type 'SOCKET' (aka 'int') with an rvalue of type 'std::nullptr_t'
+   94 | SOCKET g_server_socket = NULL;
+      |        ^                 ~~~~
+../../../audio/opensource/args/acdb/ats/./transports/tcpip/linux/src/ats_server.cpp:376:22: error: assigning to 'SOCKET' (aka 'int') from incompatible type 'std::nullptr_t'
+  376 |                         g_server_socket = NULL;
+      |                                           ^~~~
+/home/noelma/work/atlas/atlas/tmp/work/armv8-2a-atlas-linux-musl/qcom-args/git/recipe-sysroot/usr/include/unistd.h:21:14: note: expanded from macro 'NULL'
+   21 | #define NULL nullptr
+      |              ^~~~~~~
+../../../audio/opensource/args/acdb/ats/./transports/tcpip/linux/src/ats_server.cpp:461:20: error: assigning to 'SOCKET' (aka 'int') from incompatible type 'std::nullptr_t'
+  461 |         g_server_socket = NULL;
+      |                           ^~~~
+/home/noelma/work/atlas/atlas/tmp/work/armv8-2a-atlas-linux-musl/qcom-args/git/recipe-sysroot/usr/include/unistd.h:21:14: note: expanded from macro 'NULL'
+   21 | #define NULL nullptr
+      |              ^~~~~~~
+../../../audio/opensource/args/acdb/ats/./transports/tcpip/linux/src/ats_server.cpp:766:10: error: invalid operands to binary expression ('SOCKET' (aka 'int') and 'std::nullptr_t')
+  766 |     if (!IsNull(g_server_socket))
+      |          ^~~~~~~~~~~~~~~~~~~~~~~
+../../../audio/opensource/args/acdb/inc/acdb_utility.h:35:26: note: expanded from macro 'IsNull'
+   35 | #define IsNull(ptr) (ptr == NULL)
+      |                      ~~~ ^  ~~~~
+
+Upstream-Status: Pending
+Signed-off-by: Jaeyoon Jung <jaeyoon.jung@lge.com>
+---
+ acdb/ats/transports/tcpip/linux/src/ats_server.cpp | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/acdb/ats/transports/tcpip/linux/src/ats_server.cpp b/acdb/ats/transports/tcpip/linux/src/ats_server.cpp
+index b542b85..159bf8e 100644
+--- a/acdb/ats/transports/tcpip/linux/src/ats_server.cpp
++++ b/acdb/ats/transports/tcpip/linux/src/ats_server.cpp
+@@ -91,7 +91,7 @@ ats_server_context g_ats_server_context = { 0 };
+ 
+ AtsBufferManager *ats_buffer_manager = NULL;
+ bool_t g_should_close_server = FALSE;
+-SOCKET g_server_socket = NULL;
++SOCKET g_server_socket = -1;
+ 
+ /* ---------------------------------------------------------------------------
+ * Helper Functions
+@@ -373,7 +373,7 @@ void* ats_server_start_routine(void* arg)
+ 		if (IsNull(gateway_socket_ptr))
+ 		{
+ 			ATS_ERR("Insufficient memory to create socket");
+-			g_server_socket = NULL;
++			g_server_socket = -1;
+ 			atsclosesocket(sockfd);
+ 			return 0;
+ 		}
+@@ -458,7 +458,7 @@ void* ats_server_start_routine(void* arg)
+ 	}
+ 
+ 	atsclosesocket(sockfd);
+-	g_server_socket = NULL;
++	g_server_socket = -1;
+ 
+     return 0;
+ }
+@@ -763,7 +763,7 @@ int32_t ats_server_deinit()
+ 
+     g_should_close_server = TRUE;
+ 
+-    if (!IsNull(g_server_socket))
++    if (g_server_socket != -1)
+         atsclosesocket(g_server_socket);
+ 
+ 	status = ar_osal_thread_join_destroy(g_thd_ats_listener);
