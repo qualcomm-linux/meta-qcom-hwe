@@ -1,0 +1,34 @@
+From e7c81836ae02c88bfa3499387ab5901db1e2e0b8 Mon Sep 17 00:00:00 2001
+From: Jaeyoon Jung <jaeyoon.jung@lge.com>
+Date: Wed, 26 Nov 2025 14:23:31 +0900
+Subject: [PATCH] Add TEMP_FAILURE_RETRY macro if undefined
+
+Needed to build with an alternative libc such as musl.
+
+Upstream-Status: Pending
+Signed-off-by: Jaeyoon Jung <jaeyoon.jung@lge.com>
+---
+ cld80211_lib.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/cld80211-lib/cld80211_lib.c b/cld80211-lib/cld80211_lib.c
+index e92d8228..9bd3a0e6 100644
+--- a/cld80211-lib/cld80211_lib.c
++++ b/cld80211-lib/cld80211_lib.c
+@@ -59,6 +59,16 @@
+ 
+ #define SOCK_BUF_SIZE (256*1024)
+ 
++#ifndef TEMP_FAILURE_RETRY
++#define TEMP_FAILURE_RETRY(expression) \
++    ({                                             \
++        long int __result;                         \
++        do __result = (long int) (expression);     \
++        while (__result == -1L && errno == EINTR); \
++       __result;                                   \
++    })
++#endif
++
+ struct family_data {
+ 	const char *group;
+ 	int id;
