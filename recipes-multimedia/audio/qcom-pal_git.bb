@@ -12,9 +12,12 @@ SRCBRANCH  = "audio-core.lnx.1.0.r1-rel"
 SRCREV     = "c251dd197f47ccff264ea29295cd11f5b55fe5f9"
 
 SRC_URI  = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/arpal-lx \
-            file://adsprpcd_audiopd.service"
+            file://adsprpcd_audiopd.service \
+            file://0001-Add-missing-header-for-usleep-and-close.patch;patchdir=${UNPACKDIR}/audio/opensource/arpal-lx \
+            file://0002-Remove-__unused-macro.patch;patchdir=${UNPACKDIR}/audio/opensource/arpal-lx \
+"
 
-S = "${WORKDIR}/audio/opensource/arpal-lx"
+S = "${UNPACKDIR}/audio/opensource/arpal-lx"
 
 DEPENDS = "tinyalsa tinycompress qcom-agm qcom-kvh2xml qcom-audioroute fastrpc qcom-pal-headers"
 

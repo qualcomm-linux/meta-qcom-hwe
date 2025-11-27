@@ -1,0 +1,1623 @@
+From 15bd33d5d4f34852db6847a5ad0502d93b15b681 Mon Sep 17 00:00:00 2001
+From: Jaeyoon Jung <jaeyoon.jung@lge.com>
+Date: Thu, 27 Nov 2025 10:51:29 +0900
+Subject: [PATCH] Remove __unused macro
+
+Use __attribute__((unused)) in place of __unused instead as it may cause
+a error as when building with musl as below:
+In file included from ../audio/opensource/arpal-lx/./resource_manager/src/SndCardMonitor.cpp:40:
+../recipe-sysroot/usr/include/sys/poll.h:1:2: warning: #warning redirecting incorrect #include <sys/poll.h> to <poll.h> [-Wcpp]
+    1 | #warning redirecting incorrect #include <sys/poll.h> to <poll.h>
+      |  ^~~~~~~
+In file included from ../recipe-sysroot/usr/include/sys/stat.h:23,
+                 from ../audio/opensource/arpal-lx/./resource_manager/src/SndCardMonitor.cpp:38:
+../recipe-sysroot/usr/include/bits/stat.h:17:26: error: expected unqualified-id before '[' token
+   17 |         unsigned __unused[2];
+      |                          ^
+
+Upstream-Status: Pending
+Signed-off-by: Jaeyoon Jung <jaeyoon.jung@lge.com>
+---
+ Makefile.am                                   |  2 +-
+ Pal.cpp                                       |  4 +-
+ context_manager/src/ContextManager.cpp        |  2 +-
+ device/src/Device.cpp                         | 16 +++----
+ device/src/DisplayPort.cpp                    |  2 +-
+ device/src/HapticsDevProtection.cpp           |  2 +-
+ device/src/SpeakerProtection.cpp              |  2 +-
+ device/src/USBAudio.cpp                       |  6 +--
+ .../pal_ipc_client/src/pal_client_wrapper.cpp |  6 +--
+ plugins/codecs/bt_aptx.c                      |  2 +-
+ plugins/codecs/bt_ble.c                       |  2 +-
+ plugins/codecs/bt_bundle.c                    |  4 +-
+ resource_manager/inc/ResourceManager.h        |  4 +-
+ resource_manager/src/ResourceManager.cpp      | 10 ++--
+ session/inc/ACDEngine.h                       |  2 +-
+ session/inc/Session.h                         | 48 +++++++++----------
+ session/inc/SessionAgm.h                      | 30 ++++++------
+ session/inc/SessionAlsaCompress.h             |  2 +-
+ session/inc/SessionAlsaPcm.h                  |  2 +-
+ session/inc/SessionGsl.h                      |  2 +-
+ session/inc/SoundTriggerEngineCapi.h          | 44 ++++++++---------
+ session/inc/SoundTriggerEngineGsl.h           |  4 +-
+ session/src/ACDEngine.cpp                     |  2 +-
+ session/src/PayloadBuilder.cpp                | 10 ++--
+ session/src/Session.cpp                       | 10 ++--
+ session/src/SessionAgm.cpp                    | 22 ++++-----
+ session/src/SessionAlsaCompress.cpp           | 28 +++++------
+ session/src/SessionAlsaPcm.cpp                |  8 ++--
+ session/src/SessionAlsaVoice.cpp              | 10 ++--
+ session/src/SoundTriggerEngineCapi.cpp        |  8 ++--
+ session/src/SoundTriggerEngineGsl.cpp         |  2 +-
+ stream/inc/Stream.h                           | 24 +++++-----
+ stream/inc/StreamACD.h                        | 20 ++++----
+ stream/inc/StreamCommon.h                     | 34 ++++++-------
+ stream/inc/StreamCommonProxy.h                |  8 ++--
+ stream/inc/StreamContextProxy.h               |  8 ++--
+ stream/inc/StreamSensorPCMData.h              | 10 ++--
+ stream/inc/StreamSoundTrigger.h               | 18 +++----
+ stream/inc/StreamUltraSound.h                 |  2 +-
+ stream/src/Stream.cpp                         |  4 +-
+ stream/src/StreamACD.cpp                      |  6 +--
+ stream/src/StreamCommonProxy.cpp              |  6 +--
+ stream/src/StreamContextProxy.cpp             |  6 +--
+ stream/src/StreamHaptics.cpp                  |  6 +--
+ stream/src/StreamNonTunnel.cpp                |  4 +-
+ stream/src/StreamSensorPCMData.cpp            | 10 ++--
+ stream/src/StreamSoundTrigger.cpp             |  4 +-
+ stream/src/StreamUltraSound.cpp               |  6 +--
+ utils/inc/SoundTriggerPlatformInfo.h          |  4 +-
+ utils/src/ACDPlatformInfo.cpp                 |  2 +-
+ utils/src/PalRingBuffer.cpp                   |  4 +-
+ 51 files changed, 242 insertions(+), 242 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 3a0e0821..1ff1b50f 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -75,7 +75,7 @@ AM_CPPFLAGS += @AROUTE_CFLAGS@
+ AM_CPPFLAGS += @PALHEADERS_CFLAGS@
+ AM_CPPFLAGS += @KVH2XML_CFLAGS@
+ AM_CPPFLAGS += -Wno-sign-compare -Wno-unused-result -Wl,-z,defs
+-AM_CPPFLAGS += -D__unused=__attribute__\(\(__unused__\)\) -DLINUX_ENABLED -DPAL_MEMLOG_UNSUPPORTED -DATRACE_UNSUPPORTED -DCARD_STATE_UNSUPPORTED -DPAL_SIGNAL_HANDLER_UNSUPPORTED -DA2DP_SINK_SUPPORTED -DVUI_DMGR_AUDIO_UNSUPPORTED -DAUDIO_FEATURE_STATS_UNSUPPORTED
++AM_CPPFLAGS += -DLINUX_ENABLED -DPAL_MEMLOG_UNSUPPORTED -DATRACE_UNSUPPORTED -DCARD_STATE_UNSUPPORTED -DPAL_SIGNAL_HANDLER_UNSUPPORTED -DA2DP_SINK_SUPPORTED -DVUI_DMGR_AUDIO_UNSUPPORTED -DAUDIO_FEATURE_STATS_UNSUPPORTED
+ AM_CPPFLAGS += -DSND_AUDIOCODEC_ALAC=0x00000020 -DSND_AUDIOCODEC_APE=0x00000021
+ AM_CPPFLAGS += -DCONFIG_GSL
+ AM_CPPFLAGS += -DPAL_SP_TEMP_PATH=\"/etc/acdbdata/audio.cal\"
+diff --git a/Pal.cpp b/Pal.cpp
+index d98a3943..2635decd 100644
+--- a/Pal.cpp
++++ b/Pal.cpp
+@@ -1452,8 +1452,8 @@ int32_t pal_gef_rw_param(uint32_t param_id, void *param_payload,
+     return status;
+ }
+ 
+-int32_t pal_gef_rw_param_acdb(uint32_t param_id __unused, void *param_payload,
+-                      size_t payload_size __unused, pal_device_id_t pal_device_id,
++int32_t pal_gef_rw_param_acdb(uint32_t param_id __attribute__((unused)), void *param_payload,
++                      size_t payload_size __attribute__((unused)), pal_device_id_t pal_device_id,
+                       pal_stream_type_t pal_stream_type, uint32_t sample_rate,
+                       uint32_t instance_id, uint32_t dir, bool is_play )
+ {
+diff --git a/context_manager/src/ContextManager.cpp b/context_manager/src/ContextManager.cpp
+index 13b2576d..8d638821 100644
+--- a/context_manager/src/ContextManager.cpp
++++ b/context_manager/src/ContextManager.cpp
+@@ -1212,7 +1212,7 @@ exit:
+     return rc;
+ }
+ 
+-int32_t UsecaseACD::GetAckDataOnSuccessfullStart(uint32_t *size __unused, void *data __unused)
++int32_t UsecaseACD::GetAckDataOnSuccessfullStart(uint32_t *size __attribute__((unused)), void *data __attribute__((unused)))
+ {
+     int32_t rc = 0;
+     asps_acd_usecase_register_ack_payload_t *data_ptr;
+diff --git a/device/src/Device.cpp b/device/src/Device.cpp
+index 93e27d97..34519e14 100644
+--- a/device/src/Device.cpp
++++ b/device/src/Device.cpp
+@@ -371,13 +371,13 @@ int Device::getDeviceAttributes(struct pal_device *dattr, Stream* streamHandle)
+     return 0;
+ }
+ 
+-int Device::getCodecConfig(struct pal_media_config *config __unused)
++int Device::getCodecConfig(struct pal_media_config *config __attribute__((unused)))
+ {
+     return 0;
+ }
+ 
+ 
+-int Device::getDefaultConfig(pal_param_device_capability_t capability __unused)
++int Device::getDefaultConfig(pal_param_device_capability_t capability __attribute__((unused)))
+ {
+     return 0;
+ }
+@@ -450,12 +450,12 @@ std::string Device::getPALDeviceName()
+     return mPALDeviceName;
+ }
+ 
+-int Device::init(pal_param_device_connection_t device_conn __unused)
++int Device::init(pal_param_device_connection_t device_conn __attribute__((unused)))
+ {
+     return 0;
+ }
+ 
+-int Device::deinit(pal_param_device_connection_t device_conn __unused)
++int Device::deinit(pal_param_device_connection_t device_conn __attribute__((unused)))
+ {
+     return 0;
+ }
+@@ -627,22 +627,22 @@ int Device::stop_l()
+     return 0;
+ }
+ 
+-int32_t Device::setDeviceParameter(uint32_t param_id __unused, void *param __unused)
++int32_t Device::setDeviceParameter(uint32_t param_id __attribute__((unused)), void *param __attribute__((unused)))
+ {
+     return 0;
+ }
+ 
+-int32_t Device::getDeviceParameter(uint32_t param_id __unused, void **param __unused)
++int32_t Device::getDeviceParameter(uint32_t param_id __attribute__((unused)), void **param __attribute__((unused)))
+ {
+     return 0;
+ }
+ 
+-int32_t Device::setParameter(uint32_t param_id __unused, void *param __unused)
++int32_t Device::setParameter(uint32_t param_id __attribute__((unused)), void *param __attribute__((unused)))
+ {
+     return 0;
+ }
+ 
+-int32_t Device::getParameter(uint32_t param_id __unused, void **param __unused)
++int32_t Device::getParameter(uint32_t param_id __attribute__((unused)), void **param __attribute__((unused)))
+ {
+     return 0;
+ }
+diff --git a/device/src/DisplayPort.cpp b/device/src/DisplayPort.cpp
+index 100161e1..7b47b83a 100644
+--- a/device/src/DisplayPort.cpp
++++ b/device/src/DisplayPort.cpp
+@@ -420,7 +420,7 @@ int DisplayPort::init(pal_param_device_connection_t device_conn)
+     return 0;
+ }
+ 
+-int DisplayPort::deinit(pal_param_device_connection_t device_conn __unused)
++int DisplayPort::deinit(pal_param_device_connection_t device_conn __attribute__((unused)))
+ {
+     updateAudioAckState(EXT_DISPLAY_PLUG_STATUS_NOTIFY_DISCONNECT, dp_controller, dp_stream);
+     //To-Do : Have to invalidate the cahed EDID
+diff --git a/device/src/HapticsDevProtection.cpp b/device/src/HapticsDevProtection.cpp
+index edaa09bd..6c25154c 100644
+--- a/device/src/HapticsDevProtection.cpp
++++ b/device/src/HapticsDevProtection.cpp
+@@ -170,7 +170,7 @@ void HapticsDevProtection::HapticsDevCalibrateWait()
+ }
+ 
+ // Callback from DSP for Ressistance value
+-void HapticsDevProtection::handleHPCallback (uint64_t hdl __unused, uint32_t event_id,
++void HapticsDevProtection::handleHPCallback (uint64_t hdl __attribute__((unused)), uint32_t event_id,
+                                             void *event_data, uint32_t event_size)
+ {
+     param_id_haptics_th_vi_r0_get_param_t  *param_data = nullptr;
+diff --git a/device/src/SpeakerProtection.cpp b/device/src/SpeakerProtection.cpp
+index 8bd95a73..08354792 100644
+--- a/device/src/SpeakerProtection.cpp
++++ b/device/src/SpeakerProtection.cpp
+@@ -216,7 +216,7 @@ void SpeakerProtection::spkrCalibrateWait()
+ }
+ 
+ // Callback from DSP for Ressistance value
+-void SpeakerProtection::handleSPCallback (uint64_t hdl __unused, uint32_t event_id,
++void SpeakerProtection::handleSPCallback (uint64_t hdl __attribute__((unused)), uint32_t event_id,
+                                             void *event_data, uint32_t event_size)
+ {
+     param_id_sp_th_vi_calib_res_per_spkr_cfg_param_t *param_data = nullptr;
+diff --git a/device/src/USBAudio.cpp b/device/src/USBAudio.cpp
+index 3a7f8d92..8f0cf5dd 100644
+--- a/device/src/USBAudio.cpp
++++ b/device/src/USBAudio.cpp
+@@ -300,17 +300,17 @@ int USB::deinit(pal_param_device_connection_t device_conn)
+     return 0;
+ }
+ 
+-int32_t USB::isBitWidthSupported(unsigned int bitWidth __unused)
++int32_t USB::isBitWidthSupported(unsigned int bitWidth __attribute__((unused)))
+ {
+     return 0;
+ }
+ 
+-int32_t USB::checkAndUpdateBitWidth(unsigned int *bitWidth __unused)
++int32_t USB::checkAndUpdateBitWidth(unsigned int *bitWidth __attribute__((unused)))
+ {
+     return 0;
+ }
+ 
+-int32_t USB::checkAndUpdateSampleRate(unsigned int *sampleRate __unused)
++int32_t USB::checkAndUpdateSampleRate(unsigned int *sampleRate __attribute__((unused)))
+ {
+     return 0;
+ }
+diff --git a/ipc/HwBinders/pal_ipc_client/src/pal_client_wrapper.cpp b/ipc/HwBinders/pal_ipc_client/src/pal_client_wrapper.cpp
+index 8dcf379c..7c042d1a 100644
+--- a/ipc/HwBinders/pal_ipc_client/src/pal_client_wrapper.cpp
++++ b/ipc/HwBinders/pal_ipc_client/src/pal_client_wrapper.cpp
+@@ -884,7 +884,7 @@ int32_t pal_stream_set_device(pal_stream_handle_t *stream_handle,
+ }
+ 
+ int32_t pal_stream_get_volume(pal_stream_handle_t *stream_handle,
+-                              struct pal_volume_data *volume __unused)
++                              struct pal_volume_data *volume __attribute__((unused)))
+ {
+ 
+     ALOGD("%s:%d:", __func__, __LINE__);
+@@ -1119,8 +1119,8 @@ int32_t pal_gef_rw_param(uint32_t param_id, void *param_payload,
+     return 0;
+ }
+ 
+-int32_t pal_gef_rw_param_acdb(uint32_t param_id __unused, void *param_payload,
+-                              size_t payload_size __unused, pal_device_id_t pal_device_id,
++int32_t pal_gef_rw_param_acdb(uint32_t param_id __attribute__((unused)), void *param_payload,
++                              size_t payload_size __attribute__((unused)), pal_device_id_t pal_device_id,
+                               pal_stream_type_t pal_stream_type, uint32_t sample_rate,
+                               uint32_t instance_id, uint32_t dir, bool is_play)
+ {
+diff --git a/plugins/codecs/bt_aptx.c b/plugins/codecs/bt_aptx.c
+index f13caaba..9105a655 100644
+--- a/plugins/codecs/bt_aptx.c
++++ b/plugins/codecs/bt_aptx.c
+@@ -636,7 +636,7 @@ static uint64_t bt_aptx_get_codec_latency(bt_codec_t *codec)
+         return bt_aptx_get_decoder_latency(codec);
+ }
+ 
+-int bt_aptx_query_num_codecs(bt_codec_t *codec __unused) {
++int bt_aptx_query_num_codecs(bt_codec_t *codec __attribute__((unused))) {
+     ALOGV("%s", __func__);
+     return NUM_CODEC;
+ }
+diff --git a/plugins/codecs/bt_ble.c b/plugins/codecs/bt_ble.c
+index f6262b5b..175703a6 100644
+--- a/plugins/codecs/bt_ble.c
++++ b/plugins/codecs/bt_ble.c
+@@ -320,7 +320,7 @@ static uint64_t bt_ble_get_codec_latency(bt_codec_t *codec)
+         return bt_ble_get_decoder_latency(codec);
+ }
+ 
+-int bt_ble_query_num_codecs(bt_codec_t *codec __unused) {
++int bt_ble_query_num_codecs(bt_codec_t *codec __attribute__((unused))) {
+     ALOGV("%s", __func__);
+     return NUM_CODEC;
+ }
+diff --git a/plugins/codecs/bt_bundle.c b/plugins/codecs/bt_bundle.c
+index 41533cc9..8f109a0f 100644
+--- a/plugins/codecs/bt_bundle.c
++++ b/plugins/codecs/bt_bundle.c
+@@ -247,7 +247,7 @@ free_payload:
+     return ret;
+ }
+ 
+-static int aac_pack_dec_config(bt_codec_t *codec __unused, void *src __unused, void **dst __unused) {
++static int aac_pack_dec_config(bt_codec_t *codec __attribute__((unused)), void *src __attribute__((unused)), void **dst __attribute__((unused))) {
+     audio_aac_decoder_config_t *aac_bt_cfg = NULL;
+     bt_enc_payload_t *dec_payload = NULL;
+     struct payload_media_fmt_aac_t *media_fmt_aac = NULL;
+@@ -827,7 +827,7 @@ static uint64_t bt_bundle_get_codec_latency(bt_codec_t *codec)
+         return bt_bundle_get_decoder_latency(codec);
+ }
+ 
+-int bt_bundle_query_num_codecs(bt_codec_t *codec __unused) {
++int bt_bundle_query_num_codecs(bt_codec_t *codec __attribute__((unused))) {
+     ALOGV("%s", __func__);
+     return NUM_CODEC;
+ }
+diff --git a/resource_manager/inc/ResourceManager.h b/resource_manager/inc/ResourceManager.h
+index 513aae7c..08ec8015 100644
+--- a/resource_manager/inc/ResourceManager.h
++++ b/resource_manager/inc/ResourceManager.h
+@@ -947,7 +947,7 @@ public:
+     void restoreInternalECRefs();
+     bool checkStreamMatch(Stream *target, Stream *ref);
+ 
+-    static void endTag(void *userdata __unused, const XML_Char *tag_name);
++    static void endTag(void *userdata __attribute__((unused)), const XML_Char *tag_name);
+     static void snd_reset_data_buf(struct xml_userdata *data);
+     static void snd_process_data_buf(struct xml_userdata *data, const XML_Char *tag_name);
+     static void process_device_info(struct xml_userdata *data, const XML_Char *tag_name);
+@@ -964,7 +964,7 @@ public:
+     static void processCardInfo(struct xml_userdata *data, const XML_Char *tag_name);
+     static void processSpkrTempCtrls(const XML_Char **attr);
+     static void processBTCodecInfo(const XML_Char **attr, const int attr_count);
+-    static void startTag(void *userdata __unused, const XML_Char *tag_name, const XML_Char **attr);
++    static void startTag(void *userdata __attribute__((unused)), const XML_Char *tag_name, const XML_Char **attr);
+     static void snd_data_handler(void *userdata, const XML_Char *s, int len);
+     static void processDeviceIdProp(struct xml_userdata *data, const XML_Char *tag_name);
+     static void processDeviceCapability(struct xml_userdata *data, const XML_Char *tag_name);
+diff --git a/resource_manager/src/ResourceManager.cpp b/resource_manager/src/ResourceManager.cpp
+index 796c6661..03495ba0 100644
+--- a/resource_manager/src/ResourceManager.cpp
++++ b/resource_manager/src/ResourceManager.cpp
+@@ -672,7 +672,7 @@ std::vector<std::pair<int32_t, std::string>> ResourceManager::listAllBackEndIds
+     {PAL_DEVICE_IN_MAX,                   {std::string{ "" }}},
+ };
+ 
+-void agmServiceCrashHandler(uint64_t cookie __unused)
++void agmServiceCrashHandler(uint64_t cookie __attribute__((unused)))
+ {
+     PAL_ERR(LOG_TAG,"AGM service crashed :( ");
+     _exit(1);
+@@ -10331,7 +10331,7 @@ exit:
+ }
+ 
+ int ResourceManager::getParameter(uint32_t param_id, void **param_payload,
+-                     size_t *payload_size, void *query __unused)
++                     size_t *payload_size, void *query __attribute__((unused)))
+ {
+     int status = 0;
+ 
+@@ -10483,7 +10483,7 @@ exit:
+ 
+ 
+ int ResourceManager::getParameter(uint32_t param_id, void *param_payload,
+-                                  size_t payload_size __unused,
++                                  size_t payload_size __attribute__((unused)),
+                                   pal_device_id_t pal_device_id,
+                                   pal_stream_type_t pal_stream_type)
+ {
+@@ -11595,7 +11595,7 @@ exit_no_unlock:
+ 
+ 
+ int ResourceManager::setParameter(uint32_t param_id, void *param_payload,
+-                                  size_t payload_size __unused,
++                                  size_t payload_size __attribute__((unused)),
+                                   pal_device_id_t pal_device_id,
+                                   pal_stream_type_t pal_stream_type)
+ {
+@@ -11644,7 +11644,7 @@ int ResourceManager::setParameter(uint32_t param_id, void *param_payload,
+ 
+ 
+ int ResourceManager::rwParameterACDB(uint32_t paramId, void *paramPayload,
+-                 size_t payloadSize  __unused, pal_device_id_t palDeviceId,
++                 size_t payloadSize  __attribute__((unused)), pal_device_id_t palDeviceId,
+                  pal_stream_type_t palStreamType, uint32_t sampleRate,
+                  uint32_t instanceId, bool isParamWrite, bool isPlay)
+ {
+diff --git a/session/inc/ACDEngine.h b/session/inc/ACDEngine.h
+index cf776128..769665eb 100644
+--- a/session/inc/ACDEngine.h
++++ b/session/inc/ACDEngine.h
+@@ -79,7 +79,7 @@ private:
+     int32_t PopulateSoundModel(std::string model_file_name, uint32_t model_uuid);
+     int32_t PopulateEventPayload();
+     void ParseEventAndNotifyClient();
+-    void HandleSessionEvent(uint32_t event_id __unused, void *data, uint32_t size);
++    void HandleSessionEvent(uint32_t event_id __attribute__((unused)), void *data, uint32_t size);
+     bool AreOtherStreamsAttached(Stream *s);
+     void UpdateModelCount(struct pal_param_context_list *context_cfg, bool enable);
+     void AddEventInfoForStream(Stream *s, struct acd_recognition_cfg *recog_cfg);
+diff --git a/session/inc/Session.h b/session/inc/Session.h
+index 319d3192..18b2e343 100644
+--- a/session/inc/Session.h
++++ b/session/inc/Session.h
+@@ -145,10 +145,10 @@ public:
+     virtual int open(Stream * s) = 0;
+     virtual int prepare(Stream * s) = 0;
+     virtual int setConfig(Stream * s, configType type, int tag) = 0;
+-    virtual int setConfig(Stream * s __unused, configType type __unused, uint32_t tag1 __unused,
+-            uint32_t tag2 __unused, uint32_t tag3 __unused) {return 0;};
+-    virtual int setConfig(Stream * s __unused, configType type __unused, int tag __unused, int dir __unused) {return 0;};
+-    virtual int setTKV(Stream * s __unused, configType type __unused, effect_pal_payload_t *payload __unused) {return 0;};
++    virtual int setConfig(Stream * s __attribute__((unused)), configType type __attribute__((unused)), uint32_t tag1 __attribute__((unused)),
++            uint32_t tag2 __attribute__((unused)), uint32_t tag3 __attribute__((unused))) {return 0;};
++    virtual int setConfig(Stream * s __attribute__((unused)), configType type __attribute__((unused)), int tag __attribute__((unused)), int dir __attribute__((unused))) {return 0;};
++    virtual int setTKV(Stream * s __attribute__((unused)), configType type __attribute__((unused)), effect_pal_payload_t *payload __attribute__((unused))) {return 0;};
+     //virtual int getConfig(Stream * s) = 0;
+     virtual int start(Stream * s) = 0;
+     virtual int pause(Stream * s);
+@@ -156,17 +156,17 @@ public:
+     virtual int resume(Stream * s);
+     virtual int stop(Stream * s) = 0;
+     virtual int close(Stream * s) = 0;
+-    virtual int readBufferInit(Stream *s __unused, size_t noOfBuf __unused, size_t bufSize __unused, int flag __unused) {return 0;};
+-    virtual int writeBufferInit(Stream *s __unused, size_t noOfBuf __unused, size_t bufSize __unused, int flag __unused) {return 0;};
+-    virtual int read(Stream *s __unused, int tag __unused, struct pal_buffer *buf __unused, int * size __unused) {return 0;};
+-    virtual int write(Stream *s __unused, int tag __unused, struct pal_buffer *buf __unused, int * size __unused, int flag __unused) {return 0;};
+-    virtual int getParameters(Stream *s __unused, int tagId __unused, uint32_t param_id __unused, void **payload __unused) {return 0;};
+-    virtual int setParameters(Stream *s __unused, int tagId __unused, uint32_t param_id __unused, void *payload __unused) {return 0;};
+-    virtual int registerCallBack(session_callback cb __unused, uint64_t cookie __unused) {return 0;};
+-    virtual int drain(pal_drain_type_t type __unused) {return 0;};
++    virtual int readBufferInit(Stream *s __attribute__((unused)), size_t noOfBuf __attribute__((unused)), size_t bufSize __attribute__((unused)), int flag __attribute__((unused))) {return 0;};
++    virtual int writeBufferInit(Stream *s __attribute__((unused)), size_t noOfBuf __attribute__((unused)), size_t bufSize __attribute__((unused)), int flag __attribute__((unused))) {return 0;};
++    virtual int read(Stream *s __attribute__((unused)), int tag __attribute__((unused)), struct pal_buffer *buf __attribute__((unused)), int * size __attribute__((unused))) {return 0;};
++    virtual int write(Stream *s __attribute__((unused)), int tag __attribute__((unused)), struct pal_buffer *buf __attribute__((unused)), int * size __attribute__((unused)), int flag __attribute__((unused))) {return 0;};
++    virtual int getParameters(Stream *s __attribute__((unused)), int tagId __attribute__((unused)), uint32_t param_id __attribute__((unused)), void **payload __attribute__((unused))) {return 0;};
++    virtual int setParameters(Stream *s __attribute__((unused)), int tagId __attribute__((unused)), uint32_t param_id __attribute__((unused)), void *payload __attribute__((unused))) {return 0;};
++    virtual int registerCallBack(session_callback cb __attribute__((unused)), uint64_t cookie __attribute__((unused))) {return 0;};
++    virtual int drain(pal_drain_type_t type __attribute__((unused))) {return 0;};
+     virtual int flush() {return 0;};
+-    virtual void setEventPayload(uint32_t event_id __unused, void *payload __unused, size_t payload_size __unused) {  };
+-    virtual int getTimestamp(struct pal_session_time *stime __unused) {return 0;};
++    virtual void setEventPayload(uint32_t event_id __attribute__((unused)), void *payload __attribute__((unused)), size_t payload_size __attribute__((unused))) {  };
++    virtual int getTimestamp(struct pal_session_time *stime __attribute__((unused))) {return 0;};
+     /*TODO need to implement connect/disconnect in basecase*/
+     virtual int setupSessionDevice(Stream* streamHandle, pal_stream_type_t streamType,
+         std::shared_ptr<Device> deviceToCconnect) = 0;
+@@ -178,7 +178,7 @@ public:
+     void getSamplerateChannelBitwidthTags(struct pal_media_config *config,
+         uint32_t &sr_tag, uint32_t &ch_tag, uint32_t &bitwidth_tag);
+     virtual int32_t getFrontEndId(uint32_t ldir) {return -EINVAL;}
+-    virtual uint32_t getMIID(const char *backendName __unused, uint32_t tagId __unused, uint32_t *miid __unused) { return -EINVAL; }
++    virtual uint32_t getMIID(const char *backendName __attribute__((unused)), uint32_t tagId __attribute__((unused)), uint32_t *miid __attribute__((unused))) { return -EINVAL; }
+     int getEffectParameters(Stream *s, effect_pal_payload_t *effectPayload);
+     int setEffectParameters(Stream *s, effect_pal_payload_t *effectPayload);
+     int rwACDBParameters(void *payload, uint32_t sampleRate, bool isParamWrite);
+@@ -187,17 +187,17 @@ public:
+         bool isParamWrite, Stream *s);
+     int NotifyChargerConcurrency(std::shared_ptr<ResourceManager>rm, bool state);
+     int EnableChargerConcurrency(std::shared_ptr<ResourceManager>rm, Stream *s);
+-    virtual struct mixer_ctl* getFEMixerCtl(const char *controlName __unused, int *device __unused, pal_stream_direction_t dir __unused) {return nullptr;}
+-    virtual int createMmapBuffer(Stream *s __unused, int32_t min_size_frames __unused,
+-                                   struct pal_mmap_buffer *info __unused) {return -EINVAL;}
+-    virtual int GetMmapPosition(Stream *s __unused, struct pal_mmap_position *position __unused) {return -EINVAL;}
+-    virtual int ResetMmapBuffer(Stream *s __unused) {return -EINVAL;}
+-    virtual int openGraph(Stream *s __unused) { return 0; }
+-    virtual int getTagsWithModuleInfo(Stream *s __unused, size_t *size __unused,
+-                                      uint8_t *payload __unused) {return -EINVAL;}
++    virtual struct mixer_ctl* getFEMixerCtl(const char *controlName __attribute__((unused)), int *device __attribute__((unused)), pal_stream_direction_t dir __attribute__((unused))) {return nullptr;}
++    virtual int createMmapBuffer(Stream *s __attribute__((unused)), int32_t min_size_frames __attribute__((unused)),
++                                   struct pal_mmap_buffer *info __attribute__((unused))) {return -EINVAL;}
++    virtual int GetMmapPosition(Stream *s __attribute__((unused)), struct pal_mmap_position *position __attribute__((unused))) {return -EINVAL;}
++    virtual int ResetMmapBuffer(Stream *s __attribute__((unused))) {return -EINVAL;}
++    virtual int openGraph(Stream *s __attribute__((unused))) { return 0; }
++    virtual int getTagsWithModuleInfo(Stream *s __attribute__((unused)), size_t *size __attribute__((unused)),
++                                      uint8_t *payload __attribute__((unused))) {return -EINVAL;}
+     virtual int checkAndSetExtEC(const std::shared_ptr<ResourceManager>& rm,
+                                  Stream *s, bool is_enable);
+-    virtual void AdmRoutingChange(Stream *s __unused) {  };
++    virtual void AdmRoutingChange(Stream *s __attribute__((unused))) {  };
+ private:
+     uint32_t getModuleInfo(const char *control, uint32_t tagId, uint32_t *miid, struct mixer_ctl **ctl, int *device);
+     int setEffectParametersTKV(Stream *s, effect_pal_payload_t *effectPayload);
+diff --git a/session/inc/SessionAgm.h b/session/inc/SessionAgm.h
+index b9b304c5..1903266b 100644
+--- a/session/inc/SessionAgm.h
++++ b/session/inc/SessionAgm.h
+@@ -86,36 +86,36 @@ public:
+     virtual ~SessionAgm();
+     int open(Stream * s) override;
+     int prepare(Stream * s) override;
+-    int setConfig(Stream * s __unused, configType type __unused, int tag __unused) {return -EINVAL;}
++    int setConfig(Stream * s __attribute__((unused)), configType type __attribute__((unused)), int tag __attribute__((unused))) {return -EINVAL;}
+     int start(Stream * s) override;
+     int stop(Stream * s) override;
+     int close(Stream * s) override;
+     int pause(Stream * s) override;
+     int resume(Stream * s) override;
+-    int readBufferInit(Stream *s __unused, size_t noOfBuf __unused,
+-                       size_t bufSize __unused, int flag __unused) {return -EINVAL;}
+-    int writeBufferInit(Stream *s __unused, size_t noOfBuf __unused,
+-                       size_t bufSize __unused, int flag __unused) {return -EINVAL;}
++    int readBufferInit(Stream *s __attribute__((unused)), size_t noOfBuf __attribute__((unused)),
++                       size_t bufSize __attribute__((unused)), int flag __attribute__((unused))) {return -EINVAL;}
++    int writeBufferInit(Stream *s __attribute__((unused)), size_t noOfBuf __attribute__((unused)),
++                       size_t bufSize __attribute__((unused)), int flag __attribute__((unused))) {return -EINVAL;}
+     int setParameters(Stream *s, int tagId, uint32_t param_id, void *payload);
+     int getParameters(Stream *s, int tagId, uint32_t param_id, void **payload);
+     int read(Stream *s, int tag, struct pal_buffer *buf, int * size) override;
+     int write(Stream *s, int tag, struct pal_buffer *buf, int * size, int flag) override;
+-    int setECRef(Stream *s __unused, std::shared_ptr<Device> rx_dev __unused, bool is_enable __unused) {return 0;};
++    int setECRef(Stream *s __attribute__((unused)), std::shared_ptr<Device> rx_dev __attribute__((unused)), bool is_enable __attribute__((unused))) {return 0;};
+     int registerCallBack(session_callback cb, uint64_t cookie);
+     int drain(pal_drain_type_t type);
+     int flush();
+     int suspend(Stream * s);
+     int getTagsWithModuleInfo(Stream *s, size_t *size, uint8_t *payload) override;
+-    int getTimestamp(struct pal_session_time *stime __unused) {return 0;};
+-    int setupSessionDevice(Stream* streamHandle __unused, pal_stream_type_t streamType __unused,
+-        std::shared_ptr<Device> deviceToConnect __unused) {return 0;};
+-    int connectSessionDevice(Stream* streamHandle __unused, pal_stream_type_t streamType __unused,
+-        std::shared_ptr<Device> deviceToConnect __unused) {return 0;};
+-    int disconnectSessionDevice(Stream* streamHandle __unused, pal_stream_type_t streamType __unused,
+-        std::shared_ptr<Device> deviceToDisconnect __unused) {return 0;};
+-    uint32_t getMIID(const char *backendName __unused, uint32_t tagId __unused, uint32_t *miid __unused)
++    int getTimestamp(struct pal_session_time *stime __attribute__((unused))) {return 0;};
++    int setupSessionDevice(Stream* streamHandle __attribute__((unused)), pal_stream_type_t streamType __attribute__((unused)),
++        std::shared_ptr<Device> deviceToConnect __attribute__((unused))) {return 0;};
++    int connectSessionDevice(Stream* streamHandle __attribute__((unused)), pal_stream_type_t streamType __attribute__((unused)),
++        std::shared_ptr<Device> deviceToConnect __attribute__((unused))) {return 0;};
++    int disconnectSessionDevice(Stream* streamHandle __attribute__((unused)), pal_stream_type_t streamType __attribute__((unused)),
++        std::shared_ptr<Device> deviceToDisconnect __attribute__((unused))) {return 0;};
++    uint32_t getMIID(const char *backendName __attribute__((unused)), uint32_t tagId __attribute__((unused)), uint32_t *miid __attribute__((unused)))
+                      {return 0;};
+-    struct mixer_ctl* getFEMixerCtl(const char *controlName __unused, int *device __unused, pal_stream_direction_t dir __unused) {return 0;}
++    struct mixer_ctl* getFEMixerCtl(const char *controlName __attribute__((unused)), int *device __attribute__((unused)), pal_stream_direction_t dir __attribute__((unused))) {return 0;}
+     session_callback sessionCb;
+     uint64_t cbCookie;
+     int32_t sessionId;
+diff --git a/session/inc/SessionAlsaCompress.h b/session/inc/SessionAlsaCompress.h
+index 3829869e..19aefd80 100644
+--- a/session/inc/SessionAlsaCompress.h
++++ b/session/inc/SessionAlsaCompress.h
+@@ -161,7 +161,7 @@ public:
+         std::shared_ptr<Device> deviceToDisconnect) override;
+     int32_t getFrontEndId(uint32_t ldir) override;
+     uint32_t getMIID(const char *backendName, uint32_t tagId, uint32_t *miid) override;
+-    struct mixer_ctl* getFEMixerCtl(const char *controlName, int *device, pal_stream_direction_t dir __unused) override;
++    struct mixer_ctl* getFEMixerCtl(const char *controlName, int *device, pal_stream_direction_t dir __attribute__((unused))) override;
+ };
+ 
+ #endif //SESSION_ALSACOMPRESS_H
+diff --git a/session/inc/SessionAlsaPcm.h b/session/inc/SessionAlsaPcm.h
+index a3a8debe..0ccf72ea 100644
+--- a/session/inc/SessionAlsaPcm.h
++++ b/session/inc/SessionAlsaPcm.h
+@@ -154,7 +154,7 @@ public:
+     void releaseAdmFocus(Stream *s);
+     void setEventPayload(uint32_t event_id, void *payload, size_t payload_size);
+     int register_asps_event(uint32_t reg);
+-    int getTagsWithModuleInfo(Stream *s, size_t *size __unused, uint8_t *payload);
++    int getTagsWithModuleInfo(Stream *s, size_t *size __attribute__((unused)), uint8_t *payload);
+     void retryOpenWithoutEC(Stream *s, unsigned int pcm_flags, struct pcm_config *config);
+     int reconfigureModule(uint32_t tagID, const char* BE, struct sessionToPayloadParam *data);
+ };
+diff --git a/session/inc/SessionGsl.h b/session/inc/SessionGsl.h
+index 14f2675c..fb09837e 100644
+--- a/session/inc/SessionGsl.h
++++ b/session/inc/SessionGsl.h
+@@ -180,7 +180,7 @@ public:
+         std::shared_ptr<Device> deviceToConnect) override;
+     int disconnectSessionDevice(Stream* streamHandle, pal_stream_type_t streamType,
+         std::shared_ptr<Device> deviceToDisconnect) override;
+-    uint32_t getMIID(const char *backendName __unused, uint32_t tagId __unused,  uint32_t *miid __unused) {return 0;};
++    uint32_t getMIID(const char *backendName __attribute__((unused)), uint32_t tagId __attribute__((unused)),  uint32_t *miid __attribute__((unused))) {return 0;};
+     int setECRef(Stream *s, std::shared_ptr<Device> rx_dev, bool is_enable) override;
+ };
+ 
+diff --git a/session/inc/SoundTriggerEngineCapi.h b/session/inc/SoundTriggerEngineCapi.h
+index e3e9b86d..09ca4e31 100644
+--- a/session/inc/SoundTriggerEngineCapi.h
++++ b/session/inc/SoundTriggerEngineCapi.h
+@@ -54,43 +54,43 @@ public:
+                            uint32_t data_size) override;
+     int32_t UnloadSoundModel(Stream *s) override;
+     int32_t StartRecognition(Stream *s) override;
+-    int32_t RestartRecognition(Stream *s __unused) override;
++    int32_t RestartRecognition(Stream *s __attribute__((unused))) override;
+     int32_t StopRecognition(Stream *s) override;
+     void SetDetected(bool detected) override;
+ 
+-    int32_t GetParameters(uint32_t param_id __unused, void **payload __unused) {
++    int32_t GetParameters(uint32_t param_id __attribute__((unused)), void **payload __attribute__((unused))) {
+         return 0;
+     }
+     int32_t ConnectSessionDevice(
+-        Stream* stream_handle __unused,
+-        pal_stream_type_t stream_type __unused,
+-        std::shared_ptr<Device> device_to_connect __unused) { return 0; }
++        Stream* stream_handle __attribute__((unused)),
++        pal_stream_type_t stream_type __attribute__((unused)),
++        std::shared_ptr<Device> device_to_connect __attribute__((unused))) { return 0; }
+     int32_t DisconnectSessionDevice(
+-        Stream* stream_handle __unused,
+-        pal_stream_type_t stream_type __unused,
+-        std::shared_ptr<Device> device_to_disconnect __unused,
+-        bool device_switch_event __unused) { return 0; }
++        Stream* stream_handle __attribute__((unused)),
++        pal_stream_type_t stream_type __attribute__((unused)),
++        std::shared_ptr<Device> device_to_disconnect __attribute__((unused)),
++        bool device_switch_event __attribute__((unused))) { return 0; }
+     int32_t SetupSessionDevice(
+-       Stream* stream_handle __unused,
+-       pal_stream_type_t stream_type __unused,
+-       std::shared_ptr<Device> device_to_disconnect __unused) { return 0; }
+-    int32_t UpdateBufConfig(Stream *s __unused,
+-                            uint32_t hist_buffer_duration __unused,
+-                            uint32_t pre_roll_duration __unused) {
++       Stream* stream_handle __attribute__((unused)),
++       pal_stream_type_t stream_type __attribute__((unused)),
++       std::shared_ptr<Device> device_to_disconnect __attribute__((unused))) { return 0; }
++    int32_t UpdateBufConfig(Stream *s __attribute__((unused)),
++                            uint32_t hist_buffer_duration __attribute__((unused)),
++                            uint32_t pre_roll_duration __attribute__((unused))) {
+         return 0;
+     }
+-    void GetUpdatedBufConfig(uint32_t *hist_buffer_duration __unused,
+-                            uint32_t *pre_roll_duration __unused) {}
+-    void SetCaptureRequested(bool is_requested __unused) {}
++    void GetUpdatedBufConfig(uint32_t *hist_buffer_duration __attribute__((unused)),
++                            uint32_t *pre_roll_duration __attribute__((unused))) {}
++    void SetCaptureRequested(bool is_requested __attribute__((unused))) {}
+     int32_t setECRef(
+-        Stream *s __unused,
+-        std::shared_ptr<Device> dev __unused,
+-        bool is_enable __unused,
++        Stream *s __attribute__((unused)),
++        std::shared_ptr<Device> dev __attribute__((unused)),
++        bool is_enable __attribute__((unused)),
+         bool setEcForFirstTime) { return 0; }
+     ChronoSteadyClock_t GetDetectedTime(Stream *s) {
+         return std::chrono::steady_clock::time_point::min();
+     }
+-    void SetVoiceUIInterface(Stream *s __unused,
++    void SetVoiceUIInterface(Stream *s __attribute__((unused)),
+         std::shared_ptr<VoiceUIInterface> intf) {
+         vui_intf_ = intf;
+     }
+diff --git a/session/inc/SoundTriggerEngineGsl.h b/session/inc/SoundTriggerEngineGsl.h
+index 7dddfd91..2758c3b5 100644
+--- a/session/inc/SoundTriggerEngineGsl.h
++++ b/session/inc/SoundTriggerEngineGsl.h
+@@ -104,7 +104,7 @@ class SoundTriggerEngineGsl : public SoundTriggerEngine {
+                             uint32_t pre_roll_duration) override;
+     void GetUpdatedBufConfig(uint32_t *hist_buffer_duration,
+                             uint32_t *pre_roll_duration) override;
+-     void SetDetected(bool detected __unused) {};
++     void SetDetected(bool detected __attribute__((unused))) {};
+     int32_t GetParameters(uint32_t param_id, void **payload) override;
+     int32_t ConnectSessionDevice(
+         Stream* stream_handle,
+@@ -144,7 +144,7 @@ class SoundTriggerEngineGsl : public SoundTriggerEngine {
+                                       uint32_t event_size);
+ 
+     void ProcessEventTask();
+-    void HandleSessionEvent(uint32_t event_id __unused, void *data, uint32_t size);
++    void HandleSessionEvent(uint32_t event_id __attribute__((unused)), void *data, uint32_t size);
+     int32_t StartBuffering(Stream *s);
+     int32_t RestartRecognition_l(Stream *s);
+     int32_t UpdateSessionPayload(Stream *s, st_param_id_type_t param);
+diff --git a/session/src/ACDEngine.cpp b/session/src/ACDEngine.cpp
+index 102facee..5e459e66 100644
+--- a/session/src/ACDEngine.cpp
++++ b/session/src/ACDEngine.cpp
+@@ -364,7 +364,7 @@ void ACDEngine::EventProcessingThread(ACDEngine *engine)
+     PAL_DBG(LOG_TAG, "Exit");
+ }
+ 
+-void ACDEngine::HandleSessionEvent(uint32_t event_id __unused,
++void ACDEngine::HandleSessionEvent(uint32_t event_id __attribute__((unused)),
+                                                void *data, uint32_t size)
+ {
+     void *event_data = calloc(1, size);
+diff --git a/session/src/PayloadBuilder.cpp b/session/src/PayloadBuilder.cpp
+index 6115edb9..3f5c3f26 100644
+--- a/session/src/PayloadBuilder.cpp
++++ b/session/src/PayloadBuilder.cpp
+@@ -2614,7 +2614,7 @@ exit:
+ 
+ /** Used for Loopback stream types only */
+ int PayloadBuilder::populateStreamPPKV(Stream* s, std::vector <std::pair<int,int>> &keyVectorRx,
+-        std::vector <std::pair<int,int>> &keyVectorTx __unused)
++        std::vector <std::pair<int,int>> &keyVectorTx __attribute__((unused)))
+ {
+     int status = 0;
+     struct pal_stream_attributes *sattr = NULL;
+@@ -3076,8 +3076,8 @@ exit:
+     return status;
+ }
+ 
+-int PayloadBuilder::populateStreamDeviceKV(Stream* s __unused, int32_t beDevId __unused,
+-        std::vector <std::pair<int,int>> &keyVector __unused)
++int PayloadBuilder::populateStreamDeviceKV(Stream* s __attribute__((unused)), int32_t beDevId __attribute__((unused)),
++        std::vector <std::pair<int,int>> &keyVector __attribute__((unused)))
+ {
+     int status = 0;
+ 
+@@ -3306,8 +3306,8 @@ int PayloadBuilder::populateDevicePPKV(Stream* s, int32_t rxBeDevId,
+ 
+ int PayloadBuilder::populateStreamCkv(Stream *s,
+         std::vector <std::pair<int,int>> &keyVector,
+-        int tag __unused,
+-        struct pal_volume_data **volume_data __unused)
++        int tag __attribute__((unused)),
++        struct pal_volume_data **volume_data __attribute__((unused)))
+ {
+     int status = 0;
+     struct pal_stream_attributes sAttr;
+diff --git a/session/src/Session.cpp b/session/src/Session.cpp
+index 40ec2745..0fee8f74 100644
+--- a/session/src/Session.cpp
++++ b/session/src/Session.cpp
+@@ -292,7 +292,7 @@ exit:
+     return status;
+ }
+ 
+-int Session::getEffectParameters(Stream *s __unused, effect_pal_payload_t *effectPayload)
++int Session::getEffectParameters(Stream *s __attribute__((unused)), effect_pal_payload_t *effectPayload)
+ {
+     int status = 0;
+     uint8_t *ptr = NULL;
+@@ -349,7 +349,7 @@ exit:
+     return status;
+ }
+ 
+-int Session::setEffectParametersTKV(Stream *s __unused, effect_pal_payload_t *effectPayload)
++int Session::setEffectParametersTKV(Stream *s __attribute__((unused)), effect_pal_payload_t *effectPayload)
+ {
+     int status = 0;
+     int device = 0;
+@@ -425,7 +425,7 @@ exit:
+     return status;
+ }
+ 
+-int Session::setEffectParametersNonTKV(Stream *s __unused, effect_pal_payload_t *effectPayload)
++int Session::setEffectParametersNonTKV(Stream *s __attribute__((unused)), effect_pal_payload_t *effectPayload)
+ {
+     int status = 0;
+     int device = 0;
+@@ -647,12 +647,12 @@ int Session::freeCustomPayload()
+     return 0;
+ }
+ 
+-int Session::pause(Stream * s __unused)
++int Session::pause(Stream * s __attribute__((unused)))
+ {
+     return 0;
+ }
+ 
+-int Session::resume(Stream * s __unused)
++int Session::resume(Stream * s __attribute__((unused)))
+ {
+      return 0;
+ }
+diff --git a/session/src/SessionAgm.cpp b/session/src/SessionAgm.cpp
+index 1958aa6e..110d8664 100644
+--- a/session/src/SessionAgm.cpp
++++ b/session/src/SessionAgm.cpp
+@@ -47,7 +47,7 @@
+ 
+ #define MICRO_SECS_PER_SEC (1000000LL)
+ 
+-void eventCallback(uint32_t session_id, struct agm_event_cb_params *event_params __unused,
++void eventCallback(uint32_t session_id, struct agm_event_cb_params *event_params __attribute__((unused)),
+                   void *client_data)
+ {
+     struct pal_stream_attributes sAttr;
+@@ -429,7 +429,7 @@ exit:
+    return status;
+ }
+ 
+-int SessionAgm::start(Stream * s __unused)
++int SessionAgm::start(Stream * s __attribute__((unused)))
+ {
+     int32_t status = 0;
+     rm->voteSleepMonitor(s, true);
+@@ -442,17 +442,17 @@ int SessionAgm::start(Stream * s __unused)
+     return status;
+ }
+ 
+-int SessionAgm::pause(Stream * s __unused)
++int SessionAgm::pause(Stream * s __attribute__((unused)))
+ {
+     return -EINVAL;
+ }
+ 
+-int SessionAgm::resume(Stream * s __unused)
++int SessionAgm::resume(Stream * s __attribute__((unused)))
+ {
+     return -EINVAL;
+ }
+ 
+-int SessionAgm::stop(Stream * s __unused)
++int SessionAgm::stop(Stream * s __attribute__((unused)))
+ {
+     int32_t status = 0;
+ 
+@@ -463,7 +463,7 @@ int SessionAgm::stop(Stream * s __unused)
+     return status;
+ }
+ 
+-int SessionAgm::read(Stream *s, int tag __unused, struct pal_buffer *buf, int *size )
++int SessionAgm::read(Stream *s, int tag __attribute__((unused)), struct pal_buffer *buf, int *size )
+ {
+     uint32_t bytes_read = 0;
+     int status;
+@@ -510,7 +510,7 @@ int SessionAgm::read(Stream *s, int tag __unused, struct pal_buffer *buf, int *s
+     return status;
+ }
+ 
+-int SessionAgm::fileWrite(Stream *s __unused, int tag __unused, struct pal_buffer *buf, int * size, int flag __unused)
++int SessionAgm::fileWrite(Stream *s __attribute__((unused)), int tag __attribute__((unused)), struct pal_buffer *buf, int * size, int flag __attribute__((unused)))
+ {
+     std::fstream fs;
+     PAL_DBG(LOG_TAG, "Enter.");
+@@ -527,7 +527,7 @@ int SessionAgm::fileWrite(Stream *s __unused, int tag __unused, struct pal_buffe
+     return 0;
+ }
+ 
+-int SessionAgm::write(Stream *s, int tag __unused, struct pal_buffer *buf, int * size, int flag __unused)
++int SessionAgm::write(Stream *s, int tag __attribute__((unused)), struct pal_buffer *buf, int * size, int flag __attribute__((unused)))
+ {
+     size_t bytes_written = 0;
+     int status;
+@@ -576,7 +576,7 @@ int SessionAgm::write(Stream *s, int tag __unused, struct pal_buffer *buf, int *
+     return status;
+ }
+ 
+-int SessionAgm::setParameters(Stream *s __unused, int tagId __unused, uint32_t param_id, void *payload)
++int SessionAgm::setParameters(Stream *s __attribute__((unused)), int tagId __attribute__((unused)), uint32_t param_id, void *payload)
+ {
+     int32_t status = 0;
+     pal_param_payload *param_payload = (pal_param_payload *)payload;
+@@ -660,7 +660,7 @@ int SessionAgm::drain(pal_drain_type_t type)
+     return status;
+ }
+ 
+-int SessionAgm::getTagsWithModuleInfo(Stream *s __unused, size_t *size, uint8_t *payload)
++int SessionAgm::getTagsWithModuleInfo(Stream *s __attribute__((unused)), size_t *size, uint8_t *payload)
+ {
+     int status = 0;
+     status = agm_session_aif_get_tag_module_info(sessionId, 0, payload, size);
+@@ -670,7 +670,7 @@ int SessionAgm::getTagsWithModuleInfo(Stream *s __unused, size_t *size, uint8_t
+     return status;
+ }
+ 
+-int SessionAgm::getParameters(Stream *s __unused, int tagId __unused, uint32_t param_id __unused, void **payload __unused)
++int SessionAgm::getParameters(Stream *s __attribute__((unused)), int tagId __attribute__((unused)), uint32_t param_id __attribute__((unused)), void **payload __attribute__((unused)))
+ {
+     return 0;
+ }
+diff --git a/session/src/SessionAlsaCompress.cpp b/session/src/SessionAlsaCompress.cpp
+index 626e1442..ef8c3eb7 100644
+--- a/session/src/SessionAlsaCompress.cpp
++++ b/session/src/SessionAlsaCompress.cpp
+@@ -1034,12 +1034,12 @@ int SessionAlsaCompress::connectSessionDevice(Stream* streamHandle, pal_stream_t
+     return status;
+ }
+ 
+-int SessionAlsaCompress::prepare(Stream * s __unused)
++int SessionAlsaCompress::prepare(Stream * s __attribute__((unused)))
+ {
+    return 0;
+ }
+ 
+-int SessionAlsaCompress::setTKV(Stream * s __unused, configType type, effect_pal_payload_t *effectPayload)
++int SessionAlsaCompress::setTKV(Stream * s __attribute__((unused)), configType type, effect_pal_payload_t *effectPayload)
+ {
+     int status = 0;
+     uint32_t tagsent;
+@@ -1766,7 +1766,7 @@ int SessionAlsaCompress::pause(Stream * s)
+     return status;
+ }
+ 
+-int SessionAlsaCompress::resume(Stream * s __unused)
++int SessionAlsaCompress::resume(Stream * s __attribute__((unused)))
+ {
+     int32_t status = 0;
+ 
+@@ -1781,7 +1781,7 @@ int SessionAlsaCompress::resume(Stream * s __unused)
+     return status;
+ }
+ 
+-int SessionAlsaCompress::stop(Stream * s __unused)
++int SessionAlsaCompress::stop(Stream * s __attribute__((unused)))
+ {
+     int32_t status = 0;
+     size_t payload_size = 0;
+@@ -1971,7 +1971,7 @@ int SessionAlsaCompress::close(Stream * s)
+     return status;
+ }
+ 
+-int SessionAlsaCompress::read(Stream *s, int tag __unused,
++int SessionAlsaCompress::read(Stream *s, int tag __attribute__((unused)),
+                               struct pal_buffer *buf, int *size) {
+     int status = 0, bytesRead = 0, offset = 0;
+     struct pal_stream_attributes sAttr = {};
+@@ -2000,7 +2000,7 @@ int SessionAlsaCompress::read(Stream *s, int tag __unused,
+     return status;
+ }
+ 
+-int SessionAlsaCompress::fileWrite(Stream *s __unused, int tag __unused, struct pal_buffer *buf, int * size, int flag __unused)
++int SessionAlsaCompress::fileWrite(Stream *s __attribute__((unused)), int tag __attribute__((unused)), struct pal_buffer *buf, int * size, int flag __attribute__((unused)))
+ {
+     std::fstream fs;
+     PAL_DBG(LOG_TAG, "Enter.");
+@@ -2017,7 +2017,7 @@ int SessionAlsaCompress::fileWrite(Stream *s __unused, int tag __unused, struct
+     return 0;
+ }
+ 
+-int SessionAlsaCompress::write(Stream *s __unused, int tag __unused, struct pal_buffer *buf, int * size, int flag __unused)
++int SessionAlsaCompress::write(Stream *s __attribute__((unused)), int tag __attribute__((unused)), struct pal_buffer *buf, int * size, int flag __attribute__((unused)))
+ {
+     int bytes_written = 0;
+     int status;
+@@ -2063,16 +2063,16 @@ int SessionAlsaCompress::write(Stream *s __unused, int tag __unused, struct pal_
+     return 0;
+ }
+ 
+-int SessionAlsaCompress::readBufferInit(Stream *s __unused, size_t noOfBuf __unused, size_t bufSize __unused, int flag __unused)
++int SessionAlsaCompress::readBufferInit(Stream *s __attribute__((unused)), size_t noOfBuf __attribute__((unused)), size_t bufSize __attribute__((unused)), int flag __attribute__((unused)))
+ {
+     return 0;
+ }
+-int SessionAlsaCompress::writeBufferInit(Stream *s __unused, size_t noOfBuf __unused, size_t bufSize __unused, int flag __unused)
++int SessionAlsaCompress::writeBufferInit(Stream *s __attribute__((unused)), size_t noOfBuf __attribute__((unused)), size_t bufSize __attribute__((unused)), int flag __attribute__((unused)))
+ {
+     return 0;
+ }
+ 
+-struct mixer_ctl* SessionAlsaCompress::getFEMixerCtl(const char *controlName, int *device, pal_stream_direction_t dir __unused)
++struct mixer_ctl* SessionAlsaCompress::getFEMixerCtl(const char *controlName, int *device, pal_stream_direction_t dir __attribute__((unused)))
+ {
+     std::ostringstream CntrlName;
+     struct mixer_ctl *ctl;
+@@ -2093,7 +2093,7 @@ struct mixer_ctl* SessionAlsaCompress::getFEMixerCtl(const char *controlName, in
+     return ctl;
+ }
+ 
+-int32_t SessionAlsaCompress::getFrontEndId(uint32_t ldir __unused)
++int32_t SessionAlsaCompress::getFrontEndId(uint32_t ldir __attribute__((unused)))
+ {
+     int32_t device = -EINVAL;
+ 
+@@ -2123,7 +2123,7 @@ uint32_t SessionAlsaCompress::getMIID(const char *backendName, uint32_t tagId, u
+     return status;
+ }
+ 
+-int SessionAlsaCompress::setParameters(Stream *s __unused, int tagId, uint32_t param_id, void *payload)
++int SessionAlsaCompress::setParameters(Stream *s __attribute__((unused)), int tagId, uint32_t param_id, void *payload)
+ {
+     pal_param_payload *param_payload = (pal_param_payload *)payload;
+     int status = 0;
+@@ -2495,7 +2495,7 @@ int SessionAlsaCompress::drain(pal_drain_type_t type)
+     return 0;
+ }
+ 
+-int SessionAlsaCompress::getParameters(Stream *s __unused, int tagId __unused, uint32_t param_id __unused, void **payload __unused)
++int SessionAlsaCompress::getParameters(Stream *s __attribute__((unused)), int tagId __attribute__((unused)), uint32_t param_id __attribute__((unused)), void **payload __attribute__((unused)))
+ {
+     return 0;
+ }
+@@ -2511,7 +2511,7 @@ int SessionAlsaCompress::getTimestamp(struct pal_session_time *stime)
+     return status;
+ }
+ 
+-int SessionAlsaCompress::setECRef(Stream *s __unused, std::shared_ptr<Device> rx_dev __unused, bool is_enable __unused)
++int SessionAlsaCompress::setECRef(Stream *s __attribute__((unused)), std::shared_ptr<Device> rx_dev __attribute__((unused)), bool is_enable __attribute__((unused)))
+ {
+     int status = 0;
+     struct pal_stream_attributes sAttr = {};
+diff --git a/session/src/SessionAlsaPcm.cpp b/session/src/SessionAlsaPcm.cpp
+index 102332b3..f7cec5d0 100644
+--- a/session/src/SessionAlsaPcm.cpp
++++ b/session/src/SessionAlsaPcm.cpp
+@@ -2465,7 +2465,7 @@ int SessionAlsaPcm::connectSessionDevice(Stream* streamHandle, pal_stream_type_t
+     return status;
+ }
+ 
+-int SessionAlsaPcm::read(Stream *s, int tag __unused, struct pal_buffer *buf, int * size)
++int SessionAlsaPcm::read(Stream *s, int tag __attribute__((unused)), struct pal_buffer *buf, int * size)
+ {
+     int status = 0, bytesRead = 0, bytesToRead = 0, offset = 0, pcmReadSize = 0;
+     struct pal_stream_attributes sAttr = {};
+@@ -3393,7 +3393,7 @@ exit:
+     return status;
+ }
+ 
+-int SessionAlsaPcm::getParameters(Stream *s __unused, int tagId, uint32_t param_id, void **payload)
++int SessionAlsaPcm::getParameters(Stream *s __attribute__((unused)), int tagId, uint32_t param_id, void **payload)
+ {
+     int status = 0;
+     uint8_t *ptr = NULL;
+@@ -3538,7 +3538,7 @@ int SessionAlsaPcm::getTimestamp(struct pal_session_time *stime)
+     return status;
+ }
+ 
+-int SessionAlsaPcm::drain(pal_drain_type_t type __unused)
++int SessionAlsaPcm::drain(pal_drain_type_t type __attribute__((unused)))
+ {
+     return 0;
+ }
+@@ -3565,7 +3565,7 @@ bool SessionAlsaPcm::isActive()
+     return mState == SESSION_STARTED;
+ }
+ 
+-int SessionAlsaPcm::getTagsWithModuleInfo(Stream *s, size_t *size __unused, uint8_t *payload)
++int SessionAlsaPcm::getTagsWithModuleInfo(Stream *s, size_t *size __attribute__((unused)), uint8_t *payload)
+ {
+     int status = 0;
+     struct pal_stream_attributes sAttr = {};
+diff --git a/session/src/SessionAlsaVoice.cpp b/session/src/SessionAlsaVoice.cpp
+index fc897d6a..79cb61c4 100644
+--- a/session/src/SessionAlsaVoice.cpp
++++ b/session/src/SessionAlsaVoice.cpp
+@@ -211,7 +211,7 @@ uint32_t SessionAlsaVoice::getMIID(const char *backendName, uint32_t tagId, uint
+ }
+ 
+ 
+-int SessionAlsaVoice::prepare(Stream * s __unused)
++int SessionAlsaVoice::prepare(Stream * s __attribute__((unused)))
+ {
+    return 0;
+ }
+@@ -369,7 +369,7 @@ exit:
+     return status;
+ }
+ 
+-int SessionAlsaVoice::populate_vsid_payload(Stream *s __unused)
++int SessionAlsaVoice::populate_vsid_payload(Stream *s __attribute__((unused)))
+ {
+     int status = 0;
+     apm_module_param_data_t* header;
+@@ -1166,7 +1166,7 @@ exit:
+     PAL_DBG(LOG_TAG,"Exit ret: %d", status);
+     return status;
+ }
+-int SessionAlsaVoice::setParameters(Stream *s, int tagId, uint32_t param_id __unused, void *payload)
++int SessionAlsaVoice::setParameters(Stream *s, int tagId, uint32_t param_id __attribute__((unused)), void *payload)
+ {
+     int status = 0;
+     int device = 0;
+@@ -1360,7 +1360,7 @@ if (paramData) {
+     return status;
+ }
+ 
+-int SessionAlsaVoice::setConfig(Stream * s, configType type __unused, int tag, int dir)
++int SessionAlsaVoice::setConfig(Stream * s, configType type __attribute__((unused)), int tag, int dir)
+ {
+     int status = 0;
+     int device = 0;
+@@ -1462,7 +1462,7 @@ exit:
+ }
+ 
+ int SessionAlsaVoice::payloadTaged(Stream * s, configType type, int tag,
+-                                   int device __unused, int dir){
++                                   int device __attribute__((unused)), int dir){
+     int status = 0;
+     uint32_t tagsent;
+     struct agm_tag_config* tagConfig;
+diff --git a/session/src/SoundTriggerEngineCapi.cpp b/session/src/SoundTriggerEngineCapi.cpp
+index 5b40009b..26c64b63 100644
+--- a/session/src/SoundTriggerEngineCapi.cpp
++++ b/session/src/SoundTriggerEngineCapi.cpp
+@@ -949,7 +949,7 @@ int32_t SoundTriggerEngineCapi::UpdateConfThreshold(Stream *s)
+     return 0;
+ }
+ 
+-int32_t SoundTriggerEngineCapi::LoadSoundModel(Stream *s __unused,
++int32_t SoundTriggerEngineCapi::LoadSoundModel(Stream *s __attribute__((unused)),
+     uint8_t *data, uint32_t data_size)
+ {
+     int32_t status = 0;
+@@ -1080,7 +1080,7 @@ exit:
+     return status;
+ }
+ 
+-int32_t SoundTriggerEngineCapi::UnloadSoundModel(Stream *s __unused)
++int32_t SoundTriggerEngineCapi::UnloadSoundModel(Stream *s __attribute__((unused)))
+ {
+     int32_t status = 0;
+ 
+@@ -1143,7 +1143,7 @@ exit:
+     return status;
+ }
+ 
+-int32_t SoundTriggerEngineCapi::RestartRecognition(Stream *s __unused)
++int32_t SoundTriggerEngineCapi::RestartRecognition(Stream *s __attribute__((unused)))
+ {
+     int32_t status = 0;
+ 
+@@ -1167,7 +1167,7 @@ exit:
+     return status;
+ }
+ 
+-int32_t SoundTriggerEngineCapi::StopRecognition(Stream *s __unused)
++int32_t SoundTriggerEngineCapi::StopRecognition(Stream *s __attribute__((unused)))
+ {
+     int32_t status = 0;
+ 
+diff --git a/session/src/SoundTriggerEngineGsl.cpp b/session/src/SoundTriggerEngineGsl.cpp
+index ed9b0b0c..1240c9d8 100644
+--- a/session/src/SoundTriggerEngineGsl.cpp
++++ b/session/src/SoundTriggerEngineGsl.cpp
+@@ -1368,7 +1368,7 @@ int32_t SoundTriggerEngineGsl::UpdateEngineConfigOnStart(Stream *s) {
+     return status;
+ }
+ 
+-void SoundTriggerEngineGsl::HandleSessionEvent(uint32_t event_id __unused,
++void SoundTriggerEngineGsl::HandleSessionEvent(uint32_t event_id __attribute__((unused)),
+                                                void *data, uint32_t size) {
+     int32_t status = 0;
+     uint32_t pre_roll_sz = 0, ftrt_sz = 0;
+diff --git a/stream/inc/Stream.h b/stream/inc/Stream.h
+index 08bc86a0..f9c09b23 100644
+--- a/stream/inc/Stream.h
++++ b/stream/inc/Stream.h
+@@ -228,7 +228,7 @@ public:
+     virtual int32_t start() = 0;
+     virtual int32_t stop() = 0;
+     virtual int32_t prepare() = 0;
+-    virtual int32_t drain(pal_drain_type_t type __unused) {return 0;}
++    virtual int32_t drain(pal_drain_type_t type __attribute__((unused))) {return 0;}
+     virtual int32_t setStreamAttributes(struct pal_stream_attributes *sattr) = 0;
+     virtual int32_t setVolume(struct pal_volume_data *volume) = 0;
+     virtual int32_t mute(bool state) = 0;
+@@ -251,10 +251,10 @@ public:
+     virtual int32_t setECRef_l(std::shared_ptr<Device> dev, bool is_enable) = 0;
+     virtual int32_t ssrDownHandler() = 0;
+     virtual int32_t ssrUpHandler() = 0;
+-    virtual int32_t createMmapBuffer(int32_t min_size_frames __unused,
+-                                   struct pal_mmap_buffer *info __unused) {return -EINVAL;}
+-    virtual int32_t GetMmapPosition(struct pal_mmap_position *position __unused) {return -EINVAL;}
+-    virtual int32_t getTagsWithModuleInfo(size_t *size __unused, uint8_t *payload __unused) {return -EINVAL;};
++    virtual int32_t createMmapBuffer(int32_t min_size_frames __attribute__((unused)),
++                                   struct pal_mmap_buffer *info __attribute__((unused))) {return -EINVAL;}
++    virtual int32_t GetMmapPosition(struct pal_mmap_position *position __attribute__((unused))) {return -EINVAL;}
++    virtual int32_t getTagsWithModuleInfo(size_t *size __attribute__((unused)), uint8_t *payload __attribute__((unused))) {return -EINVAL;};
+     virtual bool ConfigSupportLPI() {return true;}; //Only LPI streams can update their vote to NLPI
+     int32_t getStreamAttributes(struct pal_stream_attributes *sattr);
+     int32_t getModifiers(struct modifier_kv *modifiers,uint32_t *noOfModifiers);
+@@ -359,10 +359,10 @@ public:
+    int32_t start() override;
+    int32_t stop() override;
+    int32_t prepare() override;
+-   int32_t setStreamAttributes( struct pal_stream_attributes *sattr __unused) {return 0;};
+-   int32_t setVolume( struct pal_volume_data *volume __unused) {return 0;};
+-   int32_t mute(bool state __unused) {return 0;};
+-   int32_t mute_l(bool state __unused) {return 0;};
++   int32_t setStreamAttributes( struct pal_stream_attributes *sattr __attribute__((unused))) {return 0;};
++   int32_t setVolume( struct pal_volume_data *volume __attribute__((unused))) {return 0;};
++   int32_t mute(bool state __attribute__((unused))) {return 0;};
++   int32_t mute_l(bool state __attribute__((unused))) {return 0;};
+    int32_t pause() {return 0;};
+    int32_t pause_l() {return 0;};
+    int32_t resume() {return 0;};
+@@ -374,7 +374,7 @@ public:
+    int32_t setBufInfo(size_t *in_buf_size, size_t in_buf_count,
+                        size_t *out_buf_size, size_t out_buf_count);
+ 
+-   int32_t addRemoveEffect(pal_audio_effect_t effect __unused, bool enable __unused) {return 0;};
++   int32_t addRemoveEffect(pal_audio_effect_t effect __attribute__((unused)), bool enable __attribute__((unused))) {return 0;};
+    int32_t read(struct pal_buffer *buf) override;
+    int32_t write(struct pal_buffer *buf) override;
+    int32_t registerCallBack(pal_stream_callback cb, uint64_t cookie) override;
+@@ -384,8 +384,8 @@ public:
+    static int32_t isSampleRateSupported(uint32_t sampleRate);
+    static int32_t isChannelSupported(uint32_t numChannels);
+    static int32_t isBitWidthSupported(uint32_t bitWidth);
+-   int32_t setECRef(std::shared_ptr<Device> dev __unused, bool is_enable __unused) {return 0;};
+-   int32_t setECRef_l(std::shared_ptr<Device> dev __unused, bool is_enable __unused) {return 0;};
++   int32_t setECRef(std::shared_ptr<Device> dev __attribute__((unused)), bool is_enable __attribute__((unused))) {return 0;};
++   int32_t setECRef_l(std::shared_ptr<Device> dev __attribute__((unused)), bool is_enable __attribute__((unused))) {return 0;};
+    int32_t ssrDownHandler() override;
+    int32_t ssrUpHandler() override;
+ private:
+diff --git a/stream/inc/StreamACD.h b/stream/inc/StreamACD.h
+index d16b6f0a..692949c9 100644
+--- a/stream/inc/StreamACD.h
++++ b/stream/inc/StreamACD.h
+@@ -89,8 +89,8 @@ class StreamACD : public Stream {
+     StreamACD(struct pal_stream_attributes *sattr,
+                        struct pal_device *dattr,
+                        uint32_t no_of_devices,
+-                       struct modifier_kv *modifiers __unused,
+-                       uint32_t no_of_modifiers __unused,
++                       struct modifier_kv *modifiers __attribute__((unused)),
++                       uint32_t no_of_modifiers __attribute__((unused)),
+                        std::shared_ptr<ResourceManager> rm);
+     ~StreamACD();
+ #ifndef PAL_MEMLOG_UNSUPPORTED
+@@ -103,19 +103,19 @@ class StreamACD : public Stream {
+     int32_t start() override;
+     int32_t stop() override;
+     int32_t getTagsWithModuleInfo(size_t *size, uint8_t *payload) override;
+-    int32_t setStreamAttributes(struct pal_stream_attributes *sattr __unused) {
++    int32_t setStreamAttributes(struct pal_stream_attributes *sattr __attribute__((unused))) {
+         return 0;
+     }
+-    int32_t setVolume(struct pal_volume_data * volume __unused) { return 0; }
+-    int32_t mute(bool state __unused) override { return 0; }
+-    int32_t mute_l(bool state __unused) override { return 0; }
++    int32_t setVolume(struct pal_volume_data * volume __attribute__((unused))) { return 0; }
++    int32_t mute(bool state __attribute__((unused))) override { return 0; }
++    int32_t mute_l(bool state __attribute__((unused))) override { return 0; }
+     int32_t pause() override { return 0; }
+     int32_t pause_l() override { return 0; }
+     int32_t resume() override { return 0; }
+     int32_t resume_l() override { return 0; }
+ 
+-    int32_t read(struct pal_buffer *buf __unused) {return 0; }
+-    int32_t write(struct pal_buffer *buf __unused) { return 0; }
++    int32_t read(struct pal_buffer *buf __attribute__((unused))) {return 0; }
++    int32_t write(struct pal_buffer *buf __attribute__((unused))) { return 0; }
+ 
+     int32_t DisconnectDevice(pal_device_id_t device_id) override;
+     int32_t ConnectDevice(pal_device_id_t device_id) override;
+@@ -127,8 +127,8 @@ class StreamACD : public Stream {
+     int32_t getCallBack(pal_stream_callback *cb) override;
+     int32_t getParameters(uint32_t param_id, void **payload) override;
+     int32_t setParameters(uint32_t param_id, void *payload) override;
+-    int32_t addRemoveEffect(pal_audio_effect_t effec __unused,
+-                            bool enable __unused) {
++    int32_t addRemoveEffect(pal_audio_effect_t effec __attribute__((unused)),
++                            bool enable __attribute__((unused))) {
+         return -ENOSYS;
+     }
+ 
+diff --git a/stream/inc/StreamCommon.h b/stream/inc/StreamCommon.h
+index 514f90d7..1bb57938 100644
+--- a/stream/inc/StreamCommon.h
++++ b/stream/inc/StreamCommon.h
+@@ -57,35 +57,35 @@ public:
+     int32_t start() override;
+     int32_t stop() override;
+     int32_t prepare() override {return 0;}
+-    int32_t setStreamAttributes( struct pal_stream_attributes *sattr __unused) override {return 0;}
++    int32_t setStreamAttributes( struct pal_stream_attributes *sattr __attribute__((unused))) override {return 0;}
+     int32_t setVolume( struct pal_volume_data *volume) override;
+-    int32_t mute(bool state __unused) override {return 0;}
+-    int32_t mute_l(bool state __unused) override {return 0;}
++    int32_t mute(bool state __attribute__((unused))) override {return 0;}
++    int32_t mute_l(bool state __attribute__((unused))) override {return 0;}
+     int32_t pause() override {return 0;}
+     int32_t pause_l() override {return 0;}
+     int32_t resume() override {return 0;}
+     int32_t resume_l() override {return 0;}
+     int32_t flush() {return 0;}
+-    int32_t addRemoveEffect(pal_audio_effect_t effect __unused, bool enable __unused) override {return 0;}
+-    int32_t read(struct pal_buffer *buf __unused) override {return 0;}
+-    int32_t write(struct pal_buffer *buf __unused) override {return 0;}
++    int32_t addRemoveEffect(pal_audio_effect_t effect __attribute__((unused)), bool enable __attribute__((unused))) override {return 0;}
++    int32_t read(struct pal_buffer *buf __attribute__((unused))) override {return 0;}
++    int32_t write(struct pal_buffer *buf __attribute__((unused))) override {return 0;}
+     int32_t registerCallBack(pal_stream_callback cb, uint64_t cookie) override;
+-    int32_t getCallBack(pal_stream_callback *cb __unused) override {return 0;}
+-    int32_t getParameters(uint32_t param_id __unused, void **payload __unused) override {return 0;}
+-    int32_t setParameters(uint32_t param_id __unused, void *payload __unused) override {return 0;}
+-    int32_t setECRef(std::shared_ptr<Device> dev __unused, bool is_enable __unused) override {return 0;}
+-    int32_t setECRef_l(std::shared_ptr<Device> dev __unused, bool is_enable __unused) override {return 0;}
++    int32_t getCallBack(pal_stream_callback *cb __attribute__((unused))) override {return 0;}
++    int32_t getParameters(uint32_t param_id __attribute__((unused)), void **payload __attribute__((unused))) override {return 0;}
++    int32_t setParameters(uint32_t param_id __attribute__((unused)), void *payload __attribute__((unused))) override {return 0;}
++    int32_t setECRef(std::shared_ptr<Device> dev __attribute__((unused)), bool is_enable __attribute__((unused))) override {return 0;}
++    int32_t setECRef_l(std::shared_ptr<Device> dev __attribute__((unused)), bool is_enable __attribute__((unused))) override {return 0;}
+     int32_t ssrDownHandler() override;
+     int32_t ssrUpHandler() override;
+-    int32_t createMmapBuffer(int32_t min_size_frames __unused,
+-                             struct pal_mmap_buffer *info __unused) override {return 0;}
+-    int32_t GetMmapPosition(struct pal_mmap_position *position __unused) override {return 0;}
++    int32_t createMmapBuffer(int32_t min_size_frames __attribute__((unused)),
++                             struct pal_mmap_buffer *info __attribute__((unused))) override {return 0;}
++    int32_t GetMmapPosition(struct pal_mmap_position *position __attribute__((unused))) override {return 0;}
+     int32_t start_device();
+     int32_t startSession();
+     int32_t getTagsWithModuleInfo(size_t *size, uint8_t *payload);
+-    static int32_t isSampleRateSupported(uint32_t sampleRate __unused) {return 0;}
+-    static int32_t isChannelSupported(uint32_t numChannels __unused) {return 0;}
+-    static int32_t isBitWidthSupported(uint32_t bitWidth __unused) {return 0;}
++    static int32_t isSampleRateSupported(uint32_t sampleRate __attribute__((unused))) {return 0;}
++    static int32_t isChannelSupported(uint32_t numChannels __attribute__((unused))) {return 0;}
++    static int32_t isBitWidthSupported(uint32_t bitWidth __attribute__((unused))) {return 0;}
+ };
+ 
+ #endif//STREAMCOMMON_H_
+diff --git a/stream/inc/StreamCommonProxy.h b/stream/inc/StreamCommonProxy.h
+index ad0983cd..6b0e03c5 100644
+--- a/stream/inc/StreamCommonProxy.h
++++ b/stream/inc/StreamCommonProxy.h
+@@ -43,12 +43,12 @@ class Session;
+ class StreamCommonProxy : public StreamCommon
+ {
+ public:
+-   StreamCommonProxy(const struct pal_stream_attributes *sattr, struct pal_device *dattr __unused,
+-             const uint32_t no_of_devices __unused,
+-             const struct modifier_kv *modifiers __unused, const uint32_t no_of_modifiers __unused,
++   StreamCommonProxy(const struct pal_stream_attributes *sattr, struct pal_device *dattr __attribute__((unused)),
++             const uint32_t no_of_devices __attribute__((unused)),
++             const struct modifier_kv *modifiers __attribute__((unused)), const uint32_t no_of_modifiers __attribute__((unused)),
+              const std::shared_ptr<ResourceManager> rm);
+    virtual ~StreamCommonProxy();
+    int32_t getParameters(uint32_t param_id, void **payload);
+ };
+ 
+-#endif//StreamCommonProxy_H_
+\ No newline at end of file
++#endif//StreamCommonProxy_H_
+diff --git a/stream/inc/StreamContextProxy.h b/stream/inc/StreamContextProxy.h
+index 0e4815c0..977f814d 100644
+--- a/stream/inc/StreamContextProxy.h
++++ b/stream/inc/StreamContextProxy.h
+@@ -39,14 +39,14 @@ class Session;
+ class StreamContextProxy : public StreamCommon
+ {
+ public:
+-   StreamContextProxy(const struct pal_stream_attributes *sattr, struct pal_device *dattr __unused,
+-             const uint32_t no_of_devices __unused,
+-             const struct modifier_kv *modifiers __unused, const uint32_t no_of_modifiers __unused,
++   StreamContextProxy(const struct pal_stream_attributes *sattr, struct pal_device *dattr __attribute__((unused)),
++             const uint32_t no_of_devices __attribute__((unused)),
++             const struct modifier_kv *modifiers __attribute__((unused)), const uint32_t no_of_modifiers __attribute__((unused)),
+              const std::shared_ptr<ResourceManager> rm); //make this just pass parameters to Stream and avoid duplicating code between StreamPCM and StreamCompress
+    //StreamContextProxy();
+    virtual ~StreamContextProxy();
+    int32_t setParameters(uint32_t param_id, void *payload);
+-   int32_t setVolume( struct pal_volume_data *volume __unused) {return 0;}
++   int32_t setVolume( struct pal_volume_data *volume __attribute__((unused))) {return 0;}
+ private:
+    void ParseASPSEventPayload(uint32_t event_id,
+                               uint32_t event_size, void *data);
+diff --git a/stream/inc/StreamSensorPCMData.h b/stream/inc/StreamSensorPCMData.h
+index 41710832..07ee0b92 100644
+--- a/stream/inc/StreamSensorPCMData.h
++++ b/stream/inc/StreamSensorPCMData.h
+@@ -42,11 +42,11 @@
+ class StreamSensorPCMData : public StreamCommon
+ {
+ public:
+-    StreamSensorPCMData(const struct pal_stream_attributes *sattr __unused,
+-                        struct pal_device *dattr __unused,
+-                        const uint32_t no_of_devices __unused,
+-                        const struct modifier_kv *modifiers __unused,
+-                        const uint32_t no_of_modifiers __unused,
++    StreamSensorPCMData(const struct pal_stream_attributes *sattr __attribute__((unused)),
++                        struct pal_device *dattr __attribute__((unused)),
++                        const uint32_t no_of_devices __attribute__((unused)),
++                        const struct modifier_kv *modifiers __attribute__((unused)),
++                        const uint32_t no_of_modifiers __attribute__((unused)),
+                         const std::shared_ptr<ResourceManager> rm);
+     ~StreamSensorPCMData();
+     std::shared_ptr<CaptureProfile> GetCurrentCaptureProfile();
+diff --git a/stream/inc/StreamSoundTrigger.h b/stream/inc/StreamSoundTrigger.h
+index 686aaf29..9a469412 100644
+--- a/stream/inc/StreamSoundTrigger.h
++++ b/stream/inc/StreamSoundTrigger.h
+@@ -120,8 +120,8 @@ public:
+     StreamSoundTrigger(struct pal_stream_attributes *sattr,
+                        struct pal_device *dattr,
+                        uint32_t no_of_devices,
+-                       struct modifier_kv *modifiers __unused,
+-                       uint32_t no_of_modifiers __unused,
++                       struct modifier_kv *modifiers __attribute__((unused)),
++                       uint32_t no_of_modifiers __attribute__((unused)),
+                        std::shared_ptr<ResourceManager> rm);
+     ~StreamSoundTrigger();
+ 
+@@ -135,13 +135,13 @@ public:
+ 
+     int32_t ssrDownHandler() override;
+     int32_t ssrUpHandler() override;
+-    int32_t setStreamAttributes(struct pal_stream_attributes *sattr __unused) {
++    int32_t setStreamAttributes(struct pal_stream_attributes *sattr __attribute__((unused))) {
+         return 0;
+     }
+ 
+-    int32_t setVolume(struct pal_volume_data * volume __unused) { return 0; }
+-    int32_t mute(bool state __unused) override { return 0; }
+-    int32_t mute_l(bool state __unused) override { return 0; }
++    int32_t setVolume(struct pal_volume_data * volume __attribute__((unused))) { return 0; }
++    int32_t mute(bool state __attribute__((unused))) override { return 0; }
++    int32_t mute_l(bool state __attribute__((unused))) override { return 0; }
+     int32_t pause() override { return 0; }
+     int32_t pause_l() override { return 0; }
+     int32_t resume() override { return 0; }
+@@ -149,15 +149,15 @@ public:
+ 
+     int32_t read(struct pal_buffer *buf) override;
+ 
+-    int32_t write(struct pal_buffer *buf __unused) { return 0; }
++    int32_t write(struct pal_buffer *buf __attribute__((unused))) { return 0; }
+ 
+     int32_t registerCallBack(pal_stream_callback cb,  uint64_t cookie) override;
+     int32_t getCallBack(pal_stream_callback *cb) override;
+     int32_t getParameters(uint32_t param_id, void **payload) override;
+     int32_t setParameters(uint32_t param_id, void *payload) override;
+ 
+-    int32_t addRemoveEffect(pal_audio_effect_t effec __unused,
+-                            bool enable __unused) {
++    int32_t addRemoveEffect(pal_audio_effect_t effec __attribute__((unused)),
++                            bool enable __attribute__((unused))) {
+         return -ENOSYS;
+     }
+     bool isStarted();
+diff --git a/stream/inc/StreamUltraSound.h b/stream/inc/StreamUltraSound.h
+index 401d262b..e8e9f76a 100644
+--- a/stream/inc/StreamUltraSound.h
++++ b/stream/inc/StreamUltraSound.h
+@@ -46,7 +46,7 @@ public:
+                      const uint32_t no_of_devices, const struct modifier_kv *modifiers,
+                      const uint32_t no_of_modifiers, const std::shared_ptr<ResourceManager> rm);
+     ~StreamUltraSound();
+-   int32_t setVolume( struct pal_volume_data *volume __unused) {return 0;}
++   int32_t setVolume( struct pal_volume_data *volume __attribute__((unused))) {return 0;}
+    int32_t setParameters(uint32_t param_id, void *payload);
+    int32_t start();
+    int32_t stop();
+diff --git a/stream/src/Stream.cpp b/stream/src/Stream.cpp
+index e7721aaf..d6fffe46 100644
+--- a/stream/src/Stream.cpp
++++ b/stream/src/Stream.cpp
+@@ -61,8 +61,8 @@ std::condition_variable Stream::pauseCV;
+ 
+ 
+ void Stream::handleSoftPauseCallBack(uint64_t hdl, uint32_t event_id,
+-                                        void *data __unused,
+-                                        uint32_t event_size __unused) {
++                                        void *data __attribute__((unused)),
++                                        uint32_t event_size __attribute__((unused))) {
+ 
+     PAL_DBG(LOG_TAG,"Event id %x ", event_id);
+ 
+diff --git a/stream/src/StreamACD.cpp b/stream/src/StreamACD.cpp
+index 19034b7a..36b8c077 100644
+--- a/stream/src/StreamACD.cpp
++++ b/stream/src/StreamACD.cpp
+@@ -43,8 +43,8 @@
+ StreamACD::StreamACD(struct pal_stream_attributes *sattr,
+                                        struct pal_device *dattr,
+                                        uint32_t no_of_devices,
+-                                       struct modifier_kv *modifiers __unused,
+-                                       uint32_t no_of_modifiers __unused,
++                                       struct modifier_kv *modifiers __attribute__((unused)),
++                                       uint32_t no_of_modifiers __attribute__((unused)),
+                                        std::shared_ptr<ResourceManager> rm)
+ {
+     int32_t enable_concurrency_count = 0;
+@@ -325,7 +325,7 @@ int32_t StreamACD::HandleConcurrentStream(bool active) {
+     return status;
+ }
+ 
+-int32_t StreamACD::getParameters(uint32_t param_id __unused, void **payload __unused)
++int32_t StreamACD::getParameters(uint32_t param_id __attribute__((unused)), void **payload __attribute__((unused)))
+ {
+     return 0;
+ }
+diff --git a/stream/src/StreamCommonProxy.cpp b/stream/src/StreamCommonProxy.cpp
+index 4b1530bc..761f2d26 100644
+--- a/stream/src/StreamCommonProxy.cpp
++++ b/stream/src/StreamCommonProxy.cpp
+@@ -39,9 +39,9 @@
+ #include "ResourceManager.h"
+ #include <unistd.h>
+ 
+-StreamCommonProxy::StreamCommonProxy(const struct pal_stream_attributes *sattr __unused,
+-                    struct pal_device *dattr __unused, const uint32_t no_of_devices __unused,
+-                    const struct modifier_kv *modifiers __unused, const uint32_t no_of_modifiers __unused,
++StreamCommonProxy::StreamCommonProxy(const struct pal_stream_attributes *sattr __attribute__((unused)),
++                    struct pal_device *dattr __attribute__((unused)), const uint32_t no_of_devices __attribute__((unused)),
++                    const struct modifier_kv *modifiers __attribute__((unused)), const uint32_t no_of_modifiers __attribute__((unused)),
+                     const std::shared_ptr<ResourceManager> rm) :
+                StreamCommon(sattr,dattr,no_of_devices,modifiers,no_of_modifiers,rm)
+ {
+diff --git a/stream/src/StreamContextProxy.cpp b/stream/src/StreamContextProxy.cpp
+index 6f528c9e..33eaf338 100644
+--- a/stream/src/StreamContextProxy.cpp
++++ b/stream/src/StreamContextProxy.cpp
+@@ -35,9 +35,9 @@
+ #include "ResourceManager.h"
+ #include <unistd.h>
+ 
+-StreamContextProxy::StreamContextProxy(const struct pal_stream_attributes *sattr __unused,
+-                    struct pal_device *dattr __unused, const uint32_t no_of_devices __unused,
+-                    const struct modifier_kv *modifiers __unused, const uint32_t no_of_modifiers __unused,
++StreamContextProxy::StreamContextProxy(const struct pal_stream_attributes *sattr __attribute__((unused)),
++                    struct pal_device *dattr __attribute__((unused)), const uint32_t no_of_devices __attribute__((unused)),
++                    const struct modifier_kv *modifiers __attribute__((unused)), const uint32_t no_of_modifiers __attribute__((unused)),
+                     const std::shared_ptr<ResourceManager> rm) :
+                StreamCommon(sattr,dattr,no_of_devices,modifiers,no_of_modifiers,rm)
+ {
+diff --git a/stream/src/StreamHaptics.cpp b/stream/src/StreamHaptics.cpp
+index d4c5a2d9..1e1db4da 100755
+--- a/stream/src/StreamHaptics.cpp
++++ b/stream/src/StreamHaptics.cpp
+@@ -42,9 +42,9 @@
+ #include <unistd.h>
+ #include "rx_haptics_api.h"
+ 
+-StreamHaptics::StreamHaptics(const struct pal_stream_attributes *sattr, struct pal_device *dattr __unused,
+-                    const uint32_t no_of_devices __unused, const struct modifier_kv *modifiers __unused,
+-                    const uint32_t no_of_modifiers __unused, const std::shared_ptr<ResourceManager> rm):
++StreamHaptics::StreamHaptics(const struct pal_stream_attributes *sattr, struct pal_device *dattr __attribute__((unused)),
++                    const uint32_t no_of_devices __attribute__((unused)), const struct modifier_kv *modifiers __attribute__((unused)),
++                    const uint32_t no_of_modifiers __attribute__((unused)), const std::shared_ptr<ResourceManager> rm):
+                   StreamPCM(sattr,dattr,no_of_devices,modifiers,no_of_modifiers,rm)
+ {
+     session->registerCallBack((session_callback)HandleCallBack,((uint64_t) this));
+diff --git a/stream/src/StreamNonTunnel.cpp b/stream/src/StreamNonTunnel.cpp
+index c1aad159..18e586a0 100644
+--- a/stream/src/StreamNonTunnel.cpp
++++ b/stream/src/StreamNonTunnel.cpp
+@@ -50,8 +50,8 @@ static void handleSessionCallBack(uint64_t hdl, uint32_t event_id, void *data,
+           event_size, s->cookie);
+ }
+ 
+-StreamNonTunnel::StreamNonTunnel(const struct pal_stream_attributes *sattr, struct pal_device *dattr __unused,
+-                    const uint32_t no_of_devices __unused, const struct modifier_kv *modifiers,
++StreamNonTunnel::StreamNonTunnel(const struct pal_stream_attributes *sattr, struct pal_device *dattr __attribute__((unused)),
++                    const uint32_t no_of_devices __attribute__((unused)), const struct modifier_kv *modifiers,
+                     const uint32_t no_of_modifiers, const std::shared_ptr<ResourceManager> rm)
+ {
+     mStreamMutex.lock();
+diff --git a/stream/src/StreamSensorPCMData.cpp b/stream/src/StreamSensorPCMData.cpp
+index 2b872538..90848a08 100644
+--- a/stream/src/StreamSensorPCMData.cpp
++++ b/stream/src/StreamSensorPCMData.cpp
+@@ -42,11 +42,11 @@
+ #include "Device.h"
+ #include <unistd.h>
+ 
+-StreamSensorPCMData::StreamSensorPCMData(const struct pal_stream_attributes *sattr __unused,
+-                    struct pal_device *dattr __unused,
+-                    const uint32_t no_of_devices __unused,
+-                    const struct modifier_kv *modifiers __unused,
+-                    const uint32_t no_of_modifiers __unused,
++StreamSensorPCMData::StreamSensorPCMData(const struct pal_stream_attributes *sattr __attribute__((unused)),
++                    struct pal_device *dattr __attribute__((unused)),
++                    const uint32_t no_of_devices __attribute__((unused)),
++                    const struct modifier_kv *modifiers __attribute__((unused)),
++                    const uint32_t no_of_modifiers __attribute__((unused)),
+                     const std::shared_ptr<ResourceManager> rm):
+                     StreamCommon(sattr,dattr,no_of_devices,modifiers,no_of_modifiers,rm)
+ {
+diff --git a/stream/src/StreamSoundTrigger.cpp b/stream/src/StreamSoundTrigger.cpp
+index e37e16fd..27bcaf8d 100644
+--- a/stream/src/StreamSoundTrigger.cpp
++++ b/stream/src/StreamSoundTrigger.cpp
+@@ -92,8 +92,8 @@ std::map<st_module_type_t, vui_intf_plugin_t *> vui_intf_plugin_map;
+ StreamSoundTrigger::StreamSoundTrigger(struct pal_stream_attributes *sattr,
+                                        struct pal_device *dattr,
+                                        uint32_t no_of_devices,
+-                                       struct modifier_kv *modifiers __unused,
+-                                       uint32_t no_of_modifiers __unused,
++                                       struct modifier_kv *modifiers __attribute__((unused)),
++                                       uint32_t no_of_modifiers __attribute__((unused)),
+                                        std::shared_ptr<ResourceManager> rm) {
+ 
+     class SoundTriggerUUID uuid;
+diff --git a/stream/src/StreamUltraSound.cpp b/stream/src/StreamUltraSound.cpp
+index 6729ce9c..7a96ae1e 100644
+--- a/stream/src/StreamUltraSound.cpp
++++ b/stream/src/StreamUltraSound.cpp
+@@ -41,9 +41,9 @@
+ #include "us_detect_api.h"
+ #include <unistd.h>
+ 
+-StreamUltraSound::StreamUltraSound(const struct pal_stream_attributes *sattr __unused, struct pal_device *dattr __unused,
+-                    const uint32_t no_of_devices __unused, const struct modifier_kv *modifiers __unused,
+-                    const uint32_t no_of_modifiers __unused, const std::shared_ptr<ResourceManager> rm):
++StreamUltraSound::StreamUltraSound(const struct pal_stream_attributes *sattr __attribute__((unused)), struct pal_device *dattr __attribute__((unused)),
++                    const uint32_t no_of_devices __attribute__((unused)), const struct modifier_kv *modifiers __attribute__((unused)),
++                    const uint32_t no_of_modifiers __attribute__((unused)), const std::shared_ptr<ResourceManager> rm):
+                   StreamCommon(sattr,dattr,no_of_devices,modifiers,no_of_modifiers,rm)
+ {
+     gain = PAL_ULTRASOUND_GAIN_MUTE;
+diff --git a/utils/inc/SoundTriggerPlatformInfo.h b/utils/inc/SoundTriggerPlatformInfo.h
+index cc460556..604c9c3c 100644
+--- a/utils/inc/SoundTriggerPlatformInfo.h
++++ b/utils/inc/SoundTriggerPlatformInfo.h
+@@ -67,8 +67,8 @@ class SoundTriggerXml
+ {
+ public:
+     virtual void HandleStartTag(const char *tag, const char **attribs) = 0;
+-    virtual void HandleEndTag(struct xml_userdata *data __unused, const char *tag __unused) {};
+-    virtual void HandleCharData(const char *data __unused) {};
++    virtual void HandleEndTag(struct xml_userdata *data __attribute__((unused)), const char *tag __attribute__((unused))) {};
++    virtual void HandleCharData(const char *data __attribute__((unused))) {};
+     virtual ~SoundTriggerXml() {};
+ };
+ 
+diff --git a/utils/src/ACDPlatformInfo.cpp b/utils/src/ACDPlatformInfo.cpp
+index cc2e238c..2990e3e5 100644
+--- a/utils/src/ACDPlatformInfo.cpp
++++ b/utils/src/ACDPlatformInfo.cpp
+@@ -49,7 +49,7 @@ ACDSoundModelInfo::ACDSoundModelInfo(ACDStreamConfig *sm_cfg) :
+ {
+ }
+ 
+-void ACDSoundModelInfo::HandleStartTag(const char* tag, const char** attribs __unused)
++void ACDSoundModelInfo::HandleStartTag(const char* tag, const char** attribs __attribute__((unused)))
+ {
+     PAL_DBG(LOG_TAG, "Got start tag %s", tag);
+ 
+diff --git a/utils/src/PalRingBuffer.cpp b/utils/src/PalRingBuffer.cpp
+index 607abe0b..a796e50b 100644
+--- a/utils/src/PalRingBuffer.cpp
++++ b/utils/src/PalRingBuffer.cpp
+@@ -50,8 +50,8 @@ int32_t PalRingBuffer::removeReader(PalRingBufferReader *reader)
+     return 0;
+ }
+ 
+-size_t PalRingBuffer::read(std::shared_ptr<PalRingBufferReader>reader __unused,
+-                           void* readBuffer __unused, size_t readSize __unused)
++size_t PalRingBuffer::read(std::shared_ptr<PalRingBufferReader>reader __attribute__((unused)),
++                           void* readBuffer __attribute__((unused)), size_t readSize __attribute__((unused)))
+ {
+     return 0;
+ }
