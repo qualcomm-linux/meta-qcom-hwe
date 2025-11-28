@@ -15,13 +15,13 @@ S = "${WORKDIR}/audio/opensource/audioreach-conf/ar-acdb/acdbdata"
 
 do_install:append:qcm6490() {
     mkdir -p -m 0777 ${D}${sysconfdir}/acdbdata
-    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/qcm6490_idp
-    install -m 0644 ${S}/qcm6490/qcm6490_idp/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcm6490_idp/acdb_cal.acdb
-    install -m 0644 ${S}/qcm6490/qcm6490_idp/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/qcm6490_idp/workspaceFileXml.qwsp
+    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/QCM6490_IDP
+    install -m 0644 ${S}/qcm6490/qcm6490_idp/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/QCM6490_IDP/acdb_cal.acdb
+    install -m 0644 ${S}/qcm6490/qcm6490_idp/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/QCM6490_IDP/workspaceFileXml.qwsp
 
-    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2
-    install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2/acdb_cal.acdb
-    install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2/workspaceFileXml.qwsp
+    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/QCS6490_RB3Gen2
+    install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/QCS6490_RB3Gen2/acdb_cal.acdb
+    install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/QCS6490_RB3Gen2/workspaceFileXml.qwsp
 
     mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2_video
     install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2_video/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2_video/acdb_cal.acdb
@@ -37,9 +37,9 @@ do_install:append:qcm6490() {
 }
 
 do_install:append:qcs8300() {
-    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/iq8_8275_evk
-    install -m 0644 ${S}/qcs8275/iq8_8275_evk/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/iq8_8275_evk/acdb_cal.acdb
-    install -m 0644 ${S}/qcs8275/iq8_8275_evk/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/iq8_8275_evk/workspaceFileXml.qwsp
+    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/MONACO_EVK
+    install -m 0644 ${S}/qcs8275/iq8_8275_evk/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/MONACO_EVK/acdb_cal.acdb
+    install -m 0644 ${S}/qcs8275/iq8_8275_evk/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/MONACO_EVK/workspaceFileXml.qwsp
 
     mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/monaco_monza
     install -m 0644 ${S}/qcs8275/monaco_monza/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/monaco_monza/acdb_cal.acdb
@@ -55,9 +55,9 @@ do_install:append:qcs9100() {
     install -m 0644 ${S}/qcs9100/qcs9100_ridesx/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcs9100_ridesx/acdb_cal.acdb
     install -m 0644 ${S}/qcs9100/qcs9100_ridesx/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/qcs9100_ridesx/workspaceFileXml.qwsp
 
-    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/qcs9075_rb8
-    install -m 0644 ${S}/qcs9075/qcs9075_rb8/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcs9075_rb8/acdb_cal.acdb
-    install -m 0644 ${S}/qcs9075/qcs9075_rb8/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/qcs9075_rb8/workspaceFileXml.qwsp
+    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/LEMANS_EVK
+    install -m 0644 ${S}/qcs9075/qcs9075_rb8/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/LEMANS_EVK/acdb_cal.acdb
+    install -m 0644 ${S}/qcs9075/qcs9075_rb8/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/LEMANS_EVK/workspaceFileXml.qwsp
 }
 
 DEPENDS = "qcom-kvh2xml"
