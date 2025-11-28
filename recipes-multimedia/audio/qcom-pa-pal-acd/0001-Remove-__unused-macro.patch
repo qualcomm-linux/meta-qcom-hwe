@@ -1,0 +1,109 @@
+From 3ce7167837ec02cf00c88dcd1a4ad26d095de655 Mon Sep 17 00:00:00 2001
+From: Jaeyoon Jung <jaeyoon.jung@lge.com>
+Date: Fri, 28 Nov 2025 10:52:35 +0900
+Subject: [PATCH] Remove __unused macro
+
+Use __attribute__((unused)) in place of __unused instead as it may cause
+a error as when building with musl as below:
+In file included from qcom-pa-pal-acd/audio/opensource/pulseaudio-plugins/test/acd/pa_pal_acd_test.cpp:21:
+In file included from qcom-pa-pal-acd/git/recipe-sysroot/usr/include/sys/stat.h:23:
+qcom-pa-pal-acd/git/recipe-sysroot/usr/include/bits/stat.h:17:19: error: expected member name or ';' after declaration specifiers
+   17 |         unsigned __unused[2];
+      |         ~~~~~~~~         ^
+
+Upstream-Status: Pending
+Signed-off-by: Jaeyoon Jung <jaeyoon.jung@lge.com>
+---
+ test/acd/Makefile.am                         | 4 ++--
+ test/acd/pa_pal_acd_test.cpp                 | 4 ++--
+ utils/pa_pal_voiceui/Makefile.am             | 4 ++--
+ utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp | 4 ++--
+ 4 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/test/acd/Makefile.am b/test/acd/Makefile.am
+index 1d9d2fb..957abd7 100644
+--- a/test/acd/Makefile.am
++++ b/test/acd/Makefile.am
+@@ -8,7 +8,7 @@ AM_CPPFLAGS = -Wundef \
+ lib_LTLIBRARIES = libpapalacd.la
+ libpapalacd_la_SOURCES = pa_pal_acd.cpp
+ libpapalacd_la_CPPFLAGS = @VUI_INTF_HEADERS_CFLAGS@ @PALHEADERS_CFLAGS@
+-libpapalacd_la_CPPFLAGS += $(AM_CPPFLAGS) -DNDEBUG -D__unused=__attribute__\(\(__unused__\)\) @PAL_CFLAGS@ -std=c++11
++libpapalacd_la_CPPFLAGS += $(AM_CPPFLAGS) -DNDEBUG @PAL_CFLAGS@ -std=c++11
+ libpapalacd_la_CPPFLAGS +=  $(GIO_CFLAGS)
+ libpapalacd_la_LDFLAGS = -shared -module -version-number @LT_VERSION_NUMBER@
+ libpapalacd_la_LDFLAGS += $(GIO_LIBS)
+@@ -16,7 +16,7 @@ libpapalacd_la_LDFLAGS += $(GIO_LIBS)
+ ###Generate test app ####
+ bin_PROGRAMS = pa_pal_acd_test
+ pa_pal_acd_test_SOURCES = pa_pal_acd_test.cpp
+-pa_pal_acd_test_CPPFLAGS = $(AM_CPPFLAGS) -D__unused=__attribute__\(\(__unused__\)\) @PAL_CFLAGS@ -std=c++11
++pa_pal_acd_test_CPPFLAGS = $(AM_CPPFLAGS) @PAL_CFLAGS@ -std=c++11
+ pa_pal_acd_test_CPPFLAGS += $(GIO_CFLAGS)
+ pa_pal_acd_test_CPPFLAGS += $(GLIB_CFLAGS) -include glib.h
+ pa_pal_acd_test_CPPFLAGS += @VUI_INTF_HEADERS_CFLAGS@ @PALHEADERS_CFLAGS@
+diff --git a/test/acd/pa_pal_acd_test.cpp b/test/acd/pa_pal_acd_test.cpp
+index bd8e2a0..6d52043 100644
+--- a/test/acd/pa_pal_acd_test.cpp
++++ b/test/acd/pa_pal_acd_test.cpp
+@@ -116,7 +116,7 @@ static int startIndex = 0;
+ static int endIndex = 0;
+ bool exit_loop = false;
+ 
+-static void sigint_handler(int sig __unused) {
++static void sigint_handler(int sig __attribute__((unused))) {
+     event_received = true;
+     exit_loop = true;
+ }
+@@ -163,7 +163,7 @@ static void *event_handler_thread(void *context) {
+     return NULL;
+ }
+ 
+-static void eventCallback(struct pal_st_recognition_event *event, void *sessionHndl __unused) {
++static void eventCallback(struct pal_st_recognition_event *event, void *sessionHndl __attribute__((unused))) {
+ 
+     int rc = 0;
+     pthread_attr_t attr;
+diff --git a/utils/pa_pal_voiceui/Makefile.am b/utils/pa_pal_voiceui/Makefile.am
+index ecf6e79..223b49a 100644
+--- a/utils/pa_pal_voiceui/Makefile.am
++++ b/utils/pa_pal_voiceui/Makefile.am
+@@ -8,7 +8,7 @@ AM_CPPFLAGS = -Wundef \
+ 
+ lib_LTLIBRARIES = libpapalvoiceui.la
+ libpapalvoiceui_la_SOURCES = pa_pal_voiceui.cpp
+-libpapalvoiceui_la_CPPFLAGS = $(AM_CPPFLAGS) -DNDEBUG -D__unused=__attribute__\(\(__unused__\)\) @PAL_CFLAGS@ @VUI_INTERFACE_HEADERS_CFLAGS@ @PALHEADERS_CFLAGS@ -std=c++11
++libpapalvoiceui_la_CPPFLAGS = $(AM_CPPFLAGS) -DNDEBUG @PAL_CFLAGS@ @VUI_INTERFACE_HEADERS_CFLAGS@ @PALHEADERS_CFLAGS@ -std=c++11
+ libpapalvoiceui_la_CPPFLAGS +=  $(GIO_CFLAGS)
+ libpapalvoiceui_la_LDFLAGS = -shared -module -version-number @LT_VERSION_NUMBER@
+ libpapalvoiceui_la_LDFLAGS += $(GIO_LIBS)
+@@ -16,6 +16,6 @@ libpapalvoiceui_la_LDFLAGS += $(GIO_LIBS)
+ ###Generate test app ####
+ bin_PROGRAMS = pa_pal_voiceui_test
+ pa_pal_voiceui_test_SOURCES = pa_pal_voiceui_test.cpp
+-pa_pal_voiceui_test_CPPFLAGS = $(AM_CPPFLAGS) -D__unused=__attribute__\(\(__unused__\)\) @PAL_CFLAGS@ @PALHEADERS_CFLAGS@ @VUI_INTERFACE_HEADERS_CFLAGS@ -std=c++11
++pa_pal_voiceui_test_CPPFLAGS = $(AM_CPPFLAGS) @PAL_CFLAGS@ @PALHEADERS_CFLAGS@ @VUI_INTERFACE_HEADERS_CFLAGS@ -std=c++11
+ pa_pal_voiceui_test_CPPFLAGS += $(GLIB_CFLAGS) -include glib.h
+ pa_pal_voiceui_test_LDADD = libpapalvoiceui.la $(GLIB_LIBS)
+diff --git a/utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp b/utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp
+index ee83c24..43ffc81 100644
+--- a/utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp
++++ b/utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp
+@@ -228,7 +228,7 @@ static int startIndex = 0;
+ static int endIndex = 0;
+ bool exit_loop = false;
+ 
+-static void sigint_handler(int sig __unused) {
++static void sigint_handler(int sig __attribute__((unused))) {
+     event_received = true;
+     exit_loop = true;
+ }
+@@ -437,7 +437,7 @@ static void *event_handler_thread(void *context) {
+     return NULL;
+ }
+ 
+-static void eventCallback(struct pal_st_recognition_event *event, void *sessionHndl __unused) {
++static void eventCallback(struct pal_st_recognition_event *event, void *sessionHndl __attribute__((unused))) {
+ 
+     int rc = 0;
+     pthread_attr_t attr;
