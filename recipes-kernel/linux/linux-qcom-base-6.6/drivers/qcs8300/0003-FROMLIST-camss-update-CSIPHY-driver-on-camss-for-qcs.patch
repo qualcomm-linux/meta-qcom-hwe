@@ -1,0 +1,39 @@
+From c67898036a89983363c9c9b6b54d0d0fbcadf728 Mon Sep 17 00:00:00 2001
+From: Nihal Kumar Gupta <quic_nihalkum@quicinc.com>
+Date: Wed, 29 Oct 2025 20:10:21 +0530
+Subject: [PATCH 3/3] FROMLIST: camss: update CSIPHY driver on camss for
+ qcs8300
+
+This change updates CSIPHY driver on camss for qcs8300.
+Signed-off-by: Nihal Kumar Gupta <quic_nihalkum@quicinc.com>
+Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Upstream-Status: BACKPORT [https://lore.kernel.org/linux-arm-msm/20250813053724.232494-4-quic_vikramsa@quicinc.com/]
+---
+ drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c b/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c
+index f63171938505..2aa32fcb6e2a 100644
+--- a/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c
++++ b/drivers/media/platform/qcom/camss/camss-csiphy-3ph-1-0.c
+@@ -593,6 +593,7 @@ static void csiphy_gen2_config_lanes(struct csiphy_device *csiphy,
+ 		r = &lane_regs_sm8250[0][0];
+ 		array_size = ARRAY_SIZE(lane_regs_sm8250[0]);
+ 		break;
++	case CAMSS_8300:
+ 	case CAMSS_8775P:
+ 		r = &lane_regs_sa8775p[0];
+ 		array_size = ARRAY_SIZE(lane_regs_sa8775p);
+@@ -640,7 +641,8 @@ static void csiphy_lanes_enable(struct csiphy_device *csiphy,
+ 	struct csiphy_lanes_cfg *c = &cfg->csi2->lane_cfg;
+ 	bool is_gen2 = (csiphy->camss->res->version == CAMSS_845 ||
+ 			csiphy->camss->res->version == CAMSS_8250 ||
+-			csiphy->camss->res->version == CAMSS_8775P);
++			csiphy->camss->res->version == CAMSS_8300 ||
++			csiphy->camss->res->version == CAMSS_8775P );
+ 	u8 settle_cnt;
+ 	u8 val;
+ 	int i;
+-- 
+2.34.1
+
