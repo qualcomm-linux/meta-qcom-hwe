@@ -165,4 +165,6 @@ SRC_URI:append = " \
     file://qcs9100/0004-UPSTREAM-dt-bindings-display-msm-dsi-phy-Add-header-with-exposed-clock-IDs.patch \
     file://common/0006-Revert-QCLINUX-FROMLIST-dt-bindings-remoteproc-qcom-.patch \
     file://common/0008-FROMLIST-dt-bindings-remoteproc-qcom-pas-Add-iommus-.patch \
+    file://qcs8300/0001-FROMLIST-dt-bindings-media-qcom-qcs8300-camss-Add-mi.patch \
+    file://qcs8300/0002-FROMLIST-dt-bindings-i2c-qcom-cci-Document-qcs8300-c.patch \
     "
