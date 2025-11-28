@@ -1,0 +1,29 @@
+From 74d00b04e692bab7ac7c12ca4c1a5be3bb3dcd49 Mon Sep 17 00:00:00 2001
+From: Jaeyoon Jung <jaeyoon.jung@lge.com>
+Date: Fri, 28 Nov 2025 10:30:57 +0900
+Subject: [PATCH] Use 0 over NULL for int type
+
+Fixes:
+../audio/opensource/pulseaudio-plugins/utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp:584:25: error: cannot initialize a variable of type 'pa_qst_ses_handle_t' (aka 'int') with an rvalue of type 'std::nullptr_t'
+  584 |     pa_qst_ses_handle_t ses_handle = NULL;
+      |                         ^            ~~~~
+
+Upstream-Status: Pending
+Signed-off-by: Jaeyoon Jung <jaeyoon.jung@lge.com>
+---
+ utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp b/utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp
+index 43ffc81..9f53c41 100644
+--- a/utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp
++++ b/utils/pa_pal_voiceui/pa_pal_voiceui_test.cpp
+@@ -581,7 +581,7 @@ int main(int argc, char *argv[]) {
+     struct pal_device pal_dev;
+     struct pal_stream_attributes pal_stream_attr;
+     struct sm_session_data *ses_data = NULL;
+-    pa_qst_ses_handle_t ses_handle = NULL;
++    pa_qst_ses_handle_t ses_handle = 0;
+     uint8_t *payload = NULL;
+     pal_param_payload *rec_config_payload = NULL;
+     pal_param_payload *sound_model_payload = NULL;
