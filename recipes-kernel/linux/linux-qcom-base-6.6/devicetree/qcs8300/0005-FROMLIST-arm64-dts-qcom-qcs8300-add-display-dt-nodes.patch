@@ -1,0 +1,67 @@
+From 6915e780170eccff4922a2fa08d1485de82d8dd8 Mon Sep 17 00:00:00 2001
+From: Yongxing Mou <yongxing.mou@oss.qualcomm.com>
+Date: Sat, 29 Nov 2025 16:00:35 +0800
+Subject: [PATCH 5/6] FROMLIST: arm64: dts: qcom: qcs8300: add display dt nodes
+ for MDSS, DPU, DisplayPort and eDP PHY
+
+Add devicetree changes to enable MDSS display-subsystem,
+display-controller(DPU), DisplayPort controller and eDP PHY for
+Qualcomm QCS8300 platform.
+
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Signed-off-by: Yongxing Mou <yongxing.mou@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20251117-dts_qcs8300-v7-1-bf42d39e7828@oss.qualcomm.com/]
+---
+ arch/arm64/boot/dts/qcom/qcs8300.dtsi | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8300.dtsi b/arch/arm64/boot/dts/qcom/qcs8300.dtsi
+index 47f3d64a8c35..09846f42d4d6 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8300.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs8300.dtsi
+@@ -3455,7 +3455,11 @@ mdss_dp0: displayport-controller@af54000 {
+ 				      <0x0 0x0af54200 0x0 0x200>,
+ 				      <0x0 0x0af55000 0x0 0xc00>,
+ 				      <0x0 0x0af56000 0x0 0x400>,
+-				      <0x0 0x0af57000 0x0 0x400>;
++				      <0x0 0x0af57000 0x0 0x400>,
++				      <0x0 0x0af58000 0x0 0x400>,
++				      <0x0 0x0af59000 0x0 0x400>,
++				      <0x0 0x0af5a000 0x0 0x23c>,
++				      <0x0 0x0af5b000 0x0 0x23c>;
+ 
+ 				interrupt-parent = <&mdss>;
+ 				interrupts = <12>;
+@@ -3465,17 +3469,25 @@ mdss_dp0: displayport-controller@af54000 {
+ 					 <&dispcc MDSS_DISP_CC_MDSS_DPTX0_LINK_CLK>,
+ 					 <&dispcc MDSS_DISP_CC_MDSS_DPTX0_LINK_INTF_CLK>,
+ 					 <&dispcc MDSS_DISP_CC_MDSS_DPTX0_PIXEL0_CLK>,
+-					 <&dispcc MDSS_DISP_CC_MDSS_DPTX0_PIXEL1_CLK>;
++					 <&dispcc MDSS_DISP_CC_MDSS_DPTX0_PIXEL1_CLK>,
++					 <&dispcc MDSS_DISP_CC_MDSS_DPTX0_PIXEL2_CLK>,
++					 <&dispcc MDSS_DISP_CC_MDSS_DPTX0_PIXEL3_CLK>;
+ 				clock-names = "core_iface",
+ 					      "core_aux",
+ 					      "ctrl_link",
+ 					      "ctrl_link_iface",
+ 					      "stream_pixel",
+-					      "stream_1_pixel";
++					      "stream_1_pixel",
++					      "stream_2_pixel",
++					      "stream_3_pixel";
+ 				assigned-clocks = <&dispcc MDSS_DISP_CC_MDSS_DPTX0_LINK_CLK_SRC>,
+ 						  <&dispcc MDSS_DISP_CC_MDSS_DPTX0_PIXEL0_CLK_SRC>,
+-						  <&dispcc MDSS_DISP_CC_MDSS_DPTX0_PIXEL1_CLK_SRC>;
++						  <&dispcc MDSS_DISP_CC_MDSS_DPTX0_PIXEL1_CLK_SRC>,
++						  <&dispcc MDSS_DISP_CC_MDSS_DPTX0_PIXEL2_CLK_SRC>,
++						  <&dispcc MDSS_DISP_CC_MDSS_DPTX0_PIXEL3_CLK_SRC>;
+ 				assigned-clock-parents = <&mdss_dp0_phy 0>,
++							 <&mdss_dp0_phy 1>,
++							 <&mdss_dp0_phy 1>,
+ 							 <&mdss_dp0_phy 1>,
+ 							 <&mdss_dp0_phy 1>;
+ 				phys = <&mdss_dp0_phy>;
+-- 
+2.34.1
+
