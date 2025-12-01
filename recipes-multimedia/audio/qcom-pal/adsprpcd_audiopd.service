@@ -10,7 +10,6 @@ SourcePath=/usr/bin/audioadsprpcd
 [Service]
 User=system
 Group=system
-SupplementaryGroups=fastrpc
 Restart=on-failure
 ExecStart=/usr/bin/audioadsprpcd audiopd
 
