@@ -1,0 +1,51 @@
+From 2be7759f43af687770483d2349968b61180ea957 Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Wed, 26 Nov 2025 14:41:15 +0530
+Subject: [PATCH] PENDING: arm64: dts: qcom: Add el2-overlay support qcs9075
+ and its variant
+
+Add the missed variants of sa8775p which should be overlaid with
+el2-overlay, so that it can be enabled completely.
+
+Change-Id: If835b29c09226ce9d7623b2008d2b85ab38094fc
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/Makefile | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/Makefile b/arch/arm64/boot/dts/qcom/Makefile
+index d55e19dfd2fb..749d0a76ef99 100644
+--- a/arch/arm64/boot/dts/qcom/Makefile
++++ b/arch/arm64/boot/dts/qcom/Makefile
+@@ -236,16 +236,23 @@ dtb-$(CONFIG_ARCH_QCOM)	+= sm8450-sony-xperia-nagara-pdx223.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm8450-sony-xperia-nagara-pdx224.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm8550-mtp.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm8550-qrd.dtb
+-dtb-$(CONFIG_ARCH_QCOM) += qcs9100-ride.dtb
+ 
++dtb-$(CONFIG_ARCH_QCOM) += qcs9100-ride.dtb
+ qcs9100-ride-el2-dtbs:= qcs9100-ride.dtb sa8775p-el2.dtbo
+-
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs9100-ride-el2.dtb
+-dtb-$(CONFIG_ARCH_QCOM) += qcs9100-ride-r3.dtb
+ 
++dtb-$(CONFIG_ARCH_QCOM) += qcs9100-ride-r3.dtb
+ qcs9100-ride-r3-el2-dtbs:= qcs9100-ride-r3.dtb sa8775p-el2.dtbo
+-
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs9100-ride-r3-el2.dtb
++
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs9075-iq-9075-evk.dtb
++qcs9075-iq-9075-evk-el2-dtbs:= qcs9075-iq-9075-evk.dtb sa8775p-el2.dtbo
++dtb-$(CONFIG_ARCH_QCOM) += qcs9075-iq-9075-evk-el2.dtb
++
+ dtb-$(CONFIG_ARCH_QCOM) += qcs9075-ride.dtb
++qcs9075-ride-el2-dtbs:= qcs9075-ride.dtb sa8775p-el2.dtbo
++dtb-$(CONFIG_ARCH_QCOM) += qcs9075-ride-el2.dtb
++
+ dtb-$(CONFIG_ARCH_QCOM) += qcs9075-ride-r3.dtb
++qcs9075-ride-r3-el2-dtbs:= qcs9075-ride-r3.dtb sa8775p-el2.dtbo
++dtb-$(CONFIG_ARCH_QCOM) += qcs9075-ride-r3-el2.dtb
+-- 
+2.50.1
+

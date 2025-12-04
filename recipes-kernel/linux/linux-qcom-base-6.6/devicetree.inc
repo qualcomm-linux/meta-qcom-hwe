@@ -308,6 +308,7 @@ SRC_URI:append = " \
     file://qcs9075/0047-PENDING-arm64-dts-qcom-Enable-vqmmc-voltage-switchin.patch \
     file://qcs9075/0001-FROMLIST-arm64-dts-qcom-Add-nvmem-layout-for-eeprom-o.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-Host-mode-support.patch \
+    file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-el2-overlay-support-qcs90.patch \
     "
 
 # qcs8275 board dts patches
