@@ -17,23 +17,23 @@ do_install() {
 	install -m 0644 ${WORKDIR}/usb.service -D ${D}${systemd_unitdir}/system/usb.service
 	install -d ${D}${sysconfdir}/udev/rules.d/
 	install -m 0644 ${WORKDIR}/usb_bind.rules ${D}${sysconfdir}/udev/rules.d/
-	install -m 0644 ${WORKDIR}/usb-autosuspend.rules ${D}${sysconfdir}/udev/rules.d/
 }
 
 do_install:append:qcm6490 () {
 	install -d ${D}${systemd_unitdir}/system/local-fs.target.wants
 	install -m 0644 ${WORKDIR}/var-usbfw.mount ${D}${systemd_unitdir}/system/var-usbfw.mount
 	install -d ${D}${nonarch_base_libdir}/firmware/
+	install -m 0644 ${WORKDIR}/usb-autosuspend.rules ${D}${sysconfdir}/udev/rules.d/
 	ln -sf ${systemd_unitdir}/system/var-usbfw.mount ${D}${systemd_unitdir}/system/local-fs.target.wants/var-usbfw.mount
 	ln -sf /var/usbfw/renesas_usb_fw.mem ${D}${nonarch_base_libdir}/firmware/renesas_usb_fw.mem
 }
 
 FILES:${PN} += "${systemd_unitdir}/system/ \
 		${bindir} \
-		${nonarch_base_libdir}/udev/rules.d/usb_bind.rules \
-		${nonarch_base_libdir}/udev/rules.d/usb-autosuspend.rules"
+		${sysconfdir}/udev/rules.d/usb_bind.rules"
 
 FILES:${PN}:append:qcm6490 = " ${systemd_unitdir}/system/* \
-				${nonarch_base_libdir}/firmware/*"
+			       ${nonarch_base_libdir}/firmware/* \
+			       ${sysconfdir}/udev/rules.d/usb-autosuspend.rules"
 
 SYSTEMD_SERVICE_${PN} = "usb.service"

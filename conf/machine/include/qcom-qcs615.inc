@@ -26,4 +26,5 @@ MACHINE_EXTRA_RRECOMMENDS:append:qcom-custom-bsp = " \
     fastrpc \
     qcom-subsystem-ramdump \
     trace-cmd \
+    packagegroup-qcom-sensors \
 "

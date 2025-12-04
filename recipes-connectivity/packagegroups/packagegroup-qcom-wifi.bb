@@ -34,4 +34,5 @@ RDEPENDS:${PN}:append:qcom-custom-bsp = "\
 	qcom-ftm \
 	qcom-wlan-tools \
 	qcom-ath11k-fwtest \
+	qcom-ctrl-app-dut \
 	"

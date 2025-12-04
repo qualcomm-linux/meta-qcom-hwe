@@ -1,0 +1,32 @@
+From 11a3ad2d0d3f2052d00d6841489139b8c1477425 Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Fri, 24 Oct 2025 14:25:38 +0530
+Subject: [PATCH 4/4] PENDING: arm64: dts: qcom: Add EL2 support for Iris for sa8775p
+
+Add support for IRIS on sa8775p when Linux host running
+at EL2.
+
+Change-Id: I8d699beac1bfaf0dad4ef6c02139604de3c0e706
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ arch/arm64/boot/dts/qcom/sa8775p-el2.dtso | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sa8775p-el2.dtso b/arch/arm64/boot/dts/qcom/sa8775p-el2.dtso
+index d4f29ff8da6c..0d2c9302bda6 100644
+--- a/arch/arm64/boot/dts/qcom/sa8775p-el2.dtso
++++ b/arch/arm64/boot/dts/qcom/sa8775p-el2.dtso
+@@ -25,3 +25,9 @@ &remoteproc_cdsp0 {
+ &remoteproc_cdsp1 {
+ 	iommus = <&apps_smmu 0x29c0 0x0400>;
+ };
++
++&iris {
++	video-firmware {
++		iommus = <&apps_smmu 0x0882 0x0400>;
++	};
++};
+-- 
+2.50.1
+

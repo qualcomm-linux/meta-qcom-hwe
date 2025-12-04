@@ -2,12 +2,7 @@ SUMMARY = "Firmware packages for the qcs8300 machine"
 
 inherit packagegroup
 
-RRECOMMENDS:${PN} += " \
-    firmware-qcom-dspso \
-    firmware-qcom-hlosfw \
-"
-
-RRECOMMENDS:${PN}:qcom-base-bsp = " \
+RRECOMMENDS:${PN} = " \
     hexagon-dsp-binaries-qcom-qcs8300-ride-adsp \
     hexagon-dsp-binaries-qcom-qcs8300-ride-cdsp \
     hexagon-dsp-binaries-qcom-qcs8300-ride-gdsp \
@@ -21,5 +16,23 @@ RRECOMMENDS:${PN}:qcom-base-bsp = " \
     linux-firmware-qcom-qcs8300-audio \
     linux-firmware-qcom-qcs8300-compute \
     linux-firmware-qcom-qcs8300-generalpurpose \
+    linux-firmware-qcom-qcs8300-qupv3fw \
     linux-firmware-qcom-vpu \
+    firmware-qcom-verinfo \
+"
+
+# Additional pkgs for custom-bsp builds
+RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
+    hexagon-dsp-binaries-qcs8300-updates \
+    linux-firmware-qcom-qcs8300-audio-updates \
+    linux-firmware-qcom-qcs8300-compute-updates \
+    linux-firmware-qcom-qcs8300-generalpurpose-updates \
+    linux-firmware-qcom-qcs8300-qupv3fw-updates \
+    linux-firmware-qcom-qcs8300-verinfo \
+    linux-firmware-qcs8300-ath11k-qca6698aq-updates \
+    linux-firmware-qcs8300-ath11k-wcn6855-updates \
+    linux-firmware-qcs8300-qca-qca2066-updates \
+    linux-firmware-qcs8300-qca-qca61x4-usb-updates \
+    linux-firmware-qcs8300-qca-qca6698-updates \
+    linux-firmware-qcs8300-qcom-tzapps-updates \
 "

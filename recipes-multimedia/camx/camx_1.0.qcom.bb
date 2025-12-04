@@ -5,13 +5,15 @@ LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f2
 
 DESCRIPTION = "Camx"
 
-DEPENDS += "syslog-plumber glib-2.0 property-vault camxlib fastrpc"
+DEPENDS += "syslog-plumber glib-2.0 property-vault camxlib chicdk-autogen camx-autogen fastrpc"
 
-QCS9100_SHA256SUM = "c389df44478049c8f16c44a4860cf3eb28d982f4e30ef80bf4b07fa43c1d0d50"
-QCS8300_SHA256SUM = "8a4f6e373ff5bf536eed5fc04bc847d3c5dccb85fc55719b7ab408c91aa153e8"
+QCS9100_SHA256SUM = "d7beeb979eeeaf5c9916e5af7de95fbe97e51e13f42d5937307271c3e512aa00"
+QCS8300_SHA256SUM = "fec7b88beac994b53bd5ef1bad2ad93b8f286d190a97b2fbe2485c03eba274bc"
+QCS615_SHA256SUM = "765e5ed2d6f7da1f6261a9f45b175764110e05d7b7f239ca60a1fb16c5754b87"
 
 SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"
 SRC_URI[qcs8300.sha256sum] = "${QCS8300_SHA256SUM}"
+SRC_URI[qcs615.sha256sum] = "${QCS615_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"
 

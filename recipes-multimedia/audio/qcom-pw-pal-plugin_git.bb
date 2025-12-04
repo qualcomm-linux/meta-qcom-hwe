@@ -4,18 +4,18 @@ SUMMARY = "Pipewire pal plugins"
 LICENSE = "BSD-3-Clause-Clear"
 LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=3771d4920bd6cdb8cbdf1e8344489ee0"
 
-SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/pulseaudio-plugin.git;protocol=https"
-SRCBRANCH  = "audio-algos.lnx.1.0.r1-rel"
-SRCREV     = "35adad85a280ea8dc72f5687c1a70ddc9833758c"
+SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/pipewire-plugin;protocol=https"
+SRCBRANCH  = "pipewireaudio.lnx.1.0.r1-rel"
+SRCREV     = "0ee8b2db8ae37764e36aa4bbc1a7febc9da3e2e6"
 
-SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/pulseaudio-plugins"
+SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/pipewire-plugin"
 SRC_URI += "\
     file://pipewire-pulse.service \
     file://pipewire-pulse.socket \
     file://98-qcom-pipewire.preset \
 "
 
-S = "${WORKDIR}/audio/opensource/pulseaudio-plugins/pipewire-plugin"
+S = "${WORKDIR}/audio/opensource/pipewire-plugin/pipewire-plugin"
 
 DEPENDS = "qcom-agm pipewire qcom-pal qcom-pal-headers"
 TARGET_CFLAGS += "-I ${STAGING_DIR_TARGET}/usr/include/spa-0.2"

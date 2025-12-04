@@ -21,6 +21,7 @@ SRC_URI:append:qcm6490:qcom-custom-bsp = "  \
 SRC_URI:append:qcs9100 = "  file://0001-weston-add-sdm-option.patch \
                             file://0001-drm-backend-power-off-during-hotplug-disconnect.patch \
                             file://weston.ini \
+                            file://0001-weston-backport-upstream-fix-for-multi-DPU-hotplug.patch \
                             "
 
 SRC_URI:append:qcs9100:qcom-base-bsp = " file://0001-weston-avoid-duplicate-format.patch"
@@ -57,12 +58,8 @@ PACKAGECONFIG:qcom = " \
                  ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'x11 xwayland', '', d)} \
                  "
 
-
-PACKAGECONFIG:append:qcm6490 = "kms rdp screenshare"
-
-PACKAGECONFIG:append:qcs9100 = "kms"
-PACKAGECONFIG:append:qcs8300 = "kms"
-PACKAGECONFIG:append:qcs615  = "kms"
+#Enable KMS RDP Screenshare for all chipsets
+PACKAGECONFIG:append= "kms rdp screenshare"
 
 # Weston on SDM
 PACKAGECONFIG[sdm] = "-Dbackend-sdm=true,-Dbackend-sdm=false"

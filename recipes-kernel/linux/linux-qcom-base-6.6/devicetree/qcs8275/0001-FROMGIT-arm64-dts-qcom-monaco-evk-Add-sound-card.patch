@@ -1,0 +1,95 @@
+From ae719b2b7faaf9935ac85d188da743831b97f877 Mon Sep 17 00:00:00 2001
+From: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Date: Sat, 6 Sep 2025 00:53:50 +0530
+Subject: [PATCH] FROMGIT: arm64: dts: qcom: monaco-evk: Add sound card
+
+Add the sound card for monaco-evk board and verified playback
+functionality using the max98357a I2S speaker amplifier and I2S
+microphones. The max98357a speaker amplifier is connected via
+High-Speed MI2S HS0 interface, while the microphones utilize the
+Secondary MI2S interface.
+
+Signed-off-by: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Signed-off-by: Umang Chheda <umang.chheda@oss.qualcomm.com>
+Link: https://lore.kernel.org/r/20250905192350.1223812-5-umang.chheda@oss.qualcomm.com
+Signed-off-by: Bjorn Andersson <andersson@kernel.org>
+Git-commit: bb12da95a183253b619ca1691d6fd320b7e445e9
+Git-repo: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git bb12da95a183253b619ca1691d6fd320b7e445e9]
+---
+ arch/arm64/boot/dts/qcom/monaco-evk.dts | 52 +++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/monaco-evk.dts b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+index 35a23b8b2abe..06afd07f70be 100644
+--- a/arch/arm64/boot/dts/qcom/monaco-evk.dts
++++ b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+@@ -6,6 +6,7 @@
+ /dts-v1/;
+ 
+ #include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/sound/qcom,q6afe.h>
+ #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+ 
+ #include "qcs8300.dtsi"
+@@ -41,6 +42,57 @@ sleep_clk: sleep-clk {
+ 			clock-frequency = <32000>;
+ 		};
+ 	};
++
++	dmic: audio-codec-1 {
++		compatible = "dmic-codec";
++		#sound-dai-cells = <0>;
++		num-channels = <1>;
++	};
++
++	max98357a: audio-codec-0 {
++		compatible = "maxim,max98357a";
++		#sound-dai-cells = <0>;
++	};
++
++	sound {
++		compatible = "qcom,qcs8275-sndcard";
++		model = "QCS8275-IQ8-EVK";
++
++		pinctrl-0 = <&hs0_mi2s_active>, <&mi2s1_active>;
++		pinctrl-names = "default";
++
++		hs0-mi2s-playback-dai-link {
++			link-name = "HS0 MI2S Playback";
++
++			codec {
++				sound-dai = <&max98357a>;
++			};
++
++			cpu {
++				sound-dai = <&q6apmbedai PRIMARY_MI2S_RX>;
++			};
++
++			platform {
++				sound-dai = <&q6apm>;
++			};
++	        };
++
++		sec-mi2s-capture-dai-link {
++			link-name = "Secondary MI2S Capture";
++
++			codec {
++				sound-dai = <&dmic>;
++			};
++
++			cpu {
++				sound-dai = <&q6apmbedai SECONDARY_MI2S_TX>;
++			};
++
++			platform {
++				sound-dai = <&q6apm>;
++			};
++		};
++	};
+ };
+ 
+ &apps_rsc {
+-- 
+2.34.1
+

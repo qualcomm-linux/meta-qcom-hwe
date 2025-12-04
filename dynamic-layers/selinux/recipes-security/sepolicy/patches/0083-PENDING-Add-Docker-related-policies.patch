@@ -50,8 +50,8 @@ index a23c21c8f..ebcc22108 100644
 +qcom_cam_server_mounton_tmp_dir(dockerd_t)
 +init_search_tmp_dir(dockerd_t)
 +
-+pulseaudio_search_var_run(dockerd_t)
-+pulseaudio_mounton_var_run(dockerd_t)
++
++
 +
 +qcom_weston_mounton_dev_dir(dockerd_t)
 +dbus_connect_to_stream_socket(dockerd_t)

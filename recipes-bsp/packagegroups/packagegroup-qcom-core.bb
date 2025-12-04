@@ -8,6 +8,7 @@ PROVIDES = "${PACKAGES}"
 
 SECCONFIG ?= 'True'
 USB ?= 'True'
+RPMSGEXP ?= 'True'
 
 PACKAGES = ' \
     ${PN} \
@@ -16,7 +17,7 @@ PACKAGES = ' \
 '
 
 RDEPENDS:${PN} = " \
-    rpmsgexport \
+    ${@oe.utils.conditional('RPMSGEXP', 'True', 'rpmsgexport', '', d)} \
     ${@oe.utils.conditional('SECCONFIG', 'True', 'sec-config', '', d)} \
     ${@oe.utils.conditional('USB', 'True', 'usb', '', d)} \
 "

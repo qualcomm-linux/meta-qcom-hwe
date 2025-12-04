@@ -1,0 +1,102 @@
+From a2bcea918743dd633b4847d2259c917ea9196c15 Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Fri, 20 Jun 2025 14:54:20 +0530
+Subject: [PATCH 01/20] Revert "QCLINUX: FROMLIST: remoteproc: qcom: Enable
+ map/unmap and SHM bridge support"
+
+This reverts commit e056c7a2824f1238eb69cb893c3aa02586c10723 as they
+are longer required as we are going to follow newer approach of
+getting resource table from Secure world.
+
+Change-Id: I3f716cb3a6cb118e40530e0758a2c8f3af151fbb
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Upstream-Status: Inappropriate
+---
+ drivers/remoteproc/qcom_q6v5_pas.c | 41 +-----------------------------
+ 1 file changed, 1 insertion(+), 40 deletions(-)
+
+diff --git a/drivers/remoteproc/qcom_q6v5_pas.c b/drivers/remoteproc/qcom_q6v5_pas.c
+index 459fcbafc509..b0ba905ee73c 100644
+--- a/drivers/remoteproc/qcom_q6v5_pas.c
++++ b/drivers/remoteproc/qcom_q6v5_pas.c
+@@ -111,7 +111,6 @@ struct qcom_adsp {
+ 
+ 	struct qcom_devmem_table *devmem;
+ 	struct qcom_tzmem_area *tzmem;
+-	unsigned long sid;
+ };
+ 
+ static void adsp_segment_dump(struct rproc *rproc, struct rproc_dump_segment *segment,
+@@ -297,21 +296,9 @@ static int adsp_start(struct rproc *rproc)
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = qcom_map_unmap_carveout(rproc, adsp->mem_phys, adsp->mem_size, true, true, adsp->sid);
+-	if (ret) {
+-		dev_err(adsp->dev, "iommu mapping failed, ret: %d\n", ret);
+-		goto disable_irqs;
+-	}
+-
+-	ret = qcom_map_devmem(rproc, adsp->devmem, true, adsp->sid);
+-	if (ret) {
+-		dev_err(adsp->dev, "devmem iommu mapping failed, ret: %d\n", ret);
+-		goto unmap_carveout;
+-	}
+-
+ 	ret = adsp_pds_enable(adsp, adsp->proxy_pds, adsp->proxy_pd_count);
+ 	if (ret < 0)
+-		goto unmap_devmem;
++		goto disable_irqs;
+ 
+ 	ret = clk_prepare_enable(adsp->xo);
+ 	if (ret)
+@@ -399,10 +386,6 @@ static int adsp_start(struct rproc *rproc)
+ 	clk_disable_unprepare(adsp->xo);
+ disable_proxy_pds:
+ 	adsp_pds_disable(adsp, adsp->proxy_pds, adsp->proxy_pd_count);
+-unmap_devmem:
+-	qcom_unmap_devmem(rproc, adsp->devmem, adsp->sid);
+-unmap_carveout:
+-	qcom_map_unmap_carveout(rproc, adsp->mem_phys, adsp->mem_size, false, true, adsp->sid);
+ disable_irqs:
+ 	qcom_q6v5_unprepare(&adsp->q6v5);
+ 
+@@ -448,9 +431,6 @@ static int adsp_stop(struct rproc *rproc)
+ 			dev_err(adsp->dev, "failed to shutdown dtb: %d\n", ret);
+ 	}
+ 
+-	qcom_unmap_devmem(rproc, adsp->devmem, adsp->sid);
+-	qcom_map_unmap_carveout(rproc, adsp->mem_phys, adsp->mem_size, false, true, adsp->sid);
+-
+ 	handover = qcom_q6v5_unprepare(&adsp->q6v5);
+ 	if (handover)
+ 		qcom_pas_handover(&adsp->q6v5);
+@@ -823,25 +803,6 @@ static int adsp_probe(struct platform_device *pdev)
+ 	}
+ 	platform_set_drvdata(pdev, adsp);
+ 
+-	if (of_property_present(pdev->dev.of_node, "iommus")) {
+-		struct of_phandle_args args;
+-
+-		ret = of_parse_phandle_with_args(pdev->dev.of_node, "iommus", "#iommu-cells", 0, &args);
+-		if (ret < 0)
+-			return ret;
+-
+-		rproc->has_iommu = true;
+-		adsp->sid = args.args[0];
+-		of_node_put(args.np);
+-		ret = adsp_devmem_init(adsp);
+-		if (ret)
+-			return ret;
+-
+-		adsp->pas_metadata.shm_bridge_needed = true;
+-	} else {
+-		rproc->has_iommu = false;
+-	}
+-
+ 	ret = device_init_wakeup(adsp->dev, true);
+ 	if (ret)
+ 		goto free_rproc;
+-- 
+2.50.1
+

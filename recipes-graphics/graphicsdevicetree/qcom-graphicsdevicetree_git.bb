@@ -29,6 +29,7 @@ do_compile() {
     oe_runmake ${EXTRA_OEMAKE} qcs8300-graphics
     oe_runmake ${EXTRA_OEMAKE} qcs8550-graphics
     oe_runmake ${EXTRA_OEMAKE} qcs9100-graphics
+    oe_runmake ${EXTRA_OEMAKE} qcs9100-graphics-el2
 }
 
 do_deploy() {
