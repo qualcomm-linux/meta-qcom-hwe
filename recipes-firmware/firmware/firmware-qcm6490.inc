@@ -1,11 +1,11 @@
-FW_ARTIFACTORY = "softwarecenter.qualcomm.com/nexus/generic/software/chip/qualcomm_linux-spf-1-0/qualcomm-linux-spf-1-0_test_device_public"
-FW_BUILD_ID    = "r1.0_00108.0/qcm6490-le-1-0"
+FW_ARTIFACTORY = "https://softwarecenter.qualcomm.com/nexus/generic/software/chip/qualcomm_linux-spf-1-0/qualcomm-linux-spf-1-0_test_device_public"
+FW_BUILD_ID    = "r1.0_00112.0/qcm6490-le-1-0"
 FW_BIN_PATH    = "common/build/ufs/bin"
 
-QCM6490_FW_BUILD_ID ?= "r1.0_00108.0/qcm6490-le-1-0"
+QCM6490_FW_BUILD_ID ?= "r1.0_00112.0/qcm6490-le-1-0"
 QCM6490_FW_BIN_PATH ?= "common/build/ufs/bin"
-QCM6490_HLOSFW_SHA256SUM ?= "9f7651efc5a79f68d060e01e04ab6b807b5c185fded59d3d416c0d3b0f1a7b35"
-QCM6490_DSPSO_SHA256SUM ?= "7de597fe2a4ee455ba2dac1217d1c2efd93e43110405abb2bcbd7c82c02c2ede"
+QCM6490_HLOSFW_SHA256SUM ?= "29d7217061b68b74f019971d3a4f6155509758175fba4c2e77c62d28040613f6"
+QCM6490_DSPSO_SHA256SUM ?= "8125b62696f713e6469db03d5c3b7d5d0768b9ea4fbf6eca2bb915973476a575"
 
 # Fetch a shallow mirror tarball.
 BB_GIT_SHALLOW       = "1"

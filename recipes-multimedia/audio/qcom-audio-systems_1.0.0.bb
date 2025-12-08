@@ -9,7 +9,7 @@ DEPENDS += "qcom-sva-eai qcom-capiv2-headers"
 
 PBT_ARCH = "armv8-2a"
 
-ARMV8_SHA256SUM = "6372f46eb4f250b901dbb650de64b4aca5b71c4262a6e5d2341a196978b5129c"
+ARMV8_SHA256SUM = "538c35e7cef41e1bb177d7224e0e5e31a520df6b4e3aec21abeea1244b87c54a"
 SRC_URI[armv8-2a.sha256sum] = "${ARMV8_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"

@@ -7,7 +7,7 @@ DESCRIPTION = "mercury plugin"
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/audio-utils.git;protocol=https"
 SRCBRANCH  = "audio-utils.lnx.1.0.r1-rel"
-SRCREV     = "40e72b34df7cbb64ab1eb237eec7aa9dd5bf0d41"
+SRCREV     = "873b447450cef7d2cc22f4694efbef23042822ae"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/audio-utils"
 

@@ -1,11 +1,11 @@
-FW_ARTIFACTORY = "softwarecenter.qualcomm.com/nexus/generic/software/chip/qualcomm_linux-spf-1-0/qualcomm-linux-spf-1-0_test_device_public"
-FW_BUILD_ID    = "r1.0_00108.0/qcs9100-le-1-0"
+FW_ARTIFACTORY = "https://softwarecenter.qualcomm.com/nexus/generic/software/chip/qualcomm_linux-spf-1-0/qualcomm-linux-spf-1-0_test_device_public"
+FW_BUILD_ID    = "r1.0_00112.0/qcs9100-le-1-0"
 FW_BIN_PATH    = "common/build/ufs/bin"
 
-QCS9100_FW_BUILD_ID ?= "r1.0_00108.0/qcs9100-le-1-0"
+QCS9100_FW_BUILD_ID ?= "r1.0_00112.0/qcs9100-le-1-0"
 QCS9100_FW_BIN_PATH ?= "common/build/ufs/bin"
-QCS9100_HLOSFW_SHA256SUM ?= "9d3dc8fb72a3ace8034e2623d5ab2298089027a2228af30f44f59d32560af0d3"
-QCS9100_DSPSO_SHA256SUM ?= "82dc003dff6488c108c3b01cc29c463b0deb4326aabff8bc8db4e2c3c76323dc"
+QCS9100_HLOSFW_SHA256SUM ?= "d566c8d00988ae70ede40fe34af85aeaf2fe21bd2d0ebcff93216e368979f616"
+QCS9100_DSPSO_SHA256SUM ?= "44738bc7cd56d95e3de2f489584b33cc6553a2f7521aee5f14be5ed371bb82e7"
 
 # Fetch a shallow mirror tarball.
 BB_GIT_SHALLOW       = "1"

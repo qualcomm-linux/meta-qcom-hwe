@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/${LICENSE};md5
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/opensource/data-eth.git;protocol=https"
 SRCBRANCH  = "data-kernel.qclinux.1.0.r1-rel"
-SRCREV     = "a6574a8668f685524136227e95ddb8ed4a8f2ce0"
+SRCREV     = "6f0f2bbf9e7d92b84aaaa549aa6cf80cea4b3295"
 
 SRC_URI =  "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=data-eth"
 

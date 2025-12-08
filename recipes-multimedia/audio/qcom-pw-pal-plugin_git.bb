@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=3771d4920bd6
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/pipewire-plugin;protocol=https"
 SRCBRANCH  = "pipewireaudio.lnx.1.0.r1-rel"
-SRCREV     = "0ee8b2db8ae37764e36aa4bbc1a7febc9da3e2e6"
+SRCREV     = "8a45a43cb7b010ab965d1af58e4946aecd1b1c44"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/pipewire-plugin"
 SRC_URI += "\
