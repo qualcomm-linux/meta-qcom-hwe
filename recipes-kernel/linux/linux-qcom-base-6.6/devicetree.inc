@@ -309,6 +309,7 @@ SRC_URI:append = " \
     file://qcs9075/0001-FROMLIST-arm64-dts-qcom-Add-nvmem-layout-for-eeprom-o.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-Host-mode-support.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-el2-overlay-support-qcs90.patch \
+    file://qcs9075/0001-FROMLIST-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable-T.patch \
     "
 
 # qcs8275 board dts patches
@@ -330,6 +331,7 @@ SRC_URI:append = " \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-PCIe0-PCIe1-for-QCS827.patch \
     file://qcs8275/0004-BACKPORT-FROMGIT-arm64-dts-qcom-qcs8300-Add-gpr-node.patch \
     file://qcs8275/0005-FROMGIT-arm64-dts-qcom-qcs8275-iq-8275-evk-Add-sound.patch \
+    file://qcs8275/0002-FROMLIST-arm64-dts-qcom-qcs8275-iq-8275-evk-Enable-T.patch \
     "
 # monaco evk board dts patches
 SRC_URI:append = " \
