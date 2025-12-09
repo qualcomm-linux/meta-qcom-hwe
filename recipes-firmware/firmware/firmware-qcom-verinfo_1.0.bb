@@ -34,7 +34,7 @@ do_install() {
 
         socdir=$(printf '%s' "$fwdir" | sed 's/_fw//g' | tr '[:upper:]' '[:lower:]')
         mkdir -p ${D}${nonarch_base_libdir}/firmware/qcom/${socdir}
-        find "${WORKDIR}/$fwdir/lib/firmware/qcom" -type f  -name "Ver_Info.txt" \
+        find "${WORKDIR}/$fwdir/lib/firmware/updates/qcom" -type f  -name "Ver_Info.txt" \
                  -exec cp -r {} ${D}${nonarch_base_libdir}/firmware/qcom/${socdir} \;
     done
 }
