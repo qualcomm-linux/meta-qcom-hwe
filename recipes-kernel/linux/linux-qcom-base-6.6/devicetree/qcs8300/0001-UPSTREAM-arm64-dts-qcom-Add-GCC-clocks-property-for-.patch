@@ -1,0 +1,44 @@
+From ea11d9b6fcf212ff5167283acd668d8e67c88deb Mon Sep 17 00:00:00 2001
+From: Dongfang Zhao <dongfang.zhao@oss.qualcomm.com>
+Date: Tue, 9 Dec 2025 14:50:50 +0800
+Subject: [PATCH] UPSTREAM: arm64: dts: qcom: Add GCC clocks property for qcs8300.dtsi
+
+Ensure GCC driver correctly binds parent clocks from
+device tree, avoiding fallback to dummy sources and
+restoring proper frequency selection.
+
+Fix UART framing errors at high baud rates (e.g., 320000)
+and timeouts at low rates (e.g., 115200) caused by
+incorrect clock sourcing due to missing parent clock
+binding in GCC.
+
+Signed-off-by: Dongfang Zhao <dongfang.zhao@oss.qualcomm.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?id=7be190e4bdd2bd1aca84afef06bb755c06a85473]
+---
+ arch/arm64/boot/dts/qcom/qcs8300.dtsi | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8300.dtsi b/arch/arm64/boot/dts/qcom/qcs8300.dtsi
+index 47f3d64a8c35..9e6f3799fda6 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8300.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs8300.dtsi
+@@ -891,6 +891,16 @@ gcc: clock-controller@100000 {
+ 			#clock-cells = <1>;
+ 			#reset-cells = <1>;
+ 			#power-domain-cells = <1>;
++			clocks = <&rpmhcc RPMH_CXO_CLK>,
++				 <&sleep_clk>,
++				 <&pcie0_phy>,
++				 <&pcie1_phy>,
++				 <0>,
++				 <0>,
++				 <0>,
++				 <0>,
++				 <0>,
++				 <0>;
+ 		};
+ 
+ 		ipcc: mailbox@408000 {
+-- 
+2.34.1
+
