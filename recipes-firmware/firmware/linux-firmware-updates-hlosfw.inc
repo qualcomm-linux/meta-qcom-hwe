@@ -194,13 +194,11 @@ FILES:${PN}-qcs8300-qca-qca2066-updates = " \
 SUMMARY:${PN}-qcs9100-qca-qca6698-updates = "QCA6698 firmware update files"
 FILES:${PN}-qcs9100-qca-qca6698-updates = " \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpbtfw21.tlv* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b2* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b2* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.bin* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b* \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_losslessg.bin \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48K.bin \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48Kg.bin \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.bin \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPOg.bin \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPO.bin \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_lossless.bin \
@@ -209,13 +207,11 @@ FILES:${PN}-qcs9100-qca-qca6698-updates = " \
 SUMMARY:${PN}-qcs8300-qca-qca6698-updates = "QCA6698 firmware update files"
 FILES:${PN}-qcs8300-qca-qca6698-updates = " \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpbtfw21.tlv* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b2* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b2* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.bin* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b* \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_losslessg.bin \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48K.bin \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48Kg.bin \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.bin \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPOg.bin \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPO.bin \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_lossless.bin \
