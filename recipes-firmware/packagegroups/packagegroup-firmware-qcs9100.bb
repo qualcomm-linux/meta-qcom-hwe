@@ -9,6 +9,7 @@ RRECOMMENDS:${PN} = " \
     linux-firmware-ath11k-qca6698aq \
     linux-firmware-ath12k-wcn7850 \
     linux-firmware-qca-qca2066 \
+    linux-firmware-qca-wcn685x \
     linux-firmware-qca-qca61x4-usb \
     linux-firmware-qca-qca6698 \
     linux-firmware-qcom-adreno-a660 \
