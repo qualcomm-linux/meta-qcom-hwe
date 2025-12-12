@@ -216,6 +216,7 @@ SRC_URI:append = " \
     file://qcs8300/0001-UPSTREAM-arm64-dts-qcom-Add-support-for-usb-nodes-on.patch \
     file://qcs8300/0001-Revert-PENDING-arm64-dts-qcom-qcs8300-add-video-code.patch \
     file://qcs8300/0004-FROMLIST-arm64-dts-qcom-qcs8300-add-support-for-vide.patch \
+    file://qcs8300/0005-FROMLIST-arm64-dts-qcom-qcs8300-add-display-dt-nodes.patch \
     "
 
 # qcs8300 board dts patches

@@ -534,4 +534,8 @@ SRC_URI:append = " \
     file://common/0001-FROMLIST-soc-qcom-ice-Add-OPP-based-clock-scaling-su.patch \
     file://common/0002-FROMLIST-ufs-host-Add-ICE-clock-scaling-during-UFS-c.patch \
     file://common/0003-FROMLIST-soc-qcom-ice-Set-ICE-clk-to-TURBO-on-probe.patch \
+    file://common/0001-FROMLIST-drm-msm-dp-fix-the-intf_type-of-MST-interfa.patch \
+    file://common/0002-FROMLIST-drm-msm-dp-Add-MST-stream-support-for-SA877.patch \
+    file://common/0003-FROMLIST-drm-msm-dp-add-support-for-programming-p1-p.patch \
+    file://common/0004-FROMLIST-drm-msm-dp-Add-catalog-support-for-3rd-4th-.patch \
 "
