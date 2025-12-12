@@ -7,7 +7,7 @@ require conf/machine/include/qcom-base.inc
 # Additional Kernel cmdline parameters for debug builds
 DBG_CMDLINE = "${@oe.utils.conditional('DEBUG_BUILD','1','earlycon page_owner=on qcom_scm.download_mode=1 slub_debug=FZP,zs_handle,zspage;FZPU nokaslr','',d)}"
 
-KERNEL_CMDLINE_EXTRA ?= "pcie_pme=nomsi rcupdate.rcu_expedited=1 rcu_nocbs=0-7 kpti=off kasan=off kasan.stacktrace=off no-steal-acc ${DBG_CMDLINE} swiotlb=128 mitigations=auto net.ifnames=0"
+KERNEL_CMDLINE_EXTRA ?= "pcie_pme=nomsi rcupdate.rcu_expedited=1 rcu_nocbs=0-7 kpti=off kasan=off kasan.stacktrace=off no-steal-acc ${DBG_CMDLINE} swiotlb=128 mitigations=auto net.ifnames=0 udev.children_max=12"
 
 MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS += " \
     fastrpc \
