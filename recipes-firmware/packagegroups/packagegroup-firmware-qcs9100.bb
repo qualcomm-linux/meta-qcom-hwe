@@ -11,6 +11,7 @@ RRECOMMENDS:${PN} = " \
     linux-firmware-qca-qca2066 \
     linux-firmware-qca-qca61x4-usb \
     linux-firmware-qca-qca6698 \
+    linux-firmware-qca-wcn685x \
     linux-firmware-qcom-adreno-a660 \
     linux-firmware-qcom-adreno-a663 \
     linux-firmware-qcom-sa8775p-adreno \
