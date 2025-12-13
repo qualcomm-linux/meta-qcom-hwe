@@ -57,6 +57,17 @@ def hlosfw_update_packages(d, pkgs_list):
 
         os.rmdir(soc_dir)
 
+        # TZ Apps are not really firmware. Retain them in 'lib/firmware'
+        if pkg.endswith("qcom-tzapps-updates"):
+            tza_updates_dir = '%s/%s/%s' % (pkgdest, pkg, d.getVar('FIRMWARE_UPDATES_DIR'))
+            tza_parent_dir = os.path.dirname(tza_updates_dir)
+            for item in os.listdir(tza_updates_dir):
+                src = os.path.join(tza_updates_dir, item)
+                dest = os.path.join(tza_parent_dir, item)
+                shutil.move(src, dest)
+
+            os.rmdir(tza_updates_dir)
+
 python populate_packages:append() {
     hlosfw_update_packages(d, 'QCM6490_HLOSFW_UPDATE_PACKAGES')
     hlosfw_update_packages(d, 'QCS9100_HLOSFW_UPDATE_PACKAGES')
@@ -90,7 +101,6 @@ QCS9100_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcom-sa8775p-audio-updates \
   ${PN}-qcom-sa8775p-compute-updates \
   ${PN}-qcom-sa8775p-generalpurpose-updates \
-  ${PN}-qcom-sa8775p-ipafw-updates \
   ${PN}-qcom-sa8775p-qupv3fw-updates \
   ${PN}-qcs9100-ath11k-qca6698aq-updates \
   ${PN}-qcs9100-ath11k-wcn6855-updates \
@@ -104,7 +114,6 @@ QCS8300_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcom-qcs8300-audio-updates \
   ${PN}-qcom-qcs8300-compute-updates \
   ${PN}-qcom-qcs8300-generalpurpose-updates \
-  ${PN}-qcom-qcs8300-ipafw-updates \
   ${PN}-qcom-qcs8300-qupv3fw-updates \
   ${PN}-qcom-qcs8300-verinfo \
   ${PN}-qcs8300-ath11k-qca6698aq-updates \
@@ -118,6 +127,7 @@ QCS8300_HLOSFW_UPDATE_PACKAGES = " \
 QCS615_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcom-qcs615-updates \
   ${PN}-qcom-qcs615-verinfo \
+  ${PN}-qcs615-qcom-tzapps-updates \
 "
 
 PACKAGES:prepend = " \
@@ -276,24 +286,6 @@ SUMMARY:${PN}-qcom-qcm6490-ipafw-updates = "QCM6490 QCOM IPA firmware overlay"
 FILES:${PN}-qcom-qcm6490-ipafw-updates = " \
   /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/ipa_fws.b* \
   /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/ipa_fws.mdt \
-  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/loadalgota64.b* \
-  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/loadalgota64.mdt \
-"
-
-SUMMARY:${PN}-qcom-sa8775p-ipafw-updates = "QCS9100 QCOM IPA firmware overlay"
-FILES:${PN}-qcom-sa8775p-ipafw-updates = " \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/ipa_fws.b* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/ipa_fws.mdt \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/loadalgota64.b* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/loadalgota64.mdt \
-"
-
-SUMMARY:${PN}-qcom-qcs8300-ipafw-updates = "QCS8300 QCOM IPA firmware overlay"
-FILES:${PN}-qcom-qcs8300-ipafw-updates = " \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/ipa_fws.b* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/ipa_fws.mdt \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/loadalgota64.b* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/loadalgota64.mdt \
 "
 
 SUMMARY:${PN}-qcom-qcs8300-audio-updates = "QCOM qcom-qcs8300-audio firmware overlay"
@@ -348,19 +340,32 @@ FILES:${PN}-qcom-qcm6490-wlan-updates = " \
   /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/bdwlan* \
 "
 
-SUMMARY:${PN}-qcm6490-qcom-tzapps-updates = "QCM6490 QCOM FD02C9DA firmware update files"
+SUMMARY:${PN}-qcm6490-qcom-tzapps-updates = "QCM6490 QCOM TZ application files"
 FILES:${PN}-qcm6490-qcom-tzapps-updates = " \
   /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/FD02C9DA* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/loadalgota64.b* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/loadalgota64.mdt \
 "
 
-SUMMARY:${PN}-qcs9100-qcom-tzapps-updates = "QCS9100 QCOM FD02C9DA firmware update files"
+
+SUMMARY:${PN}-qcs9100-qcom-tzapps-updates = "QCS9100 QCOM TZ application files"
 FILES:${PN}-qcs9100-qcom-tzapps-updates = " \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/FD02C9DA* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/loadalgota64.b* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qcom/sa8775p/loadalgota64.mdt \
 "
 
-SUMMARY:${PN}-qcs8300-qcom-tzapps-updates = "QCS8300 QCOM FD02C9DA firmware update files"
+SUMMARY:${PN}-qcs8300-qcom-tzapps-updates = "QCS8300 QCOM TZ application files"
 FILES:${PN}-qcs8300-qcom-tzapps-updates = " \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/FD02C9DA* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/loadalgota64.b* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/loadalgota64.mdt \
+"
+
+SUMMARY:${PN}-qcs615-qcom-tzapps-updates = "QCS615 QCOM TZ application files"
+FILES:${PN}-qcs615-qcom-tzapps-updates = " \
+  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/loadalgota64.b* \
+  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/loadalgota64.mdt \
 "
 
 SUMMARY:${PN}-qcom-qcm6490-wlanhsp-updates = "QCOM QCM6490 Data firmware update files"
@@ -373,8 +378,6 @@ SUMMARY:${PN}-qcom-qcs615-updates = "QCOM QCS615 firmware update files"
 FILES:${PN}-qcom-qcs615-updates = " \
   /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/adsp* \
   /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/cdsp* \
-  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/loadalgota64.b* \
-  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/loadalgota64.mdt \
 "
 
 SUMMARY:${PN}-qcom-qcm6490-qps615-updates = "QCOM QCM6490 QPS615 firmware update files"
