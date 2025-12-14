@@ -41,7 +41,7 @@ python qprebuilt_do_install() {
         os.remove("%s/CHANGES" % dest)
 
     # Stop notice file from getting packaged
-    noticefile = os.path.join(dest, "NOTICE.txt")
+    noticefile = os.path.join(dest, "NOTICE")
     if os.path.exists(noticefile):
         os.remove(noticefile)
 
@@ -59,12 +59,12 @@ python qprebuilt_do_install() {
         os.remove(licensefile)
 
     # Some older archives may still have these files. Drop them.
-    nologin_license_file = os.path.join(dest, "NO.LOGIN.BINARY.LICENSE.QTI.pdf")
-    if os.path.exists(nologin_license_file):
-        os.remove(nologin_license_file)
-
+    if os.path.exists(os.path.join(dest, "NO.LOGIN.BINARY.LICENSE.QTI.pdf")):
+        os.remove(os.path.join(dest, "NO.LOGIN.BINARY.LICENSE.QTI.pdf"))
+    if os.path.exists(os.path.join(dest, "NOTICE.txt")):
+        os.remove(os.path.join(dest, "NOTICE.txt"))
     if os.path.exists("%s/__LIC__" % dest):
-        shutil.rmtree("%s/__LIC__" % dest)
+        shutil.rmtree("%s/__LIC__" % dest, ignore_errors=True)
 }
 
 EXPORT_FUNCTIONS do_unpack do_install
