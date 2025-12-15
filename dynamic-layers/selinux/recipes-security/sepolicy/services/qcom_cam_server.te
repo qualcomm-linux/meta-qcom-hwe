@@ -62,3 +62,8 @@ corenet_tcp_bind_all_nodes(qcom_cam_server_t)
 qcom_system_alloc_buf_rw(qcom_cam_server_t)
 
 container_stream_connect_spc(qcom_cam_server_t)
+
+type qcom_cam_server_etc_t;
+files_type(qcom_cam_server_etc_t);
+
+allow qcom_cam_server_t qcom_cam_server_etc_t:file manage_file_perms;
