@@ -531,4 +531,7 @@ SRC_URI:append = " \
     file://common/0002-PENDING-usb-typec-Add-wakeup-support-from.patch \
     file://common/0003-PENDING-usb-conn-gpio-Add-support-for-creation.patch \
     file://common/0004-PENDING-usb-conn-gpio-Add-LPM-support-when-only.patch \
+    file://common/0001-FROMLIST-soc-qcom-ice-Add-OPP-based-clock-scaling-su.patch \
+    file://common/0002-FROMLIST-ufs-host-Add-ICE-clock-scaling-during-UFS-c.patch \
+    file://common/0003-FROMLIST-soc-qcom-ice-Set-ICE-clk-to-TURBO-on-probe.patch \
 "
