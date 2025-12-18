@@ -32,7 +32,7 @@ do_install() {
         fwdir=$(basename "$dir")
         bbdebug 1 "Processing firmware directory: ${fwdir}"
 
-        socdir=$(echo "${fwdir/_fw/}" | tr '[:upper:]' '[:lower:]')
+        socdir=$(printf '%s' "$fwdir" | sed 's/_fw//g' | tr '[:upper:]' '[:lower:]')
         mkdir -p ${D}${nonarch_base_libdir}/firmware/qcom/${socdir}
         find "${WORKDIR}/$fwdir/lib/firmware/updates/qcom" -type f  -name "Ver_Info.txt" \
                  -exec cp -r {} ${D}${nonarch_base_libdir}/firmware/qcom/${socdir} \;

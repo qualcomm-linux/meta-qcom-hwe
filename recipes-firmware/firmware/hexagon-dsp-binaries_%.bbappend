@@ -26,7 +26,7 @@ do_install:append:qcom (){
         fwdir=$(basename "$dir")
         bbdebug 1 "Processing firmware directory: ${fwdir}"
 
-        socdir=$(echo "${fwdir/_dspso/}" | tr '[:upper:]' '[:lower:]')
+        socdir=$(printf '%s' "$fwdir" | sed 's/_dspso//g' | tr '[:upper:]' '[:lower:]')
         install -d ${D}/${socdir}${nonarch_base_libdir}/dsp
         [ -d "${WORKDIR}/$fwdir/usr/lib/dsp" ] && \
         find "${WORKDIR}/$fwdir/usr/lib/dsp" -maxdepth 1 -type d \

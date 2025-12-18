@@ -25,7 +25,7 @@ do_install:append:qcom (){
         bbdebug 1 "Processing firmware directory: ${fwdir}"
 
         # Copy all except 'lib/firmware/updates'
-        socdir=$(echo "${fwdir/_fw/}" | tr '[:upper:]' '[:lower:]')
+        socdir=$(printf '%s' "$fwdir" | sed 's/_fw//g' | tr '[:upper:]' '[:lower:]')
         install -d ${D}/${socdir}${FIRMWARE_UPDATES_DIR}
         [ -d "${WORKDIR}/$fwdir/lib/firmware" ] && \
         find "${WORKDIR}/$fwdir/lib/firmware" -mindepth 1 -maxdepth 1 -type d ! -name "updates" \
