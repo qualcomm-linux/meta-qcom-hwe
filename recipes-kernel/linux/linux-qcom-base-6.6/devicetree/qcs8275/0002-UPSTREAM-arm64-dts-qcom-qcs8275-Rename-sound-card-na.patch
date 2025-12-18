@@ -1,0 +1,32 @@
+From 38011e940c1efc1ec5780349c10c825eb5e9ba48 Mon Sep 17 00:00:00 2001
+From: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Date: Wed, 17 Dec 2025 12:40:10 +0530
+Subject: [PATCH 2/2] UPSTREAM: arm64: dts: qcom: qcs8275: Rename sound card
+ name
+
+Rename sound card name to align with upstream sound card.
+
+Signed-off-by: Umang Chheda <umang.chheda@oss.qualcomm.com>
+Signed-off-by: Bjorn Andersson <andersson@kernel.org>
+Signed-off-by: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/arch/arm64/boot/dts/qcom/monaco-evk.dts?id=bb12da95a183253b619ca1691d6fd320b7e445e9]
+---
+ arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index 778b7ec0e0e8..452607646a5f 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -57,7 +57,7 @@ max98357a: audio-codec-0 {
+ 
+ 	sound {
+ 		compatible = "qcom,qcs8275-sndcard";
+-		model = "QCS8275-IQ8-EVK";
++		model = "MONACO-EVK";
+ 
+ 		pinctrl-0 = <&hs0_mi2s_active>, <&mi2s1_active>;
+ 		pinctrl-names = "default";
+-- 
+2.34.1
+

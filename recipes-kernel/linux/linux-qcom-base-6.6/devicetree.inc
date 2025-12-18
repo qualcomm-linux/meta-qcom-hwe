@@ -312,6 +312,7 @@ SRC_URI:append = " \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-Host-mode-support.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-el2-overlay-support-qcs90.patch \
     file://qcs9075/0001-FROMLIST-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable-T.patch \
+    file://qcs9075/0001-UPSTREAM-arm64-dts-qcom-qcs9075-Rename-sound-card-na.patch \
     file://qcs9075/0003-FROMLIST-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable-IM.patch \
     file://qcs9100/0001-UPSTREAM-arm64-dts-qcom-sa8775p-Add-default-pin-conf.patch \
     "
@@ -350,4 +351,5 @@ SRC_URI:append = " \
     file://qcs8300/0001-FROMLIST-arm64-dts-qcom-qcs8300-Add-CCI-definitions.patch \
     file://qcs8275/0002-PENDING-arm64-dts-qcom-qcs8275-rb4-Enable-IMX577-cam.patch \
     file://qcs8275/0001-BACKPORT-arm64-dts-qcom-qcs8275-Enable-Adreno-623-GP.patch \
+    file://qcs8275/0002-UPSTREAM-arm64-dts-qcom-qcs8275-Rename-sound-card-na.patch \
     "

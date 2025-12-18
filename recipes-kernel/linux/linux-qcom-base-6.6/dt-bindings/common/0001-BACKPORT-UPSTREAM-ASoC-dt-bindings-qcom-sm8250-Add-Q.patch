@@ -1,0 +1,42 @@
+From b57508dfe887a460f69148b04302ab24a7e86be7 Mon Sep 17 00:00:00 2001
+From: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Date: Thu, 11 Dec 2025 03:42:37 +0530
+Subject: [PATCH 1/4] BACKPORT: UPSTREAM: ASoC: dt-bindings: qcom,sm8250: Add
+ QCM6490 snd QCS6490 sound card
+
+Document the bindings for the Qualcomm QCM6490 IDP, QCS6490 RB3Gen2
+QCS9100 and QCS8275 board specific sound card.
+
+The bindings are the same as for other newer Qualcomm ADSP sound cards,
+thus keep them in existing qcom,sm8250.yaml file, even though Linux driver
+is separate.
+
+Signed-off-by: Mohammad Rafi Shaik <quic_mohs@quicinc.com>
+Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+Reviewed-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git c64c4e3f789123e82ffae3404d108cf826c9599a 689a95178f31ccfc9af0a11abcb11f2a200095bc 3b8dc31715e31ab930d36ef7b98ffc714344e411]
+---
+ Documentation/devicetree/bindings/sound/qcom,sm8250.yaml | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/sound/qcom,sm8250.yaml b/Documentation/devicetree/bindings/sound/qcom,sm8250.yaml
+index 9596bc0f7dfc..78d267a0e8a9 100644
+--- a/Documentation/devicetree/bindings/sound/qcom,sm8250.yaml
++++ b/Documentation/devicetree/bindings/sound/qcom,sm8250.yaml
+@@ -24,6 +24,11 @@ properties:
+       - enum:
+           - qcom,apq8016-sbc-sndcard
+           - qcom,msm8916-qdsp6-sndcard
++          - qcom,qcm6490-idp-sndcard
++          - qcom,qcs6490-rb3gen2-sndcard
++          - qcom,qcs8275-sndcard
++          - qcom,qcs9075-sndcard
++          - qcom,qcs9100-sndcard
+           - qcom,qcs9075-rb8-sndcard
+           - qcom,qrb5165-rb5-sndcard
+           - qcom,sc8280xp-sndcard
+-- 
+2.34.1
+
