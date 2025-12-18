@@ -18,7 +18,7 @@ S = "${WORKDIR}/audio/opensource/arpal-lx"
 
 DEPENDS = "tinyalsa tinycompress qcom-agm qcom-kvh2xml qcom-audioroute fastrpc qcom-pal-headers"
 
-EXTRA_OECONF += " --with-glib --with-syslog"
+EXTRA_OECONF += " --with-glib --with-syslog --enable-upstream-support=yes"
 
 SYSTEMD_SERVICE:${PN} += "adsprpcd_audiopd.service"
 

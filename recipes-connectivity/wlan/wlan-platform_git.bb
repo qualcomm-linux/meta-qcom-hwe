@@ -21,7 +21,7 @@ python __anonymous () {
     if (machine == 'qcs8550' or machine == 'qcs8650'):
         d.appendVar('EXTRA_OEMAKE', " CONFIG_PINCTRL_MSM=n WLAN_PLATFORM_DRIVER_CNSS=y")
     elif "qcs6490" in machine or "qcm6490" in machine:
-        d.appendVar('EXTRA_OEMAKE', " CONFIG_PINCTRL_MSM=n WLAN_PLATFORM_DRIVER_CNSS=y WLAN_PLATFORM_DRIVER_ICNSS=y")
+        d.appendVar('EXTRA_OEMAKE', " CONFIG_PINCTRL_MSM=n WLAN_PLATFORM_DRIVER_CNSS=y WLAN_PLATFORM_DRIVER_ICNSS=y CONFIG_QLI_FW_PATH_PREFIX=y")
 }
 
 MAKE_TARGETS = "modules"
