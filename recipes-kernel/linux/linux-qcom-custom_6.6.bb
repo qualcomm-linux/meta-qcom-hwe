@@ -21,10 +21,6 @@ SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=kernel \
            ${@bb.utils.contains('DISTRO_FEATURES', 'smack', ' file://smack.cfg', '', d)} \
            ${@bb.utils.contains('DISTRO_FEATURES', 'smack', ' file://smack_debug.cfg', '', d)} \
            file://0001-QCLINUX-Add-support-to-compile-msm_display.ko.patch \
-           file://0002-FROMLIST-dt-bindings-bridge-lt8713sx-Add-bindings.patch \
-           file://0003-FROMLIST-drm-bridge-add-support-for-lontium-lt8713sx.patch \
-           file://0004-FROMLIST-defconfig-qcom-Enable-lt8713sx-bridge-drive.patch \
-           file://0005-FROMLIST-arm64-dts-qcom-add-lt8713sx-bridge-for-iq8.patch \
            "
 
 S = "${WORKDIR}/kernel"
