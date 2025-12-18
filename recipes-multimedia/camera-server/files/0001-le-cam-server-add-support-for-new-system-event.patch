@@ -1,0 +1,448 @@
+From 7853675188b86ca74713fc6b28e7e7905972994f Mon Sep 17 00:00:00 2001
+From: Deepali Reddy Karra <quic_dkarra@quicinc.com>
+Date: Thu, 24 Jul 2025 11:33:25 +0530
+Subject: [PATCH] le-cam-server: add support for new system event
+
+- Implement handling of system event messages.
+- Forward these events to the clients for further processing.
+- Enabled for qcs8300 targets
+
+Change-Id: Iacbfdf4c4f39bdaffebbe21296bd96c6475146db
+---
+ .../qmmf_camera3_device_client.cc             | 14 +++++++
+ .../qmmf_camera3_device_client.h              |  3 ++
+ .../qmmf_camera3_request_handler.cc           | 20 +++++++---
+ .../qmmf_camera3_request_handler.h            |  5 +++
+ common/cameraadaptor/qmmf_camera3_types.h     | 11 ++++++
+ config/qcs8300/CMakeLists.txt                 |  2 +
+ include/qmmf-sdk/qmmf_recorder_params.h       | 21 ++++++----
+ recorder/src/service/qmmf_camera_context.cc   | 14 ++++++-
+ recorder/src/service/qmmf_camera_context.h    |  7 +++-
+ recorder/src/service/qmmf_camera_interface.h  |  3 +-
+ recorder/src/service/qmmf_camera_source.cc    |  5 ++-
+ recorder/src/service/qmmf_camera_source.h     |  3 +-
+ recorder/src/service/qmmf_recorder_common.h   |  2 +
+ recorder/src/service/qmmf_recorder_impl.cc    | 39 ++++++++++++++++++-
+ recorder/src/service/qmmf_recorder_impl.h     |  3 ++
+ 15 files changed, 130 insertions(+), 22 deletions(-)
+
+diff --git a/common/cameraadaptor/qmmf_camera3_device_client.cc b/common/cameraadaptor/qmmf_camera3_device_client.cc
+index 9921225..1106427 100644
+--- a/common/cameraadaptor/qmmf_camera3_device_client.cc
++++ b/common/cameraadaptor/qmmf_camera3_device_client.cc
+@@ -1477,6 +1477,12 @@ void Camera3DeviceClient::Notify(const camera3_notify_msg *msg) {
+       NotifyError(msg->message.error);
+       break;
+     }
++#ifdef ENABLE_SYSTEM_MESSAGE_EVENT
++    case CAMERA3_MSG_SYSTEM: {
++      NotifySystemEvent(msg->message.systemeventmsg);
++      break;
++    }
++#endif
+     default:
+       SET_ERR("Unknown notify message from HAL: %d", msg->type);
+   }
+@@ -1593,6 +1599,14 @@ void Camera3DeviceClient::NotifyShutter(const camera3_shutter_msg_t &msg) {
+   }
+ }
+ 
++#ifdef ENABLE_SYSTEM_MESSAGE_EVENT
++void Camera3DeviceClient::NotifySystemEvent(const camera3_system_msg_t &msg) {
++  // Set flag in request handler to disable wait loop in Clear()
++  request_handler_.SetSystemEventOccurred(true);
++  client_cb_.systemCb(msg.errorCode);
++}
++#endif
++
+ #if defined(CAMERA_HAL_API_VERSION) && (CAMERA_HAL_API_VERSION >= 0x0307)
+ camera3_buffer_request_status_t Camera3DeviceClient::RequestStreamBuffers(
+     uint32_t num_buffer_reqs, const camera3_buffer_request_t *buffer_reqs,
+diff --git a/common/cameraadaptor/qmmf_camera3_device_client.h b/common/cameraadaptor/qmmf_camera3_device_client.h
+index eafede7..02434ad 100644
+--- a/common/cameraadaptor/qmmf_camera3_device_client.h
++++ b/common/cameraadaptor/qmmf_camera3_device_client.h
+@@ -169,6 +169,9 @@ class Camera3DeviceClient : public camera3_callback_ops,
+   void Notify(const camera3_notify_msg *msg);
+   void NotifyError(const camera3_error_msg_t &msg);
+   void NotifyShutter(const camera3_shutter_msg_t &msg);
++#ifdef ENABLE_SYSTEM_MESSAGE_EVENT
++  void NotifySystemEvent(const camera3_system_msg_t &msg);
++#endif
+   void RemovePendingRequestLocked(uint32_t frameNumber);
+   void ReturnOutputBuffers(const camera3_stream_buffer_t *outputBuffers,
+                            size_t numBuffers, int64_t timestamp,
+diff --git a/common/cameraadaptor/qmmf_camera3_request_handler.cc b/common/cameraadaptor/qmmf_camera3_request_handler.cc
+index b732a54..f4814cf 100644
+--- a/common/cameraadaptor/qmmf_camera3_request_handler.cc
++++ b/common/cameraadaptor/qmmf_camera3_request_handler.cc
+@@ -57,7 +57,8 @@ Camera3RequestHandler::Camera3RequestHandler(Camera3Monitor &monitor)
+       batch_size_(1),
+       run_worker_(false),
+       cam_opmode_(0),
+-      request_mdata_(CameraMetadata(128,128)) {
++      request_mdata_(CameraMetadata(128,128)),
++      system_event_occurred_(false) {
+   pthread_mutex_init(&lock_, NULL);
+   cond_init(&requests_signal_);
+   cond_init(&current_request_signal_);
+@@ -221,11 +222,14 @@ int32_t Camera3RequestHandler::Clear(int64_t *lastFrameNumber) {
+   streaming_last_frame_number_ = NO_IN_FLIGHT_REPEATING_FRAMES;
+ 
+   int32_t ret = 0;
+-  while (current_request_.resultExtras.requestId != -1) {
+-    // If there is a in-flight request, wait until it is submitted to HAL.
+-    ret = cond_wait_relative(&current_request_signal_, &lock_, CLEAR_TIMEOUT);
+-    if (-ETIMEDOUT == ret) {
+-      break;
++  // Skip waiting for current request if system event occurred
++  if (!system_event_occurred_) {
++    while (current_request_.resultExtras.requestId != -1) {
++      // If there is a in-flight request, wait until it is submitted to HAL.
++      ret = cond_wait_relative(&current_request_signal_, &lock_, CLEAR_TIMEOUT);
++      if (-ETIMEDOUT == ret) {
++        break;
++      }
+     }
+   }
+ 
+@@ -937,6 +941,10 @@ bool Camera3RequestHandler::RequestStreamSubmitPostProcess(
+   return ret;
+ }
+ 
++void Camera3RequestHandler::SetSystemEventOccurred(bool occurred) {
++  system_event_occurred_ = occurred;
++}
++
+ bool Camera3RequestHandler::RequestStreamGetProcess(
+     RequestList::iterator it, CaptureRequest &realRequest, bool first) {
+ 
+diff --git a/common/cameraadaptor/qmmf_camera3_request_handler.h b/common/cameraadaptor/qmmf_camera3_request_handler.h
+index 459bfeb..74404bd 100644
+--- a/common/cameraadaptor/qmmf_camera3_request_handler.h
++++ b/common/cameraadaptor/qmmf_camera3_request_handler.h
+@@ -125,6 +125,8 @@ class Camera3RequestHandler : public ThreadHelper {
+ 
+   void DeleteInputBuffer(uint32_t frameNumber);
+ 
++  void SetSystemEventOccurred(bool occurred);
++
+  protected:
+   bool ThreadLoop() override;
+ 
+@@ -199,6 +201,9 @@ class Camera3RequestHandler : public ThreadHelper {
+   CamReqModeParams  cam_reqmode_params_;
+   std::mutex        cam_reqmode_lock_;
+   CameraMetadata    request_mdata_;
++
++  // Flag to track system event occurrence
++  std::atomic<bool> system_event_occurred_;
+ };
+ 
+ }  // namespace cameraadaptor ends here
+diff --git a/common/cameraadaptor/qmmf_camera3_types.h b/common/cameraadaptor/qmmf_camera3_types.h
+index 3c85573..c7b0ad3 100644
+--- a/common/cameraadaptor/qmmf_camera3_types.h
++++ b/common/cameraadaptor/qmmf_camera3_types.h
+@@ -198,6 +198,14 @@ enum CameraErrorCode {
+   ERROR_CAMERA_BUFFER = 4,        // Error during buffer processing
+ };
+ 
++enum SystemEventMessage {
++  MSG_SYSTEM_SOFFREEZE          = 1,
++  MSG_SYSTEM_RECOVERYFAILURE    = 2,
++  MSG_SYSTEM_FATAL              = 3,
++  MSG_SYSTEM_RECOVERYSUCCESS    = 4,
++  MSG_SYSTEM_INTERNAL_RECOVERY  = 5,
++};
++
+ // Notifies about all sorts of errors that can happen during camera operation
+ typedef std::function<
+     void(CameraErrorCode errorCode, const CaptureResultExtras &resultExtras)>
+@@ -211,6 +219,8 @@ typedef std::function<void(const CaptureResultExtras &resultExtras,
+ typedef std::function<void(int streamId)> PreparedCallback;
+ // Notifies about a new capture result
+ typedef std::function<void(const CaptureResult &result)> ResultCallback;
++// Notifies about all sorts of system messages that can happen during camera operation
++typedef std::function<void(uint32_t errorCode)> SystemCallback;
+ 
+ // Please note that these callbacks shouldn't get blocked for long durations.
+ // Also very important is to not to try and call "Camera3DeviceClient" API
+@@ -222,6 +232,7 @@ typedef struct {
+   ShutterCallback shutterCb;
+   PreparedCallback peparedCb;
+   ResultCallback resultCb;
++  SystemCallback systemCb;
+ } CameraClientCallbacks;
+ 
+ //Please note that this callbacks need to return as fast as possible
+diff --git a/config/qcs8300/CMakeLists.txt b/config/qcs8300/CMakeLists.txt
+index 0d01c8b..9bdb445 100644
+--- a/config/qcs8300/CMakeLists.txt
++++ b/config/qcs8300/CMakeLists.txt
+@@ -36,6 +36,8 @@ set(PLATFORM_CXX_FLAGS "${PLATFORM_CXX_FLAGS} -DEIS_MODES_ENABLE")
+ 
+ set(PLATFORM_CXX_FLAGS "${PLATFORM_CXX_FLAGS} -DVHDR_MODES_ENABLE")
+ 
++set(PLATFORM_CXX_FLAGS "${PLATFORM_CXX_FLAGS} -DENABLE_SYSTEM_MESSAGE_EVENT")
++
+ set(ENABLE_OFFLINE_JPEG "0" PARENT_SCOPE)
+ 
+ if(HAVE_GBM_H)
+diff --git a/include/qmmf-sdk/qmmf_recorder_params.h b/include/qmmf-sdk/qmmf_recorder_params.h
+index 9cee645..ea1788c 100644
+--- a/include/qmmf-sdk/qmmf_recorder_params.h
++++ b/include/qmmf-sdk/qmmf_recorder_params.h
+@@ -60,14 +60,19 @@ namespace recorder {
+ typedef int32_t status_t;
+ 
+ enum class EventType : uint32_t {
+-  kUnknown       = 0, // Indicates a unknown event has occured.
+-  kServerDied    = 1, // Indicates un-recoverable service crash.
+-  kCameraError   = 2, // Indicates un-recoverable camera error.
+-  kCameraOpened  = 3, // Indicates camera that has been opened.
+-  kCameraClosing = 4, // Indicates camera that is about to be closed.
+-  kCameraClosed  = 5, // Indicates camera that has been closed.
+-  kFrameError    = 6, // Indicates a frame has been droped.
+-  kMetadataError = 7, // Indicates metadata for a frame has been droped.
++  kUnknown           = 0,  // Indicates a unknown event has occured.
++  kServerDied        = 1,  // Indicates un-recoverable service crash.
++  kCameraError       = 2,  // Indicates un-recoverable camera error.
++  kCameraOpened      = 3,  // Indicates camera that has been opened.
++  kCameraClosing     = 4,  // Indicates camera that is about to be closed.
++  kCameraClosed      = 5,  // Indicates camera that has been closed.
++  kFrameError        = 6,  // Indicates a frame has been droped.
++  kMetadataError     = 7,  // Indicates metadata for a frame has been droped.
++  kSOFFreeze         = 8,  // Indicates SOF freeze event has occured.
++  kRecoveryFailure   = 9,  // Indicates Recovery failure event has occured
++  kFatal             = 10, // Indicates ISP Fatal event error has occured
++  kRecoverySuccess   = 11, // Indicates recovery has been successful.
++  kInternal_Recovery = 12, // Indicates non fatal error has occured.
+ };
+ 
+ enum class VideoFormat : uint32_t {
+diff --git a/recorder/src/service/qmmf_camera_context.cc b/recorder/src/service/qmmf_camera_context.cc
+index d72425a..e6f2e0a 100644
+--- a/recorder/src/service/qmmf_camera_context.cc
++++ b/recorder/src/service/qmmf_camera_context.cc
+@@ -96,6 +96,7 @@ CameraContext::CameraContext()
+       capture_cnt_(0),
+       result_cb_(nullptr),
+       error_cb_(nullptr),
++      system_cb_(nullptr),
+       zsl_port_id_(0x100),
+       hfr_supported_(false),
+       batch_stream_id_(-1),
+@@ -131,6 +132,8 @@ CameraContext::CameraContext()
+   camera_callbacks_.resultCb = [&] (const CaptureResult &result)
+       { CameraResultCb(result); };
+ 
++  camera_callbacks_.systemCb = [&] (uint32_t errcode) { CameraSystemCb(errcode); };
++
+   camera_device_ = std::make_shared<Camera3DeviceClient>(camera_callbacks_);
+   if (!camera_device_) {
+     QMMF_ERROR("%s: Can't Instantiate Camera3DeviceClient", __func__);
+@@ -247,7 +250,8 @@ status_t CameraContext::OpenCamera(const uint32_t camera_id,
+                                    const float frame_rate,
+                                    const CameraExtraParam& extra_param,
+                                    const ResultCb &cb,
+-                                   const ErrorCb &errcb) {
++                                   const ErrorCb &errcb,
++                                   const SystemCb &syscb) {
+ 
+   uint32_t ret = 0;
+   bool match_camera_id = false;
+@@ -593,6 +597,7 @@ status_t CameraContext::OpenCamera(const uint32_t camera_id,
+ 
+   result_cb_ = cb;
+   error_cb_ = errcb;
++  system_cb_ = syscb;
+ 
+   return ret;
+ }
+@@ -2880,6 +2885,13 @@ void CameraContext::CameraPreparedCb(int32_t stream_id) {
+   prepare_done_.Signal();
+ }
+ 
++void CameraContext::CameraSystemCb(uint32_t errcode) {
++  QMMF_INFO("%s: Camera sent an event with camera_id %d!!", __func__,camera_id_);
++  if (nullptr != system_cb_) {
++    system_cb_(camera_id_, errcode);
++  }
++}
++
+ template <typename T>
+ bool CameraContext::UpdatePartialTag(CameraMetadata &result, int32_t tag,
+                                      const T *value,
+diff --git a/recorder/src/service/qmmf_camera_context.h b/recorder/src/service/qmmf_camera_context.h
+index 318c07d..f69a533 100644
+--- a/recorder/src/service/qmmf_camera_context.h
++++ b/recorder/src/service/qmmf_camera_context.h
+@@ -88,7 +88,8 @@ class CameraContext : public CameraInterface {
+   status_t OpenCamera(const uint32_t camera_id, const float frame_rate,
+                       const CameraExtraParam& extra_param,
+                       const ResultCb &cb = nullptr,
+-                      const ErrorCb &errcb = nullptr) override;
++                      const ErrorCb &errcb = nullptr,
++                      const SystemCb &syscb = nullptr) override;
+ 
+   status_t CloseCamera(const uint32_t camera_id) override;
+ 
+@@ -251,6 +252,8 @@ class CameraContext : public CameraInterface {
+ 
+   void CameraResultCb(const CaptureResult &result);
+ 
++  void CameraSystemCb(uint32_t errcode);
++
+   uint32_t GetROICountTag () { return multi_roi_count_tag_; }
+ 
+   uint32_t GetROIInfoTag () { return multi_roi_info_tag_; }
+@@ -317,7 +320,7 @@ class CameraContext : public CameraInterface {
+ 
+   ResultCb                 result_cb_;
+   ErrorCb                  error_cb_;
+-
++  SystemCb                 system_cb_;
+   std::vector<int32_t>     supported_fps_;
+   uint32_t                 zsl_port_id_;
+   uint32_t                 reproc_port_id_;
+diff --git a/recorder/src/service/qmmf_camera_interface.h b/recorder/src/service/qmmf_camera_interface.h
+index 31eb165..7c6a7a9 100644
+--- a/recorder/src/service/qmmf_camera_interface.h
++++ b/recorder/src/service/qmmf_camera_interface.h
+@@ -83,7 +83,8 @@ class CameraInterface {
+                               const float framerate,
+                               const CameraExtraParam& extra_param,
+                               const ResultCb &cb = nullptr,
+-                              const ErrorCb &errcb = nullptr) = 0;
++                              const ErrorCb &errcb = nullptr,
++                              const SystemCb &syscb = nullptr) = 0;
+ 
+   /// Close the camera
+   virtual status_t CloseCamera(const uint32_t camera_id) = 0;
+diff --git a/recorder/src/service/qmmf_camera_source.cc b/recorder/src/service/qmmf_camera_source.cc
+index 4685b99..2e841c5 100644
+--- a/recorder/src/service/qmmf_camera_source.cc
++++ b/recorder/src/service/qmmf_camera_source.cc
+@@ -120,7 +120,8 @@ status_t CameraSource::StartCamera(const uint32_t camera_id,
+                                    const float framerate,
+                                    const CameraExtraParam& extra_param,
+                                    const ResultCb &cb,
+-                                   const ErrorCb &errcb) {
++                                   const ErrorCb &errcb,
++                                   const SystemCb &syscb) {
+ 
+   QMMF_INFO("%s: Camera Id(%u) to open!", __func__, camera_id);
+   QMMF_KPI_DETAIL();
+@@ -153,7 +154,7 @@ status_t CameraSource::StartCamera(const uint32_t camera_id,
+   start_cam_param_[camera_id] = extra_param;
+   start_cam_param_lock_.unlock();
+ 
+-  auto ret = camera->OpenCamera(camera_id, framerate, extra_param, cb, errcb);
++  auto ret = camera->OpenCamera(camera_id, framerate, extra_param, cb, errcb, syscb);
+   if (ret != 0) {
+     QMMF_ERROR("%s: OpenCamera(%d) Failed!", __func__, camera_id);
+     active_cameras_lock_.lock();
+diff --git a/recorder/src/service/qmmf_camera_source.h b/recorder/src/service/qmmf_camera_source.h
+index a875a06..5585663 100644
+--- a/recorder/src/service/qmmf_camera_source.h
++++ b/recorder/src/service/qmmf_camera_source.h
+@@ -85,7 +85,8 @@ class CameraSource {
+                        const float framerate,
+                        const CameraExtraParam& extra_param,
+                        const ResultCb &cb = nullptr,
+-                       const ErrorCb &errcb = nullptr);
++                       const ErrorCb &errcb = nullptr,
++                       const SystemCb &syscb = nullptr);
+ 
+   /// Close Camera.
+   status_t StopCamera(const uint32_t camera_id);
+diff --git a/recorder/src/service/qmmf_recorder_common.h b/recorder/src/service/qmmf_recorder_common.h
+index 656cb4e..72b1b8d 100644
+--- a/recorder/src/service/qmmf_recorder_common.h
++++ b/recorder/src/service/qmmf_recorder_common.h
+@@ -83,6 +83,8 @@ typedef std::function< const std::shared_ptr<RemoteCallBack>& (uint32_t client_i
+ 
+ typedef std::function<void(uint32_t camera_id, int32_t errcode)> ErrorCb;
+ 
++typedef std::function<void(uint32_t camera_id, int32_t errcode)> SystemCb;
++
+ }; //namespace recorder.
+ 
+ }; //namespace qmmf.
+diff --git a/recorder/src/service/qmmf_recorder_impl.cc b/recorder/src/service/qmmf_recorder_impl.cc
+index 271208a..f83031f 100644
+--- a/recorder/src/service/qmmf_recorder_impl.cc
++++ b/recorder/src/service/qmmf_recorder_impl.cc
+@@ -376,9 +376,12 @@ status_t RecorderImpl::StartCamera(const uint32_t client_id,
+   ErrorCb errcb = [&] (uint32_t camera_id, uint32_t errcode) {
+       CameraErrorCb(camera_id, errcode); };
+ 
++  SystemCb syscb = [&] (uint32_t camera_id, uint32_t errcode) {
++      CameraSystemCb(camera_id, errcode); };
++
+   auto ret = camera_source_->StartCamera(camera_id, framerate, extra_param,
+                                          enable_result_cb ? cb : nullptr,
+-                                         errcb);
++                                         errcb, syscb);
+   if (ret != 0) {
+     QMMF_ERROR("%s: StartCamera Failed!!", __func__);
+     return -EINVAL;
+@@ -1392,6 +1395,40 @@ void RecorderImpl::CameraErrorCb(uint32_t camera_id, uint32_t errcode) {
+   }
+ }
+ 
++void RecorderImpl::CameraSystemCb(uint32_t camera_id, uint32_t errcode) {
++  assert(remote_cb_handle_ != nullptr);
++  EventType event = EventType::kUnknown;
++
++  auto client_ids = GetCameraClients(camera_id);
++
++  switch (errcode) {
++    case MSG_SYSTEM_SOFFREEZE:
++      event = EventType::kSOFFreeze;
++      break;
++    case MSG_SYSTEM_RECOVERYFAILURE:
++      event = EventType::kRecoveryFailure;
++      break;
++    case MSG_SYSTEM_FATAL:
++      event = EventType::kFatal;
++      break;
++    case MSG_SYSTEM_RECOVERYSUCCESS:
++      event = EventType::kRecoverySuccess;
++      break;
++    case MSG_SYSTEM_INTERNAL_RECOVERY:
++      event = EventType::kInternal_Recovery;
++      break;
++    default:
++      event = EventType::kUnknown;
++      break;
++  }
++
++  for (auto const& client_id : client_ids) {
++    assert(IsClientValid(client_id));
++    remote_cb_handle_(client_id)->NotifyRecorderEvent(
++        event, &camera_id, sizeof(uint32_t));
++  }
++}
++
+ bool RecorderImpl::IsClientValid(const uint32_t& client_id) {
+ 
+   std::lock_guard<std::mutex> lock(client_track_lock_);
+diff --git a/recorder/src/service/qmmf_recorder_impl.h b/recorder/src/service/qmmf_recorder_impl.h
+index 2d2937c..0601c2e 100644
+--- a/recorder/src/service/qmmf_recorder_impl.h
++++ b/recorder/src/service/qmmf_recorder_impl.h
+@@ -219,6 +219,9 @@ class RecorderImpl {
+   /// Camera Error callback handler
+   void CameraErrorCb(uint32_t camera_id, uint32_t errcode);
+ 
++  /// Camera System callback handler
++  void CameraSystemCb(uint32_t camera_id, uint32_t errcode);
++
+   // Get suitable trackid for linked stream
+   uint32_t FindSuitableIdForLinkedTrack(const VideoTrackParam& params);
+ 
+-- 
+2.34.1
+

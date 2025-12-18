@@ -18,7 +18,8 @@ SRCBRANCH  = "le-services.lnx.1.0.r1-rel"
 SRCREV     = "d65504bcd96a88bd00580e72234657123e201010"
 
 SRC_URI  = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=le-camera-server \
-            file://cam-server-env"
+            file://cam-server-env \
+            file://0001-le-cam-server-add-support-for-new-system-event.patch"
 
 S = "${WORKDIR}/le-camera-server"
 
