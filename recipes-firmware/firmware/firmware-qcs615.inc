@@ -1,11 +1,11 @@
 FW_ARTIFACTORY = "https://softwarecenter.qualcomm.com/nexus/generic/software/chip/qualcomm_linux-spf-1-0/qualcomm-linux-spf-1-0_test_device_public"
-FW_BUILD_ID    = "r1.0_00112.0/qcs615-le-1-0"
+FW_BUILD_ID    = "r1.0_00114.0/qcs615-le-1-0"
 FW_BIN_PATH    = "common/build/common/bin"
 
-QCS615_FW_BUILD_ID ?= "r1.0_00112.0/qcs615-le-1-0"
+QCS615_FW_BUILD_ID ?= "r1.0_00114.0/qcs615-le-1-0"
 QCS615_FW_BIN_PATH ?= "common/build/common/bin"
-QCS615_HLOSFW_SHA256SUM  ?= "9d7bd5f2914881f17c38a838dd0b6af056b34482cb4aff3eeeecbf1c8aca2125"
-QCS615_DSPSO_SHA256SUM  ?= "f441d81a40e7e458ba62f8d7c677cf69c48f53ff6a0003f27e2e84687d4240be"
+QCS615_HLOSFW_SHA256SUM  ?= "53378e80b2e9d5b33144d46d45f27363084a1dbb3ef9cbf53826d0e989f7210e"
+QCS615_DSPSO_SHA256SUM  ?= "f94dbc7fcaa92a8f749a0262ba0caea7f8b8c76d05d8b461d4fa950bb0b2ed4f"
 
 # Fetch a shallow mirror tarball.
 BB_GIT_SHALLOW       = "1"
