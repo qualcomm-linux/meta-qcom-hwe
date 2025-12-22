@@ -36,4 +36,5 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-qcs8300-qca-qca61x4-usb-updates \
     linux-firmware-qcs8300-qca-qca6698-updates \
     linux-firmware-qcs8300-qcom-tzapps-updates \
+    linux-firmware-qcs8300-qca-wcn685x-updates \
 "
