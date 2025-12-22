@@ -547,4 +547,5 @@ SRC_URI:append = " \
     file://common/0004-FROMLIST-wifi-ath11k-Register-relayfs-entries-for-CF.patch \
     file://common/0005-FROMLIST-wifi-ath11k-Register-DBR-event-handler-for-.patch \
     file://common/0006-FROMLIST-wifi-ath11k-Register-handler-for-CFR-captur.patch \
+    file://common/0150-FROMLIST-driver-bluetooth-hci_qca-Always-perform-.patch \
 "

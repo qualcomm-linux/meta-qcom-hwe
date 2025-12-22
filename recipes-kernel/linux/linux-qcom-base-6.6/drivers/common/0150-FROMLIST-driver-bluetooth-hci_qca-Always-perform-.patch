@@ -1,0 +1,49 @@
+From 58b6d0efc0cb199ccd93be76ed4d01caf63a6889 Mon Sep 17 00:00:00 2001
+From: jinwli <jinwang.li@oss.qualcomm.com>
+Date: Mon, 22 Dec 2025 20:27:30 +0800
+Subject: [PATCH v1] FROMLIST: driver: bluetooth: hci_qca: Always perform
+ cleanup on every setup failure
+
+The retry logic in qca_setup combined error handling and
+retry gating under a single condition. This caused the final failed
+attempt (when retries reached MAX_INIT_RETRIES) to return without
+performing cleanup.
+
+So only jumping to retry when there is a error and retries have not
+reached MAX_INIT_RETRIES.
+
+Signed-off-by: jinwli <jinwang.li@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20251222123824.3000167-1-jinwang.li@oss.qualcomm.com/]
+---
+ drivers/bluetooth/hci_qca.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/bluetooth/hci_qca.c b/drivers/bluetooth/hci_qca.c
+index a30682386ed1..c7e716a0b90e 100644
+--- a/drivers/bluetooth/hci_qca.c
++++ b/drivers/bluetooth/hci_qca.c
+@@ -2012,7 +2012,7 @@ static int qca_setup(struct hci_uart *hu)
+ 	}
+ 
+ out:
+-	if (ret && retries < MAX_INIT_RETRIES) {
++	if (ret) {
+ 		bt_dev_warn(hdev, "Retry BT power ON:%d", retries);
+ 		qca_power_shutdown(hu);
+ 		if (hu->serdev) {
+@@ -2023,8 +2023,10 @@ static int qca_setup(struct hci_uart *hu)
+ 				return ret;
+ 			}
+ 		}
+-		retries++;
+-		goto retry;
++		if (retries < MAX_INIT_RETRIES) {
++			retries++;
++			goto retry;
++		}
+ 	}
+ 
+ 	/* Setup bdaddr */
+-- 
+2.34.1
+
