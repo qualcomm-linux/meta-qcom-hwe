@@ -36,4 +36,5 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-qcom-qcm6490-wifi-updates \
     linux-firmware-qcom-qcm6490-wlanhsp-updates \
     linux-firmware-qcom-qcm6490-wlan-updates \
+    linux-firmware-qcm6490-qca-wcn685x-updates \
 "
