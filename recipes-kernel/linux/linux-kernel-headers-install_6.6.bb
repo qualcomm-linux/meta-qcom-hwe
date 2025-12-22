@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 SRCPROJECT = "git://git.codelinaro.org/clo/la/kernel/qcom.git;protocol=https"
 SRCBRANCH  = "kernel.qclinux.1.0.r1-rel"
-SRCREV     = "a91e27bc4e4f363848a25ce732b7294320fbda17"
+SRCREV     = "de229c16e2aad78e054a222957219e8fda5bb335"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=kernel"
 

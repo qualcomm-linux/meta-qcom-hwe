@@ -21,7 +21,7 @@ QCOM_FW_API_SRCREV ?= "1339a115ae068c533623bf5eea12448d0a99c693"
 
 QCOM_WLAN_SRC ?= "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/wlan/platform.git;protocol=https"
 QCOM_WLAN_SRCBRANCH ?= "wlan-platform.qclinux.1.0.r2-rel"
-QCOM_WLAN_SRCREV ?= "40461f61190230a2ad3111f94b5ce4ac78bef355"
+QCOM_WLAN_SRCREV ?= "c07f727270df5f7073b640aa1933c10f1eb3d643"
 
 SRCREV_FORMAT= "qcacld_wlanhostcmn_fwapi_qcomwlan"
 
