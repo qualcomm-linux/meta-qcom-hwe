@@ -28,7 +28,6 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-qcom-qcs8300-audio-updates \
     linux-firmware-qcom-qcs8300-compute-updates \
     linux-firmware-qcom-qcs8300-generalpurpose-updates \
-    linux-firmware-qcom-qcs8300-qupv3fw-updates \
     linux-firmware-qcom-qcs8300-verinfo \
     linux-firmware-qcs8300-ath11k-qca6698aq-updates \
     linux-firmware-qcs8300-ath11k-wcn6855-updates \

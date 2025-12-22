@@ -32,7 +32,6 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-qcom-qcm6490-audio-updates \
     linux-firmware-qcom-qcm6490-compute-updates \
     linux-firmware-qcom-qcm6490-qps615-updates \
-    linux-firmware-qcom-qcm6490-qupv3fw-updates \
     linux-firmware-qcom-qcm6490-verinfo \
     linux-firmware-qcom-qcm6490-wifi-updates \
     linux-firmware-qcom-qcm6490-wlanhsp-updates \
