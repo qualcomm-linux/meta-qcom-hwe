@@ -345,4 +345,5 @@ SRC_URI:append = " \
     file://qcs8275/0001-FROMLIST-arm64-dts-qcom-monaco-evk-Enable-PCIe0-PCIe.patch \
     file://qcs8275/0001-FROMGIT-arm64-dts-qcom-monaco-evk-Add-firmware-name-.patch \
     file://qcs8275/0001-FROMGIT-arm64-dts-qcom-monaco-evk-Enable-Adreno-623-.patch \
+    file://qcs8275/0001-BACKPORT-arm64-dts-qcom-qcs8275-Enable-Adreno-623-GP.patch \
     "
