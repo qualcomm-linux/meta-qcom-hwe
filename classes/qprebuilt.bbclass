@@ -36,11 +36,6 @@ python qprebuilt_do_install() {
     if retval:
        bb.fatal("Errors in extracting prebuilt (%s)" % output)
 
-    # Stop no login license file from getting packaged
-    nologin_license_file = os.path.join(dest, "NO.LOGIN.BINARY.LICENSE.QTI.pdf")
-    if os.path.exists(nologin_license_file):
-        os.remove(nologin_license_file)
-
     # Stop change log from getting packaged
     if os.path.exists("%s/CHANGES" % dest):
         os.remove("%s/CHANGES" % dest)
@@ -50,15 +45,26 @@ python qprebuilt_do_install() {
     if os.path.exists(noticefile):
         os.remove(noticefile)
 
-    # Install license
+    # Install license into licensedir
+    licensefile = os.path.join(dest, "LICENSE.qcom-2")
     licensedir = d.getVar('LICENSE_DIRECTORY')
     pn = d.getVar("PN")
-    cmd = "cp -r %s/__LIC__ %s/%s" % (dest, licensedir, pn)
+    cmd = "cp %s %s/%s" % (licensefile, licensedir, pn)
     (retval, output) = oe.utils.getstatusoutput(cmd)
     if retval:
         bb.warn("Unable to retrieve license: %s" % output)
 
-    shutil.rmtree("%s/__LIC__" % dest)
+    # Stop license file from getting packaged
+    if os.path.exists(licensefile):
+        os.remove(licensefile)
+
+    # Some older archives may still have these files. Drop them.
+    nologin_license_file = os.path.join(dest, "NO.LOGIN.BINARY.LICENSE.QTI.pdf")
+    if os.path.exists(nologin_license_file):
+        os.remove(nologin_license_file)
+
+    if os.path.exists("%s/__LIC__" % dest):
+        shutil.rmtree("%s/__LIC__" % dest)
 }
 
 EXPORT_FUNCTIONS do_unpack do_install
