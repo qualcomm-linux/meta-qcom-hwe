@@ -8,7 +8,7 @@ SSTATE_ALLOW_OVERLAP_FILES = "/"
 
 DEPENDS += "glib-2.0"
 DEPENDS += "gtest"
-DEPENDS += "property-vault syslog-plumber protobuf-native protobuf-c protobuf-c-native"
+DEPENDS += "protobuf-native protobuf-c protobuf-c-native"
 DEPENDS:append:qcm6490 = " camx-kt"
 DEPENDS:append:qcs9100 = " camx"
 DEPENDS:append:qcs8300 = " camx"
@@ -19,6 +19,7 @@ SRCREV     = "bc8d77091b55ce79b8010e8d27f6c3009cdfa9bd"
 
 SRC_URI  = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=le-camera-server \
             file://cam-server-env"
+SRC_URI  += "file://cam-server.ini"
 
 S = "${WORKDIR}/le-camera-server"
 
@@ -30,6 +31,7 @@ EXTRA_OECMAKE += "-DBUILD_CATEGORY=ALL"
 EXTRA_OECMAKE += "-DCAM_SERVER_SYSTEMD_DIR=${sysconfdir}/systemd/system"
 EXTRA_OECMAKE += "-DGBM_FREE_FD=${GBM_FREE_FD}"
 EXTRA_OECMAKE += "-DCMAKE_SYSROOT_NATIVE=${WORKDIR}/recipe-sysroot-native/"
+EXTRA_OECMAKE += "-DCAM_SERVER_CONFIG_DIR=${sysconfdir}"
 EXTRA_OECMAKE:append:qcm6490 = " -DTARGET_BOARD_PLATFORM=qcm6490 "
 EXTRA_OECMAKE:append:qcs9100 = " -DTARGET_BOARD_PLATFORM=qcs9100 "
 EXTRA_OECMAKE:append:qcs8300 = " -DTARGET_BOARD_PLATFORM=qcs8300 "
@@ -50,6 +52,7 @@ do_install:append () {
            ${D}/etc/systemd/system/multi-user.target.wants/cam-server.service
     fi
     install ${WORKDIR}/cam-server-env -D ${D}/${sysconfdir}/cam-server-env
+    install ${WORKDIR}/cam-server.ini -D ${D}/${sysconfdir}/cam-server.ini
 }
 
 FILES:${PN}-cam-server-dbg = "${bindir}/.debug/cam-server"
