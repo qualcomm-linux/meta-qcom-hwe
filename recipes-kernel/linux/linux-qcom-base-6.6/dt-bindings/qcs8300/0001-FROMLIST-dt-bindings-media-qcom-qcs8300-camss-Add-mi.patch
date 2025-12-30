@@ -1,0 +1,57 @@
+From 2e1802bf698b63d38faf0ce938ecdf5a79eebcfc Mon Sep 17 00:00:00 2001
+From: Nihal Kumar Gupta <quic_nihalkum@quicinc.com>
+Date: Fri, 24 Oct 2025 15:34:46 +0530
+Subject: [PATCH 1/2] FROMLIST: dt-bindings: media: qcom,qcs8300-camss: Add
+ missing power supplies
+
+Add support for vdda-phy-supply and vdda-pll-supply in the QCS8300
+CAMSS binding.
+
+Signed-off-by: Nihal Kumar Gupta <quic_nihalkum@quicinc.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20251107162521.511536-2-quic_vikramsa@quicinc.com]
+---
+ .../bindings/media/qcom,qcs8300-camss.yaml          | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/media/qcom,qcs8300-camss.yaml b/Documentation/devicetree/bindings/media/qcom,qcs8300-camss.yaml
+index e72744f430c4..1c6158dab5f1 100644
+--- a/Documentation/devicetree/bindings/media/qcom,qcs8300-camss.yaml
++++ b/Documentation/devicetree/bindings/media/qcom,qcs8300-camss.yaml
+@@ -127,6 +127,14 @@ properties:
+     items:
+       - const: top
+
++  vdda-phy-supply:
++    description:
++      Phandle to a 0.88V regulator supply to CSI PHYs.
++
++  vdda-pll-supply:
++    description:
++      Phandle to 1.2V regulator supply to CSI PHYs pll block.
++
+   ports:
+     $ref: /schemas/graph.yaml#/properties/ports
+
+@@ -204,6 +212,8 @@ required:
+   - iommus
+   - power-domains
+   - power-domain-names
++  - vdda-phy-supply
++  - vdda-pll-supply
+
+ additionalProperties: false
+
+@@ -383,6 +393,9 @@ examples:
+             power-domain-names = "top";
+             operating-points-v2 = <&camss_opp_table>;
+
++            vdda-phy-supply = <&vreg_l4a_0p88>;
++            vdda-pll-supply = <&vreg_l1c_1p2>;
++
+             camss_opp_table: opp-table {
+                 compatible = "operating-points-v2";
+                 opp-400000000 {
+--
+2.34.1
+
