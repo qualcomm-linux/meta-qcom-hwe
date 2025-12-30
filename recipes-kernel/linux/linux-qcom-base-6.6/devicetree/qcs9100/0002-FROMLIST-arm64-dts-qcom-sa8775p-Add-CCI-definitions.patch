@@ -1,0 +1,290 @@
+From 4962ea0e7f9bd591e682c8aaa39ad7b6364a55f2 Mon Sep 17 00:00:00 2001
+From: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Date: Thu, 4 Sep 2025 14:03:50 +0800
+Subject: [PATCH 2/5] FROMLIST: arm64: dts: qcom: sa8775p: Add CCI definitions
+
+Qualcomm SA8775P SoC contains 4 Camera Control Interface controllers.
+
+Signed-off-by: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/linux-arm-msm/20250815-rb8_camera-v2-2-6806242913ed@quicinc.com/]
+---
+ arch/arm64/boot/dts/qcom/sa8775p.dtsi | 256 ++++++++++++++++++++++++++
+ 1 file changed, 256 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sa8775p.dtsi b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+index 30c1083fb298..2294870217f0 100644
+--- a/arch/arm64/boot/dts/qcom/sa8775p.dtsi
++++ b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+@@ -3971,6 +3971,150 @@ videocc: clock-controller@abf0000 {
+ 			#power-domain-cells = <1>;
+ 		};
+ 
++		cci0: cci@ac13000 {
++			compatible = "qcom,sa8775p-cci", "qcom,msm8996-cci";
++
++			reg = <0x0 0xac13000 0x0 0x1000>;
++			interrupts = <GIC_SPI 460 IRQ_TYPE_EDGE_RISING>;
++			power-domains = <&camcc CAM_CC_TITAN_TOP_GDSC>;
++			clocks = <&camcc CAM_CC_CAMNOC_AXI_CLK>,
++				 <&camcc CAM_CC_CPAS_AHB_CLK>,
++				 <&camcc CAM_CC_CCI_0_CLK>;
++			clock-names = "camnoc_axi",
++				      "cpas_ahb",
++				      "cci";
++			pinctrl-0 = <&cci0_0_default &cci0_1_default>;
++			pinctrl-1 = <&cci0_0_sleep &cci0_1_sleep>;
++			pinctrl-names = "default", "sleep";
++
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			status = "disabled";
++
++			cci0_i2c0: i2c-bus@0 {
++				reg = <0>;
++				clock-frequency = <1000000>;
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++
++			cci0_i2c1: i2c-bus@1 {
++				reg = <1>;
++				clock-frequency = <1000000>;
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++		};
++
++		cci1: cci@ac14000 {
++			compatible = "qcom,sa8775p-cci", "qcom,msm8996-cci";
++
++			reg = <0x0 0xac14000 0x0 0x1000>;
++			interrupts = <GIC_SPI 271 IRQ_TYPE_EDGE_RISING>;
++			power-domains = <&camcc CAM_CC_TITAN_TOP_GDSC>;
++			clocks = <&camcc CAM_CC_CAMNOC_AXI_CLK>,
++				 <&camcc CAM_CC_CPAS_AHB_CLK>,
++				 <&camcc CAM_CC_CCI_1_CLK>;
++			clock-names = "camnoc_axi",
++				      "cpas_ahb",
++				      "cci";
++			pinctrl-0 = <&cci1_0_default &cci1_1_default>;
++			pinctrl-1 = <&cci1_0_sleep &cci1_1_sleep>;
++			pinctrl-names = "default", "sleep";
++
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			status = "disabled";
++
++			cci1_i2c0: i2c-bus@0 {
++				reg = <0>;
++				clock-frequency = <1000000>;
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++
++			cci1_i2c1: i2c-bus@1 {
++				reg = <1>;
++				clock-frequency = <1000000>;
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++		};
++
++		cci2: cci@ac15000 {
++			compatible = "qcom,sa8775p-cci", "qcom,msm8996-cci";
++
++			reg = <0x0 0xac15000 0x0 0x1000>;
++			interrupts = <GIC_SPI 651 IRQ_TYPE_EDGE_RISING>;
++			power-domains = <&camcc CAM_CC_TITAN_TOP_GDSC>;
++			clocks = <&camcc CAM_CC_CAMNOC_AXI_CLK>,
++				 <&camcc CAM_CC_CPAS_AHB_CLK>,
++				 <&camcc CAM_CC_CCI_2_CLK>;
++			clock-names = "camnoc_axi",
++				      "cpas_ahb",
++				      "cci";
++			pinctrl-0 = <&cci2_0_default &cci2_1_default>;
++			pinctrl-1 = <&cci2_0_sleep &cci2_1_sleep>;
++			pinctrl-names = "default", "sleep";
++
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			status = "disabled";
++
++			cci2_i2c0: i2c-bus@0 {
++				reg = <0>;
++				clock-frequency = <1000000>;
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++
++			cci2_i2c1: i2c-bus@1 {
++				reg = <1>;
++				clock-frequency = <1000000>;
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++		};
++
++		cci3: cci@ac16000 {
++			compatible = "qcom,sa8775p-cci", "qcom,msm8996-cci";
++
++			reg = <0x0 0xac16000 0x0 0x1000>;
++			interrupts = <GIC_SPI 771 IRQ_TYPE_EDGE_RISING>;
++			power-domains = <&camcc CAM_CC_TITAN_TOP_GDSC>;
++			clocks = <&camcc CAM_CC_CAMNOC_AXI_CLK>,
++				 <&camcc CAM_CC_CPAS_AHB_CLK>,
++				 <&camcc CAM_CC_CCI_3_CLK>;
++			clock-names = "camnoc_axi",
++				      "cpas_ahb",
++				      "cci";
++			pinctrl-0 = <&cci3_0_default &cci3_1_default>;
++			pinctrl-1 = <&cci3_0_sleep &cci3_1_sleep>;
++			pinctrl-names = "default", "sleep";
++
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			status = "disabled";
++
++			cci3_i2c0: i2c-bus@0 {
++				reg = <0>;
++				clock-frequency = <1000000>;
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++
++			cci3_i2c1: i2c-bus@1 {
++				reg = <1>;
++				clock-frequency = <1000000>;
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++		};
++
+ 		camss: isp@ac7a000 {
+ 			compatible = "qcom,sa8775p-camss";
+ 
+@@ -4805,6 +4949,118 @@ tlmm: pinctrl@f000000 {
+ 			#interrupt-cells = <2>;
+ 			gpio-ranges = <&tlmm 0 0 149>;
+ 			wakeup-parent = <&pdc>;
++
++			cci0_0_default: cci0-0-default-state {
++				pins = "gpio60", "gpio61";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-up = <2200>;
++			};
++
++			cci0_0_sleep: cci0-0-sleep-state {
++				pins = "gpio60", "gpio61";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-down;
++			};
++
++			cci0_1_default: cci0-1-default-state {
++				pins = "gpio52", "gpio53";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-up = <2200>;
++			};
++
++			cci0_1_sleep: cci0-1-sleep-state {
++				pins = "gpio52", "gpio53";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-down;
++			};
++
++			cci1_0_default: cci1-0-default-state {
++				pins = "gpio62", "gpio63";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-up = <2200>;
++			};
++
++			cci1_0_sleep: cci1-0-sleep-state {
++				pins = "gpio62", "gpio63";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-down;
++			};
++
++			cci1_1_default: cci1-1-default-state {
++				pins = "gpio54", "gpio55";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-up = <2200>;
++			};
++
++			cci1_1_sleep: cci1-1-sleep-state {
++				pins = "gpio54", "gpio55";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-down;
++			};
++
++			cci2_0_default: cci2-0-default-state {
++				pins = "gpio64", "gpio65";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-up = <2200>;
++			};
++
++			cci2_0_sleep: cci2-0-sleep-state {
++				pins = "gpio64", "gpio65";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-down;
++			};
++
++			cci2_1_default: cci2-1-default-state {
++				pins = "gpio56", "gpio57";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-up = <2200>;
++			};
++
++			cci2_1_sleep: cci2-1-sleep-state {
++				pins = "gpio56", "gpio57";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-down;
++			};
++
++			cci3_0_default: cci3-0-default-state {
++				pins = "gpio66", "gpio67";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-up = <2200>;
++			};
++
++			cci3_0_sleep: cci3-0-sleep-state {
++				pins = "gpio66", "gpio67";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-down;
++			};
++
++			cci3_1_default: cci3-1-default-state {
++				pins = "gpio58", "gpio59";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-up = <2200>;
++			};
++
++			cci3_1_sleep: cci3-1-sleep-state {
++				pins = "gpio58", "gpio59";
++				function = "cci_i2c";
++				drive-strength = <2>;
++				bias-pull-down;
++			};
+ 		};
+ 
+ 		apps_smmu: iommu@15000000 {
+-- 
+2.34.1
+

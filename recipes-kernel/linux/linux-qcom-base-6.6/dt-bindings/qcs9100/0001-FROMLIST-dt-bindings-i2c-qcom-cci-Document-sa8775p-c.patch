@@ -1,0 +1,53 @@
+From c52312a0b4787f853ebc8e539db7949b1460d27a Mon Sep 17 00:00:00 2001
+From: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Date: Thu, 4 Sep 2025 13:58:19 +0800
+Subject: [PATCH 1/5] FROMLIST: dt-bindings: i2c: qcom-cci: Document sa8775p
+ compatible
+
+Add the sa8775p CCI device string compatible.
+
+Signed-off-by: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20250815-rb8_camera-v2-1-6806242913ed@quicinc.com/]
+---
+ .../devicetree/bindings/i2c/qcom,i2c-cci.yaml  | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml b/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml
+index 042d4dc636ee..4083aaccffac 100644
+--- a/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml
++++ b/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml
+@@ -25,6 +25,7 @@ properties:
+ 
+       - items:
+           - enum:
++              - qcom,sa8775p-cci
+               - qcom,sdm845-cci
+               - qcom,sm6350-cci
+               - qcom,sm8250-cci
+@@ -174,6 +175,23 @@ allOf:
+             - const: cci
+             - const: cci_src
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,sa8775p-cci
++    then:
++      properties:
++        clocks:
++          minItems: 3
++          maxItems: 3
++        clock-names:
++          items:
++            - const: camnoc_axi
++            - const: cpas_ahb
++            - const: cci
++
+ additionalProperties: false
+ 
+ examples:
+-- 
+2.34.1
+

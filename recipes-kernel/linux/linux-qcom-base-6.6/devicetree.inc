@@ -285,6 +285,7 @@ SRC_URI:append = " \
     file://qcs9075/0041-PENDING-media-qcom-camss-Add-support-for-camss-drive.patch \
     file://qcs9075/0042-PENDING-arm64-dts-qcom-sa8775p-Add-support-for-camss.patch \
     file://qcs9075/0043-PENDING-add-TPG-driver-on-camss-for-sa8775p.patch \
+    file://qcs9100/0002-FROMLIST-arm64-dts-qcom-sa8775p-Add-CCI-definitions.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Enable-camss-for-sa8775p-ride.patch \
     file://qcs9075/0001-PENDING-media-dt-bindings-Add-qcom-qcs8300-camss.patch \
     file://qcs9075/0002-PENDING-arm64-dts-qcom-qcs8300-Add-support-for-camss.patch \
@@ -299,7 +300,6 @@ SRC_URI:append = " \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Enable-all-3-usb-controllers-.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-Add-UFS-support-for-Q.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-Enable-ethernet-on-QC.patch \
-    file://qcs9075/0001-PENDING-arm64-dts-qcom-Enable-camss-for-qcs9075-rb8.patch \
     file://qcs9075/0044-PENDING-arm64-dts-qcom-qcs9075-rb8-Add-support-for-W.patch \
     file://qcs9075/0002-PENDING-arm64-dts-qcom-Rename-qcs9075-rb8-to-qcs9075.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-iq-9075-evk-Add-PSCI-SYSTEM_R.patch \
@@ -312,6 +312,7 @@ SRC_URI:append = " \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-Host-mode-support.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-el2-overlay-support-qcs90.patch \
     file://qcs9075/0001-FROMLIST-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable-T.patch \
+    file://qcs9075/0003-FROMLIST-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable-IM.patch \
     "
 
 # qcs8275 board dts patches
