@@ -1,0 +1,500 @@
+From f4c730dbede8422a8e18da171b2da1782b823846 Mon Sep 17 00:00:00 2001
+From: Qian Zhang <zhangq@qti.qualcomm.com>
+Date: Thu, 18 Dec 2025 21:23:09 +0800
+Subject: [PATCH 3/6] FROMLIST: wifi: ath11k: Add support unassociated client
+ CFR
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Provide debugfs interfaces support to config unassociated client CFR
+from the user space.
+
+To enable CFR capture for unassociated clients,
+
+echo “<mac address> <val> <periodicity>”
+ > /sys/kernel/debug/ieee80211/phyX/ath11k/cfr_unassoc
+
+Mac address: mac address of the client.
+Val: 0 - start CFR capture
+     1 – stop CFR capture
+Periodicity: Periodicity at which hardware is expected to collect CFR
+dump.
+     0 - single shot capture.
+     non zero - for Periodic captures (value must be multiple of 10 ms)
+
+Tested-on: IPQ8074 hw2.0 PCI IPQ8074 WLAN.HK.2.5.0.1-00991-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN6855 hw2.1 PCI WLAN.HSP.1.1-04685-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1
+
+Signed-off-by: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
+Co-developed-by: Yu Zhang(Yuriy) <yu.zhang@oss.qualcomm.com>
+Signed-off-by: Yu Zhang(Yuriy) <yu.zhang@oss.qualcomm.com>
+Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Link: https://lore.kernel.org/all/20251105172226.3182968-4-yu.zhang@oss.qualcomm.com/
+Signed-off-by: Yu Zhang(Yuriy) <yu.zhang@oss.qualcomm.com>
+Signed-off-by: Qian Zhang <qian.zhang@oss.qualcomm.com>
+Upstream-Status: Submitted [https://patchwork.kernel.org/project/linux-wireless/patch/20251030043150.3905086-4-yu.zhang@oss.qualcomm.com/]
+---
+ drivers/net/wireless/ath/ath11k/cfr.c | 246 ++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/cfr.h |  33 ++++
+ drivers/net/wireless/ath/ath11k/mac.c |  15 +-
+ drivers/net/wireless/ath/ath11k/wmi.c |  16 +-
+ drivers/net/wireless/ath/ath11k/wmi.h |   2 +-
+ 5 files changed, 308 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/cfr.c b/drivers/net/wireless/ath/ath11k/cfr.c
+index 00ea7e33feca..ed649bf1e5e6 100644
+--- a/drivers/net/wireless/ath/ath11k/cfr.c
++++ b/drivers/net/wireless/ath/ath11k/cfr.c
+@@ -14,6 +14,60 @@ static int ath11k_cfr_process_data(struct ath11k *ar,
+ 	return 0;
+ }
+ 
++/* Helper function to check whether the given peer mac address
++ * is in unassociated peer pool or not.
++ */
++bool ath11k_cfr_peer_is_in_cfr_unassoc_pool(struct ath11k *ar, const u8 *peer_mac)
++{
++	struct ath11k_cfr *cfr = &ar->cfr;
++	struct cfr_unassoc_pool_entry *entry;
++	int i;
++
++	if (!ar->cfr_enabled)
++		return false;
++
++	spin_lock_bh(&cfr->lock);
++	for (i = 0; i < ATH11K_MAX_CFR_ENABLED_CLIENTS; i++) {
++		entry = &cfr->unassoc_pool[i];
++		if (!entry->is_valid)
++			continue;
++
++		if (ether_addr_equal(peer_mac, entry->peer_mac)) {
++			spin_unlock_bh(&cfr->lock);
++			return true;
++		}
++	}
++
++	spin_unlock_bh(&cfr->lock);
++
++	return false;
++}
++
++void ath11k_cfr_update_unassoc_pool_entry(struct ath11k *ar,
++					  const u8 *peer_mac)
++{
++	struct ath11k_cfr *cfr = &ar->cfr;
++	struct cfr_unassoc_pool_entry *entry;
++	int i;
++
++	spin_lock_bh(&cfr->lock);
++	for (i = 0; i < ATH11K_MAX_CFR_ENABLED_CLIENTS; i++) {
++		entry = &cfr->unassoc_pool[i];
++		if (!entry->is_valid)
++			continue;
++
++		if (ether_addr_equal(peer_mac, entry->peer_mac) &&
++		    entry->period == 0) {
++			memset(entry->peer_mac, 0, ETH_ALEN);
++			entry->is_valid = false;
++			cfr->cfr_enabled_peer_cnt--;
++			break;
++		}
++	}
++
++	spin_unlock_bh(&cfr->lock);
++}
++
+ void ath11k_cfr_decrement_peer_count(struct ath11k *ar,
+ 				     struct ath11k_sta *arsta)
+ {
+@@ -130,6 +184,63 @@ int ath11k_cfr_send_peer_cfr_capture_cmd(struct ath11k *ar,
+ 	return ret;
+ }
+ 
++void ath11k_cfr_update_unassoc_pool(struct ath11k *ar,
++				    struct ath11k_per_peer_cfr_capture *params,
++				    u8 *peer_mac)
++{
++	struct ath11k_cfr *cfr = &ar->cfr;
++	struct cfr_unassoc_pool_entry *entry;
++	int available_idx = -1;
++	int i;
++
++	spin_lock_bh(&cfr->lock);
++
++	if (!params->cfr_enable) {
++		for (i = 0; i < ATH11K_MAX_CFR_ENABLED_CLIENTS; i++) {
++			entry = &cfr->unassoc_pool[i];
++			if (ether_addr_equal(peer_mac, entry->peer_mac)) {
++				memset(entry->peer_mac, 0, ETH_ALEN);
++				entry->is_valid = false;
++				cfr->cfr_enabled_peer_cnt--;
++				break;
++			}
++		}
++
++		goto exit;
++	}
++
++	if (cfr->cfr_enabled_peer_cnt >= ATH11K_MAX_CFR_ENABLED_CLIENTS) {
++		ath11k_info(ar->ab, "Max cfr peer threshold reached\n");
++		goto exit;
++	}
++
++	for (i = 0; i < ATH11K_MAX_CFR_ENABLED_CLIENTS; i++) {
++		entry = &cfr->unassoc_pool[i];
++
++		if (ether_addr_equal(peer_mac, entry->peer_mac)) {
++			ath11k_info(ar->ab,
++				    "peer entry already present updating params\n");
++			entry->period = params->cfr_period;
++			available_idx = -1;
++			break;
++		}
++
++		if (available_idx < 0 && !entry->is_valid)
++			available_idx = i;
++	}
++
++	if (available_idx >= 0) {
++		entry = &cfr->unassoc_pool[available_idx];
++		ether_addr_copy(entry->peer_mac, peer_mac);
++		entry->period = params->cfr_period;
++		entry->is_valid = true;
++		cfr->cfr_enabled_peer_cnt++;
++	}
++
++exit:
++	spin_unlock_bh(&cfr->lock);
++}
++
+ static ssize_t ath11k_read_file_enable_cfr(struct file *file,
+ 					   char __user *user_buf,
+ 					   size_t count, loff_t *ppos)
+@@ -197,10 +308,141 @@ static const struct file_operations fops_enable_cfr = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t ath11k_write_file_cfr_unassoc(struct file *file,
++					     const char __user *ubuf,
++					     size_t count, loff_t *ppos)
++{
++	struct ath11k *ar = file->private_data;
++	struct ath11k_cfr *cfr = &ar->cfr;
++	struct cfr_unassoc_pool_entry *entry;
++	char buf[64] = {};
++	u8 peer_mac[6];
++	u32 cfr_capture_enable;
++	u32 cfr_capture_period;
++	int available_idx = -1;
++	int ret, i;
++
++	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
++
++	mutex_lock(&ar->conf_mutex);
++	spin_lock_bh(&cfr->lock);
++
++	if (ar->state != ATH11K_STATE_ON) {
++		ret = -ENETDOWN;
++		goto out;
++	}
++
++	if (!ar->cfr_enabled) {
++		ret = -EINVAL;
++		ath11k_err(ar->ab, "CFR is not enabled on this pdev %d\n",
++			   ar->pdev_idx);
++		goto out;
++	}
++
++	ret = sscanf(buf, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx %u %u",
++		     &peer_mac[0], &peer_mac[1], &peer_mac[2], &peer_mac[3],
++		     &peer_mac[4], &peer_mac[5], &cfr_capture_enable,
++		     &cfr_capture_period);
++
++	if (ret < 1) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	if (cfr_capture_enable && ret != 8) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	if (!cfr_capture_enable) {
++		for (i = 0; i < ATH11K_MAX_CFR_ENABLED_CLIENTS; i++) {
++			entry = &cfr->unassoc_pool[i];
++			if (ether_addr_equal(peer_mac, entry->peer_mac)) {
++				memset(entry->peer_mac, 0, ETH_ALEN);
++				entry->is_valid = false;
++				cfr->cfr_enabled_peer_cnt--;
++			}
++		}
++
++		ret = count;
++		goto out;
++	}
++
++	if (cfr->cfr_enabled_peer_cnt >= ATH11K_MAX_CFR_ENABLED_CLIENTS) {
++		ath11k_info(ar->ab, "Max cfr peer threshold reached\n");
++		ret = count;
++		goto out;
++	}
++
++	for (i = 0; i < ATH11K_MAX_CFR_ENABLED_CLIENTS; i++) {
++		entry = &cfr->unassoc_pool[i];
++
++		if (available_idx < 0 && !entry->is_valid)
++			available_idx = i;
++
++		if (ether_addr_equal(peer_mac, entry->peer_mac)) {
++			ath11k_info(ar->ab,
++				    "peer entry already present updating params\n");
++			entry->period = cfr_capture_period;
++			ret = count;
++			goto out;
++		}
++	}
++
++	if (available_idx >= 0) {
++		entry = &cfr->unassoc_pool[available_idx];
++		ether_addr_copy(entry->peer_mac, peer_mac);
++		entry->period = cfr_capture_period;
++		entry->is_valid = true;
++		cfr->cfr_enabled_peer_cnt++;
++	}
++
++	ret = count;
++out:
++	spin_unlock_bh(&cfr->lock);
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
++static ssize_t ath11k_read_file_cfr_unassoc(struct file *file,
++					    char __user *ubuf,
++					    size_t count, loff_t *ppos)
++{
++	struct ath11k *ar = file->private_data;
++	struct ath11k_cfr *cfr = &ar->cfr;
++	struct cfr_unassoc_pool_entry *entry;
++	char buf[512] = {};
++	int len = 0, i;
++
++	spin_lock_bh(&cfr->lock);
++
++	for (i = 0; i < ATH11K_MAX_CFR_ENABLED_CLIENTS; i++) {
++		entry = &cfr->unassoc_pool[i];
++		if (entry->is_valid)
++			len += scnprintf(buf + len, sizeof(buf) - len,
++					 "peer: %pM period: %u\n",
++					 entry->peer_mac, entry->period);
++	}
++
++	spin_unlock_bh(&cfr->lock);
++
++	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_configure_cfr_unassoc = {
++	.write = ath11k_write_file_cfr_unassoc,
++	.read = ath11k_read_file_cfr_unassoc,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static void ath11k_cfr_debug_unregister(struct ath11k *ar)
+ {
+ 	debugfs_remove(ar->cfr.enable_cfr);
+ 	ar->cfr.enable_cfr = NULL;
++	debugfs_remove(ar->cfr.cfr_unassoc);
++	ar->cfr.cfr_unassoc = NULL;
+ }
+ 
+ static void ath11k_cfr_debug_register(struct ath11k *ar)
+@@ -208,6 +450,10 @@ static void ath11k_cfr_debug_register(struct ath11k *ar)
+ 	ar->cfr.enable_cfr = debugfs_create_file("enable_cfr", 0600,
+ 						 ar->debug.debugfs_pdev, ar,
+ 						 &fops_enable_cfr);
++
++	ar->cfr.cfr_unassoc = debugfs_create_file("cfr_unassoc", 0600,
++						  ar->debug.debugfs_pdev, ar,
++						  &fops_configure_cfr_unassoc);
+ }
+ 
+ void ath11k_cfr_lut_update_paddr(struct ath11k *ar, dma_addr_t paddr,
+diff --git a/drivers/net/wireless/ath/ath11k/cfr.h b/drivers/net/wireless/ath/ath11k/cfr.h
+index 7d161f7f7be8..e7b69e98cbf5 100644
+--- a/drivers/net/wireless/ath/ath11k/cfr.h
++++ b/drivers/net/wireless/ath/ath11k/cfr.h
+@@ -45,6 +45,12 @@ struct ath11k_look_up_table {
+ 	struct ath11k_dbring_element *buff;
+ };
+ 
++struct cfr_unassoc_pool_entry {
++	u8 peer_mac[ETH_ALEN];
++	u32 period;
++	bool is_valid;
++};
++
+ struct ath11k_cfr {
+ 	struct ath11k_dbring rx_ring;
+ 	/* Protects cfr data */
+@@ -53,6 +59,7 @@ struct ath11k_cfr {
+ 	spinlock_t lut_lock;
+ 	struct ath11k_look_up_table *lut;
+ 	struct dentry *enable_cfr;
++	struct dentry *cfr_unassoc;
+ 	u8 cfr_enabled_peer_cnt;
+ 	u32 lut_num;
+ 	u64 tx_evt_cnt;
+@@ -66,6 +73,7 @@ struct ath11k_cfr {
+ 	u64 clear_txrx_event;
+ 	u64 cfr_dma_aborts;
+ 	bool enabled;
++	struct cfr_unassoc_pool_entry unassoc_pool[ATH11K_MAX_CFR_ENABLED_CLIENTS];
+ };
+ 
+ enum ath11k_cfr_capture_method {
+@@ -89,6 +97,13 @@ void ath11k_cfr_lut_update_paddr(struct ath11k *ar, dma_addr_t paddr,
+ 				 u32 buf_id);
+ void ath11k_cfr_decrement_peer_count(struct ath11k *ar,
+ 				     struct ath11k_sta *arsta);
++void ath11k_cfr_update_unassoc_pool_entry(struct ath11k *ar,
++					  const u8 *peer_mac);
++bool ath11k_cfr_peer_is_in_cfr_unassoc_pool(struct ath11k *ar,
++					    const u8 *peer_mac);
++void ath11k_cfr_update_unassoc_pool(struct ath11k *ar,
++				    struct ath11k_per_peer_cfr_capture *params,
++				    u8 *peer_mac);
+ int ath11k_cfr_send_peer_cfr_capture_cmd(struct ath11k *ar,
+ 					 struct ath11k_sta *arsta,
+ 					 struct ath11k_per_peer_cfr_capture *params,
+@@ -114,6 +129,24 @@ static inline void ath11k_cfr_decrement_peer_count(struct ath11k *ar,
+ {
+ }
+ 
++static inline void ath11k_cfr_update_unassoc_pool_entry(struct ath11k *ar,
++							const u8 *peer_mac)
++{
++}
++
++static inline bool
++ath11k_cfr_peer_is_in_cfr_unassoc_pool(struct ath11k *ar, const u8 *peer_mac)
++{
++	return false;
++}
++
++static inline void
++ath11k_cfr_update_unassoc_pool(struct ath11k *ar,
++			       struct ath11k_per_peer_cfr_capture *params,
++			       u8 *peer_mac)
++{
++}
++
+ static inline int
+ ath11k_cfr_send_peer_cfr_capture_cmd(struct ath11k *ar,
+ 				     struct ath11k_sta *arsta,
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index cd9aec8bb2e2..59ae08f74b74 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -5920,6 +5920,8 @@ static int ath11k_mac_mgmt_tx_wmi(struct ath11k *ar, struct ath11k_vif *arvif,
+ 	dma_addr_t paddr;
+ 	int buf_id;
+ 	int ret;
++	bool tx_params_valid = false;
++	bool peer_in_unassoc_pool;
+ 
+ 	ATH11K_SKB_CB(skb)->ar = ar;
+ 
+@@ -5958,7 +5960,18 @@ static int ath11k_mac_mgmt_tx_wmi(struct ath11k *ar, struct ath11k_vif *arvif,
+ 
+ 	ATH11K_SKB_CB(skb)->paddr = paddr;
+ 
+-	ret = ath11k_wmi_mgmt_send(ar, arvif->vdev_id, buf_id, skb);
++	peer_in_unassoc_pool = ath11k_cfr_peer_is_in_cfr_unassoc_pool(ar, hdr->addr1);
++
++	if (ar->cfr_enabled &&
++	    ieee80211_is_probe_resp(hdr->frame_control) &&
++	    peer_in_unassoc_pool)
++		tx_params_valid = true;
++
++	if (peer_in_unassoc_pool)
++		ath11k_cfr_update_unassoc_pool_entry(ar, hdr->addr1);
++
++	ret = ath11k_wmi_mgmt_send(ar, arvif->vdev_id, buf_id, skb,
++				   tx_params_valid);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to send mgmt frame: %d\n", ret);
+ 		goto err_unmap_buf;
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index dc6c775c377a..a87fd70dcfb1 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -646,11 +646,12 @@ static u32 ath11k_wmi_mgmt_get_freq(struct ath11k *ar,
+ }
+ 
+ int ath11k_wmi_mgmt_send(struct ath11k *ar, u32 vdev_id, u32 buf_id,
+-			 struct sk_buff *frame)
++			 struct sk_buff *frame, bool tx_params_valid)
+ {
+ 	struct ath11k_pdev_wmi *wmi = ar->wmi;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(frame);
+ 	struct wmi_mgmt_send_cmd *cmd;
++	struct wmi_mgmt_send_params *params;
+ 	struct wmi_tlv *frame_tlv;
+ 	struct sk_buff *skb;
+ 	u32 buf_len;
+@@ -660,6 +661,8 @@ int ath11k_wmi_mgmt_send(struct ath11k *ar, u32 vdev_id, u32 buf_id,
+ 		  frame->len : WMI_MGMT_SEND_DOWNLD_LEN;
+ 
+ 	len = sizeof(*cmd) + sizeof(*frame_tlv) + roundup(buf_len, 4);
++	if (tx_params_valid)
++		len += sizeof(*params);
+ 
+ 	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, len);
+ 	if (!skb)
+@@ -675,7 +678,7 @@ int ath11k_wmi_mgmt_send(struct ath11k *ar, u32 vdev_id, u32 buf_id,
+ 	cmd->paddr_hi = upper_32_bits(ATH11K_SKB_CB(frame)->paddr);
+ 	cmd->frame_len = frame->len;
+ 	cmd->buf_len = buf_len;
+-	cmd->tx_params_valid = 0;
++	cmd->tx_params_valid = !!tx_params_valid;
+ 
+ 	frame_tlv = (struct wmi_tlv *)(skb->data + sizeof(*cmd));
+ 	frame_tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_BYTE) |
+@@ -685,6 +688,15 @@ int ath11k_wmi_mgmt_send(struct ath11k *ar, u32 vdev_id, u32 buf_id,
+ 
+ 	ath11k_ce_byte_swap(frame_tlv->value, buf_len);
+ 
++	if (tx_params_valid) {
++		params =
++		(struct wmi_mgmt_send_params *)(skb->data + (len - sizeof(*params)));
++		params->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_TX_SEND_PARAMS) |
++				     FIELD_PREP(WMI_TLV_LEN,
++						sizeof(*params) - TLV_HDR_SIZE);
++		params->tx_params_dword1 |= WMI_TX_PARAMS_DWORD1_CFR_CAPTURE;
++	}
++
+ 	ret = ath11k_wmi_cmd_send(wmi, skb, WMI_MGMT_TX_SEND_CMDID);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab,
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index c511c8087312..3239e6f8d31d 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -6376,7 +6376,7 @@ int ath11k_wmi_cmd_send(struct ath11k_pdev_wmi *wmi, struct sk_buff *skb,
+ 			u32 cmd_id);
+ struct sk_buff *ath11k_wmi_alloc_skb(struct ath11k_wmi_base *wmi_sc, u32 len);
+ int ath11k_wmi_mgmt_send(struct ath11k *ar, u32 vdev_id, u32 buf_id,
+-			 struct sk_buff *frame);
++			 struct sk_buff *frame, bool tx_params_valid);
+ int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
+ 			struct ieee80211_mutable_offsets *offs,
+ 			struct sk_buff *bcn, u32 ema_param);
+-- 
+2.34.1
+

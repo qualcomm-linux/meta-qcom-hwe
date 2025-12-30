@@ -540,4 +540,10 @@ SRC_URI:append = " \
     file://common/0002-FROMLIST-drm-msm-dp-Add-MST-stream-support-for-SA877.patch \
     file://common/0003-FROMLIST-drm-msm-dp-add-support-for-programming-p1-p.patch \
     file://common/0004-FROMLIST-drm-msm-dp-Add-catalog-support-for-3rd-4th-.patch \
+    file://common/0001-FROMLIST-wifi-ath11k-Add-initialization-and-deinitia.patch \
+    file://common/0002-FROMLIST-wifi-ath11k-Register-debugfs-for-CFR-config.patch \
+    file://common/0003-FROMLIST-wifi-ath11k-Add-support-unassociated-client.patch \
+    file://common/0004-FROMLIST-wifi-ath11k-Register-relayfs-entries-for-CF.patch \
+    file://common/0005-FROMLIST-wifi-ath11k-Register-DBR-event-handler-for-.patch \
+    file://common/0006-FROMLIST-wifi-ath11k-Register-handler-for-CFR-captur.patch \
 "
