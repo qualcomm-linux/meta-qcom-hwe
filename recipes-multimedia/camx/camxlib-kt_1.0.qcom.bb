@@ -26,9 +26,8 @@ do_install[postfuncs] += "relocate_firmware_files"
 FILES:${PN} = "\
     /usr/lib/* \
     /usr/bin/* \
-    /usr/include/* \
     ${nonarch_base_libdir}/firmware/*"
-FILES:${PN}-dev = ""
+FILES:${PN}-dev = "/usr/include/*"
 
 #Skips check for archtecture
 INSANE_SKIP:${PN}-dbg = "arch"
