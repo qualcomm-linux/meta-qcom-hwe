@@ -1,0 +1,41 @@
+From f00ab9e5119feb59822510af2151169aeb175afb Mon Sep 17 00:00:00 2001
+From: Shuai Zhang <shuai.zhang@oss.qualcomm.com>
+Date: Fri, 9 Jan 2026 15:45:54 +0800
+Subject: [PATCH v1] FROMLIST: driver: bluetooth: btusb: Allow firmware
+ re-download when version matches
+
+Since USB can disconnect at any time, if it disconnects during
+the BT firmware download, the BT controller firmware version may still
+be updated even without completing the download.
+
+When USB reconnects, the BT host detects the same version as in the
+firmware file, which prevents the firmware from being downloaded again.
+
+Therefore, remove the equality check to ensure that after
+USB reconnection, the BT host can still download the firmware.
+
+Signed-off-by: Shuai Zhang <shuai.zhang@oss.qualcomm.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20260108074353.1027877-1-shuai.zhang@oss.qualcomm.com/]
+---
+ drivers/bluetooth/btusb.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+index 4c21230aee46..a847b3d99c8b 100644
+--- a/drivers/bluetooth/btusb.c
++++ b/drivers/bluetooth/btusb.c
+@@ -3906,7 +3906,10 @@ static int btusb_setup_qca_load_rampatch(struct hci_dev *hdev,
+ 		    "firmware rome 0x%x build 0x%x",
+ 		    rver_rom, rver_patch, ver_rom, ver_patch);
+ 
+-	if (rver_rom != ver_rom || rver_patch <= ver_patch) {
++	/* Allow rampatch if version is greater than or equal to firmware version.
++	 * Equal versions are acceptable for re-flashing or recovery scenarios.
++	 */
++	if (rver_rom != ver_rom || rver_patch < ver_patch) {
+ 		bt_dev_err(hdev, "rampatch file version did not match with firmware");
+ 		err = -EINVAL;
+ 		goto done;
+-- 
+2.43.0
+
