@@ -27,9 +27,12 @@ do_install:append:qcm6490() {
     install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2_video/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2_video/acdb_cal.acdb
     install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2_video/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2_video/workspaceFileXml.qwsp
 
-    mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2_vision
-    install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2_vision/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2_vision/acdb_cal.acdb
-    install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2_vision/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2_vision/workspaceFileXml.qwsp
+    # Install vision configuration for multiple device variants
+    for variant in qcs6490_rb3gen2_vision qcom_Inc.RoboticsRB3gen2; do
+        mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/${variant}
+        install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2_vision/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/${variant}/acdb_cal.acdb
+        install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2_vision/workspaceFileXml.qwsp ${D}${sysconfdir}/acdbdata/${variant}/workspaceFileXml.qwsp
+    done
 
     mkdir -p -m 0755 ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2_ia
     install -m 0644 ${S}/qcs6490/qcs6490_rb3gen2_ia/acdb_cal.acdb ${D}${sysconfdir}/acdbdata/qcs6490_rb3gen2_ia/acdb_cal.acdb
