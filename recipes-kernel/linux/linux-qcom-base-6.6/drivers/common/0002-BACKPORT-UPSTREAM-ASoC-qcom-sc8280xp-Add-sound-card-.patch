@@ -1,0 +1,38 @@
+From d66cc3836e0c154909781c8b03dabe7f8fb389f0 Mon Sep 17 00:00:00 2001
+From: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Date: Thu, 11 Dec 2025 10:45:48 +0530
+Subject: [PATCH 2/4] BACKPORT: UPSTREAM: ASoC: qcom: sc8280xp: Add sound card
+ support for QCM6490 and QCS6490
+
+Add compatibles for sound card on Qualcomm QCM6490 IDP,
+QCS6490 RB3Gen2, QCS9100 boards.
+
+Signed-off-by: Mohammad Rafi Shaik <quic_mohs@quicinc.com>
+Reviewed-by: Srinivas Kandagatla <srinivas.kandagatla@oss.qualcomm.com>
+Reviewed-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Signed-off-by: Mark Brown <broonie@kernel.org>
+Signed-off-by: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git 5485c3fa96f78314207a30e81dbe270424d70ede 5b5bf5922f4c104e4e829c0dbfdd9399b7cfc434 34d340d48e595f8dfd4e72fe4100d2579dbe4a1a]
+---
+ sound/soc/qcom/sc8280xp.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/sound/soc/qcom/sc8280xp.c b/sound/soc/qcom/sc8280xp.c
+index a2440cb22b57..ffc3bc27e7a8 100644
+--- a/sound/soc/qcom/sc8280xp.c
++++ b/sound/soc/qcom/sc8280xp.c
+@@ -161,7 +161,11 @@ static int sc8280xp_platform_probe(struct platform_device *pdev)
+ 
+ static const struct of_device_id snd_sc8280xp_dt_match[] = {
+ 	{.compatible = "qcom,sc8280xp-sndcard", "sc8280xp"},
++	{.compatible = "qcom,qcm6490-idp-sndcard", "qcm6490"},
++	{.compatible = "qcom,qcs6490-rb3gen2-sndcard", "qcs6490"},
+ 	{.compatible = "qcom,qcs8275-sndcard", "qcs8300"},
++	{.compatible = "qcom,qcs9075-sndcard", "sa8775p"},
++	{.compatible = "qcom,qcs9100-sndcard", "sa8775p"},
+ 	{}
+ };
+ 
+-- 
+2.34.1
+

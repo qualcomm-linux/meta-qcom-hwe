@@ -541,6 +541,7 @@ SRC_URI:append = " \
     file://common/0002-FROMLIST-drm-msm-dp-Add-MST-stream-support-for-SA877.patch \
     file://common/0003-FROMLIST-drm-msm-dp-add-support-for-programming-p1-p.patch \
     file://common/0004-FROMLIST-drm-msm-dp-Add-catalog-support-for-3rd-4th-.patch \
+    file://common/0002-BACKPORT-UPSTREAM-ASoC-qcom-sc8280xp-Add-sound-card-.patch \
     file://common/0001-FROMLIST-wifi-ath11k-Add-initialization-and-deinitia.patch \
     file://common/0002-FROMLIST-wifi-ath11k-Register-debugfs-for-CFR-config.patch \
     file://common/0003-FROMLIST-wifi-ath11k-Add-support-unassociated-client.patch \

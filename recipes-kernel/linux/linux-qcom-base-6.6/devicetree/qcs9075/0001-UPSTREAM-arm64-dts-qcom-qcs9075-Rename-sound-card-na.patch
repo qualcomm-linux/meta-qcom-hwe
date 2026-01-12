@@ -1,0 +1,83 @@
+From cc6df7e01ebe1293616e4d5567c83f49bff433a6 Mon Sep 17 00:00:00 2001
+From: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Date: Wed, 17 Dec 2025 17:19:18 +0530
+Subject: [PATCH 1/2] UPSTREAM: arm64: dts: qcom: qcs9075: Rename sound card
+ name
+
+Rename sound card name to use upstream machine driver and
+add pinctrl support.
+
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Signed-off-by: Bjorn Andersson <andersson@kernel.org>
+Signed-off-by: Mohammad Rafi Shaik <mohammad.rafi.shaik@oss.qualcomm.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/arch/arm64/boot/dts/qcom/lemans-evk.dts?id=473a19211c4dc762e6ecab9c3e6583afd3200817]
+---
+ .../boot/dts/qcom/qcs9075-iq-9075-evk.dts     | 34 +++++--------------
+ 1 file changed, 9 insertions(+), 25 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index 8bf58c2ca504..6257d168816b 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -46,38 +46,22 @@ dmic_codec: dmic-codec {
+ 	};
+ 
+ 	sound: sound {
+-		compatible = "qcom,qcs9075-rb8-sndcard";
+-		model = "qcs9075-rb8-snd-card";
+-
+-		clocks = <&q6prmcc LPASS_HW_MACRO_VOTE LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
+-			 <&q6prmcc LPASS_HW_DCODEC_VOTE LPASS_CLK_ATTRIBUTE_COUPLE_NO>;
+-		clock-names = "macro", "dcodec";
+-
+-		pinctrl-names = "default", "mi2s_aud_out_active", "mi2s_aud_out_sleep";
+-		pinctrl-0 = <&hs0_mi2s_data0_sleep>, <&hs0_mi2s_sclk_sleep>,
+-			    <&hs0_mi2s_data1_sleep>, <&hs0_mi2s_ws_sleep>,
+-			    <&hs1_mi2s_data0_sleep>, <&hs1_mi2s_sclk_sleep>,
+-			    <&hs1_mi2s_data1_sleep>, <&hs1_mi2s_ws_sleep>,
+-			    <&hs2_mi2s_data0_sleep>, <&hs2_mi2s_data1_sleep>,
+-			    <&hs2_mi2s_sck_sleep>, <&hs2_mi2s_ws_sleep>;
+-		pinctrl-1 = <&hs0_mi2s_data0>, <&hs0_mi2s_sclk>,
++		compatible = "qcom,qcs9100-sndcard";
++		model = "LEMANS-EVK";
++
++		pinctrl-names = "default";
++		pinctrl-0 = <&hs0_mi2s_data0>, <&hs0_mi2s_sclk>,
+ 			    <&hs0_mi2s_data1>, <&hs0_mi2s_ws>,
+ 			    <&hs1_mi2s_data0>, <&hs1_mi2s_sclk>,
+ 			    <&hs1_mi2s_data1>, <&hs1_mi2s_ws>,
+ 			    <&hs2_mi2s_data0>, <&hs2_mi2s_data1>,
+ 			    <&hs2_mi2s_sck>, <&hs2_mi2s_ws>;
+-		pinctrl-2 = <&hs0_mi2s_data0_sleep>, <&hs0_mi2s_sclk_sleep>,
+-			    <&hs0_mi2s_data1_sleep>, <&hs0_mi2s_ws_sleep>,
+-			    <&hs1_mi2s_data0_sleep>, <&hs1_mi2s_sclk_sleep>,
+-			    <&hs1_mi2s_data1_sleep>, <&hs1_mi2s_ws_sleep>,
+-			    <&hs2_mi2s_data0_sleep>, <&hs2_mi2s_data1_sleep>,
+-			    <&hs2_mi2s_sck_sleep>, <&hs2_mi2s_ws_sleep>;
+ 
+ 		hs0-mi2s-playback-dai-link {
+-			link-name = "MI2S-LPAIF_SDR-RX-PRIMARY";
++			link-name = "HS0 MI2S Playback";
+ 
+ 			cpu {
+-				sound-dai = <&q6apmbedai PRIMARY_SDR_MI2S_RX>;
++				sound-dai = <&q6apmbedai PRIMARY_MI2S_RX>;
+ 			};
+ 
+ 			codec {
+@@ -90,10 +74,10 @@ platform {
+ 		};
+ 
+ 		hs2-mi2s-capture-dai-link {
+-			link-name = "MI2S-LPAIF_SDR-TX-TERTIARY";
++			link-name = "HS2 MI2S Capture";
+ 
+ 			cpu {
+-				sound-dai = <&q6apmbedai TERTIARY_SDR_MI2S_TX>;
++				sound-dai = <&q6apmbedai TERTIARY_MI2S_TX>;
+ 			};
+ 
+ 			codec {
+-- 
+2.34.1
+
