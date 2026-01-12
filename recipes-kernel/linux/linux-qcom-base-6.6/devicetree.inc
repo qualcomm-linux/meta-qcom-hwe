@@ -313,6 +313,7 @@ SRC_URI:append = " \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-el2-overlay-support-qcs90.patch \
     file://qcs9075/0001-FROMLIST-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable-T.patch \
     file://qcs9075/0003-FROMLIST-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable-IM.patch \
+    file://qcs9100/0001-UPSTREAM-arm64-dts-qcom-sa8775p-Add-default-pin-conf.patch \
     "
 
 # qcs8275 board dts patches
