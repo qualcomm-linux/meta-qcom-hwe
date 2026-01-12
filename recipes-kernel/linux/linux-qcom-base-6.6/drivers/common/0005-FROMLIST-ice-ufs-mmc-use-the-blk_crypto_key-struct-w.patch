@@ -1,4 +1,4 @@
-From df686207dd1b8fbd311f0a8d7450360e6dcda778 Mon Sep 17 00:00:00 2001
+From 494c3149cebf4b3da40eec6517324d62328451be Mon Sep 17 00:00:00 2001
 From: Bartosz Golaszewski <brgl@bgdev.pl>
 Date: Sun, 1 Dec 2024 21:44:37 +0530
 Subject: [PATCH 1/1] FROMLIST: ice, ufs, mmc: use the blk_crypto_key struct
@@ -30,7 +30,7 @@ Upstream-Status: Submitted [https://lore.kernel.org/all/20241011-wrapped-keys-v7
  8 files changed, 25 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/mmc/host/cqhci-crypto.c b/drivers/mmc/host/cqhci-crypto.c
-index 6652982410ec..91da6de1d650 100644
+index 6652982410ec5..91da6de1d6501 100644
 --- a/drivers/mmc/host/cqhci-crypto.c
 +++ b/drivers/mmc/host/cqhci-crypto.c
 @@ -32,6 +32,7 @@ cqhci_host_from_crypto_profile(struct blk_crypto_profile *profile)
@@ -69,7 +69,7 @@ index 6652982410ec..91da6de1d650 100644
  
  static int cqhci_crypto_keyslot_evict(struct blk_crypto_profile *profile,
 diff --git a/drivers/mmc/host/cqhci.h b/drivers/mmc/host/cqhci.h
-index 1a12e40a02e6..949ebbe05773 100644
+index 1a12e40a02e67..949ebbe05773f 100644
 --- a/drivers/mmc/host/cqhci.h
 +++ b/drivers/mmc/host/cqhci.h
 @@ -12,6 +12,7 @@
@@ -89,10 +89,10 @@ index 1a12e40a02e6..949ebbe05773 100644
  #endif
  };
 diff --git a/drivers/mmc/host/sdhci-msm.c b/drivers/mmc/host/sdhci-msm.c
-index 9520acb247d0..bea37c73e198 100644
+index 0754c8141183c..e97394335bf74 100644
 --- a/drivers/mmc/host/sdhci-msm.c
 +++ b/drivers/mmc/host/sdhci-msm.c
-@@ -1908,6 +1908,7 @@ static __maybe_unused int sdhci_msm_ice_suspend(struct sdhci_msm_host *msm_host)
+@@ -1937,6 +1937,7 @@ static __maybe_unused int sdhci_msm_ice_suspend(struct sdhci_msm_host *msm_host)
   * vendor-specific SCM calls for this; it doesn't support the standard way.
   */
  static int sdhci_msm_program_key(struct cqhci_host *cq_host,
@@ -100,7 +100,7 @@ index 9520acb247d0..bea37c73e198 100644
  				 const union cqhci_crypto_cfg_entry *cfg,
  				 int slot)
  {
-@@ -1915,6 +1916,7 @@ static int sdhci_msm_program_key(struct cqhci_host *cq_host,
+@@ -1944,6 +1945,7 @@ static int sdhci_msm_program_key(struct cqhci_host *cq_host,
  	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
  	struct sdhci_msm_host *msm_host = sdhci_pltfm_priv(pltfm_host);
  	union cqhci_crypto_cap_entry cap;
@@ -108,7 +108,7 @@ index 9520acb247d0..bea37c73e198 100644
  
  	if (!(cfg->config_enable & CQHCI_CRYPTO_CONFIGURATION_ENABLE))
  		return qcom_ice_evict_key(msm_host->ice, slot);
-@@ -1925,10 +1927,10 @@ static int sdhci_msm_program_key(struct cqhci_host *cq_host,
+@@ -1954,10 +1956,10 @@ static int sdhci_msm_program_key(struct cqhci_host *cq_host,
  		cap.key_size != CQHCI_CRYPTO_KEY_SIZE_256)
  		return -EINVAL;
  
@@ -122,7 +122,7 @@ index 9520acb247d0..bea37c73e198 100644
  }
  
 diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-index d6e205e3812a..9f9bd324d646 100644
+index d6e205e3812a9..9f9bd324d6462 100644
 --- a/drivers/soc/qcom/ice.c
 +++ b/drivers/soc/qcom/ice.c
 @@ -164,8 +164,8 @@ EXPORT_SYMBOL_GPL(qcom_ice_suspend);
@@ -146,7 +146,7 @@ index d6e205e3812a..9f9bd324d646 100644
  	/* The SCM call requires that the key words are encoded in big endian */
  	for (i = 0; i < ARRAY_SIZE(key.words); i++)
 diff --git a/drivers/ufs/core/ufshcd-crypto.c b/drivers/ufs/core/ufshcd-crypto.c
-index f4cc54d82281..34537cbac622 100644
+index 7d3a3e228db0d..33083e0cad6e1 100644
 --- a/drivers/ufs/core/ufshcd-crypto.c
 +++ b/drivers/ufs/core/ufshcd-crypto.c
 @@ -18,6 +18,7 @@ static const struct ufs_crypto_alg_entry {
@@ -175,7 +175,7 @@ index f4cc54d82281..34537cbac622 100644
  
  	memzero_explicit(&cfg, sizeof(cfg));
  	return err;
-@@ -103,7 +104,7 @@ static int ufshcd_clear_keyslot(struct ufs_hba *hba, int slot)
+@@ -107,7 +108,7 @@ static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
  	 */
  	union ufs_crypto_cfg_entry cfg = {};
  
@@ -183,9 +183,9 @@ index f4cc54d82281..34537cbac622 100644
 +	return ufshcd_program_key(hba, NULL, &cfg, slot);
  }
  
- static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
+ /*
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index c6417ef074a4..f2f798f05d7a 100644
+index c94824c999ccd..8f9a5fc5d69cb 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
 @@ -153,11 +153,13 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
@@ -216,7 +216,7 @@ index c6417ef074a4..f2f798f05d7a 100644
  }
  
 diff --git a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h
-index d5f6a228df65..fc998f66c4c3 100644
+index d5f6a228df659..fc998f66c4c35 100644
 --- a/include/soc/qcom/ice.h
 +++ b/include/soc/qcom/ice.h
 @@ -7,6 +7,7 @@
@@ -239,17 +239,17 @@ index d5f6a228df65..fc998f66c4c3 100644
  struct qcom_ice *of_qcom_ice_get(struct device *dev);
  struct qcom_ice *devm_of_qcom_ice_get(struct device *dev);
 diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index d5aa832f8dba..3becc1873b53 100644
+index 78380fc2374ea..aa403be1e33aa 100644
 --- a/include/ufs/ufshcd.h
 +++ b/include/ufs/ufshcd.h
-@@ -365,6 +365,7 @@ struct ufs_hba_variant_ops {
+@@ -366,6 +366,7 @@ struct ufs_hba_variant_ops {
  				struct devfreq_dev_profile *profile,
  				struct devfreq_simple_ondemand_data *data);
  	int	(*program_key)(struct ufs_hba *hba,
 +			       const struct blk_crypto_key *bkey,
  			       const union ufs_crypto_cfg_entry *cfg, int slot);
- 	void	(*event_notify)(struct ufs_hba *hba,
- 				enum ufs_event_type evt, void *data);
+ 	int	(*fill_crypto_prdt)(struct ufs_hba *hba,
+ 				    const struct bio_crypt_ctx *crypt_ctx,
 -- 
 2.25.1
 
