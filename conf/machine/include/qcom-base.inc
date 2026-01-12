@@ -115,14 +115,13 @@ EFI_DTB_DIR ?= "${EFI_PREFIX}dtb"
 # Unified Kernel Image (UKI) name
 EFI_LINUX_IMG ?= "linux-${MACHINE}.efi"
 
-# Add optional kernel cmdline to UKI
-EFI_UKI_ADD_CMDLINE ?= "True"
+# Add optional kernel cmdline to UKI (default disabled)
+EFI_UKI_ADD_CMDLINE ?= "False"
 
 # Place dtb at EFIDTDIR to seamlessly package
 KERNEL_DTBDEST = "${EFI_DTB_DIR}"
 
 # sota specific flags
-EFI_UKI_ADD_CMDLINE:sota = "False"
 CORE_IMAGE_EXTRA_INSTALL:sota += "efimount"
 CORE_IMAGE_EXTRA_INSTALL:sota += "varmount"
 IMAGE_CLASSES += "image_types_ota_sdboot"
