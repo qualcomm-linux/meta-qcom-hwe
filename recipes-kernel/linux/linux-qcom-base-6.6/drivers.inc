@@ -549,4 +549,8 @@ SRC_URI:append = " \
     file://common/0005-FROMLIST-wifi-ath11k-Register-DBR-event-handler-for-.patch \
     file://common/0006-FROMLIST-wifi-ath11k-Register-handler-for-CFR-captur.patch \
     file://common/0150-FROMLIST-driver-bluetooth-hci_qca-Always-perform-.patch \
+    file://common/0001-BACKPORT-UPSTREAM-drm-msm-dpu-switch-RM-to-use-crtc_.patch \
+    file://common/0002-BACKPORT-UPSTREAM-drm-msm-dpu-fill-CRTC-resources-in.patch \
+    file://common/0003-BACKPORT-UPSTREAM-drm-msm-dpu-don-t-set-crtc_state-m.patch \
+    file://common/0004-BACKPORT-UPSTREAM-drm-msm-dpu-move-resource-allocati.patch \
 "
