@@ -1,51 +1,26 @@
-From add16878d42821036151b5116bf231e023cf9bef Mon Sep 17 00:00:00 2001
+From b0bd9e87ce843edaeed5a6fd1836b00cff4cf92a Mon Sep 17 00:00:00 2001
 From: Wenmeng Liu <quic_wenmliu@quicinc.com>
 Date: Thu, 4 Sep 2025 14:09:14 +0800
-Subject: [PATCH 3/5] FROMLIST: arm64: dts: qcom: qcs9075-iq-9075-evk: Enable
- IMX577 camera sensor
+Subject: [PATCH] PENDING: arm64: dts: qcom: qcs9075-iq-9075-evk: Enable IMX577
+ camera sensor
 
 Enable IMX577 camera sensor for qcs9075 evk board.
 
 Signed-off-by: Wenmeng Liu <quic_wenmliu@quicinc.com>
 Upstream-Status: Submitted [https://lore.kernel.org/linux-arm-msm/20250815-rb8_camera-v2-3-6806242913ed@quicinc.com/]
 ---
- arch/arm64/boot/dts/qcom/Makefile             |  3 +
- .../qcom/lemans-evk-camera-csi1-imx577.dtso   | 97 +++++++++++++++++++
- 2 files changed, 100 insertions(+)
- create mode 100644 arch/arm64/boot/dts/qcom/lemans-evk-camera-csi1-imx577.dtso
+ .../boot/dts/qcom/qcs9075-iq-9075-evk.dts     | 83 +++++++++++++++++++
+ 1 file changed, 83 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/Makefile b/arch/arm64/boot/dts/qcom/Makefile
-index 830d891b5fec..29ff86eae139 100644
---- a/arch/arm64/boot/dts/qcom/Makefile
-+++ b/arch/arm64/boot/dts/qcom/Makefile
-@@ -250,6 +250,9 @@ dtb-$(CONFIG_ARCH_QCOM)	+= qcs9075-iq-9075-evk.dtb
- qcs9075-iq-9075-evk-el2-dtbs:= qcs9075-iq-9075-evk.dtb sa8775p-el2.dtbo
- dtb-$(CONFIG_ARCH_QCOM) += qcs9075-iq-9075-evk-el2.dtb
- 
-+qcs9075-iq-9075-evk-camera-csi1-imx577-dtbs	:= qcs9075-iq-9075-evk.dtb lemans-evk-camera-csi1-imx577.dtbo
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index 3151f32ca39e..501548ab942f 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -147,6 +147,14 @@ dummy_reg: regulator-dummy {
+ 		regulator-min-microvolt = <2950000>;
+ 		regulator-max-microvolt = <2950000>;
+ 	};
 +
-+dtb-$(CONFIG_ARCH_QCOM)	+= qcs9075-iq-9075-evk-camera-csi1-imx577.dtb
- dtb-$(CONFIG_ARCH_QCOM) += qcs9075-ride.dtb
- qcs9075-ride-el2-dtbs:= qcs9075-ride.dtb sa8775p-el2.dtbo
- dtb-$(CONFIG_ARCH_QCOM) += qcs9075-ride-el2.dtb
-diff --git a/arch/arm64/boot/dts/qcom/lemans-evk-camera-csi1-imx577.dtso b/arch/arm64/boot/dts/qcom/lemans-evk-camera-csi1-imx577.dtso
-new file mode 100644
-index 000000000000..f1163efc58f7
---- /dev/null
-+++ b/arch/arm64/boot/dts/qcom/lemans-evk-camera-csi1-imx577.dtso
-@@ -0,0 +1,97 @@
-+// SPDX-License-Identifier: BSD-3-Clause
-+/*
-+ * Copyright (c) 2025 Qualcomm Innovation Center, Inc. All rights reserved.
-+ */
-+
-+/dts-v1/;
-+/plugin/;
-+
-+#include <dt-bindings/clock/qcom,sa8775p-camcc.h>
-+#include <dt-bindings/gpio/gpio.h>
-+
-+&{/} {
 +	vreg_cam1_1p8: regulator-cam1 {
 +		compatible = "regulator-fixed";
 +		regulator-name = "vreg_cam1";
@@ -53,8 +28,13 @@ index 000000000000..f1163efc58f7
 +		enable-active-high;
 +		gpio = <&pmm8654au_0_gpios 8 GPIO_ACTIVE_HIGH>;
 +	};
-+};
-+
+ };
+ 
+ &apps_rsc {
+@@ -380,6 +388,65 @@ vreg_l8e: ldo8 {
+ 	};
+ };
+ 
 +&camss {
 +	vdda-pll-supply = <&vreg_l1c>;
 +	vdda-phy-supply = <&vreg_l4a>;
@@ -114,7 +94,13 @@ index 000000000000..f1163efc58f7
 +	};
 +};
 +
-+&tlmm {
+ &ethernet0 {
+ 	phy-handle = <&sgmii_phy0>;
+ 	phy-mode = "sgmii";
+@@ -1048,6 +1115,22 @@ &spi19 {
+ };
+ 
+ &tlmm {
 +	cam1_default: cam1-default-state {
 +		mclk-pins {
 +			pins = "gpio73";
@@ -130,7 +116,10 @@ index 000000000000..f1163efc58f7
 +			bias-disable;
 +		};
 +	};
-+};
++
+ 	dp0_hot_plug_det: dp0-hot-plug-det-state {
+ 		pins = "gpio101";
+ 		function = "edp0_hot";
 -- 
 2.34.1
 

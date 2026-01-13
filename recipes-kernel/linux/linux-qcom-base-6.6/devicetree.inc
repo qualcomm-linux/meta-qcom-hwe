@@ -312,19 +312,19 @@ SRC_URI:append = " \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-Host-mode-support.patch \
     file://qcs9075/0001-PENDING-arm64-dts-qcom-Add-el2-overlay-support-qcs90.patch \
     file://qcs9075/0001-FROMLIST-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable-T.patch \
+    file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable.patch \
+    file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-enable-vi.patch \
     file://qcs9075/0001-UPSTREAM-arm64-dts-qcom-qcs9075-Rename-sound-card-na.patch \
-    file://qcs9075/0003-FROMLIST-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable-IM.patch \
     file://qcs9100/0001-UPSTREAM-arm64-dts-qcom-sa8775p-Add-default-pin-conf.patch \
     file://qcs9075/0001-BACKPORT-arm64-dts-qcom-Add-Host-only-mode-support-f.patch \
     file://qcs9075/0002-PENDING-arm64-dts-qcom-Add-Host-only-mode-support-fo.patch \
+    file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable-IM.patch \
     "
 
 # qcs8275 board dts patches
 SRC_URI:append = " \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Add-support-for-QCS8275-IQ8-E.patch \
     file://addons/0002-QCLINUX-arm64-dts-qcom-Add-msm-id-board-id-for-qcs82.patch \
-    file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-Enable.patch \
-    file://qcs9075/0001-PENDING-arm64-dts-qcom-qcs9075-iq-9075-evk-enable-vi.patch \
     file://qcs8275/0001-QCLINUX-arm64-dts-fix-base-BSP-compilation-issue-for.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-Enable-usb0-support-on-QCS827.patch \
     file://qcs8275/0001-PENDING-arm64-dts-qcom-qcs8275-iq-8275-evk-Add-firmw.patch \
