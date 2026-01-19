@@ -1,0 +1,91 @@
+From 090b3daf1ab9a2fb7c15b13c00e57a82ac298832 Mon Sep 17 00:00:00 2001
+From: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Date: Mon, 29 Dec 2025 18:03:45 +0530
+Subject: [PATCH 2/3] PENDING: arm64: dts: qcom: Add Host only mode support for
+ USB2 on QCS9075 IQ9 EVK
+
+Add Host only mode support for USB2 on QCS9075 IQ9 EVK.
+
+Change-Id: I70aac582890dac5fa2173bc5fbb0f3acfb05e4e6
+Signed-off-by: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Upstream-Status: Pending
+---
+ .../boot/dts/qcom/qcs9075-iq-9075-evk.dts     | 44 +------------------
+ 1 file changed, 1 insertion(+), 43 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index c38e59fb3a07..e61cd32610ab 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -781,14 +781,6 @@ usb0_intr_state: usb0-intr-state {
+ 		bias-pull-up;
+ 		power-source = <0>;
+ 	};
+-
+-	usb2_id_det_default: usb2-id-det-default {
+-		pins = "gpio11";
+-		function = "normal";
+-		input-enable;
+-		bias-pull-up;
+-		power-source = <0>;
+-	};
+ };
+ 
+ &pmm8654au_1_gpios {
+@@ -887,25 +879,6 @@ &sleep_clk {
+ };
+ 
+ &soc {
+-	connector_usb2: connector-usb2 {
+-		compatible = "gpio-usb-b-connector";
+-		id-gpio = <&pmm8654au_2_gpios 11 GPIO_ACTIVE_HIGH>;
+-		vbus-supply = <&vbus_supply_regulator_2>;
+-		pinctrl-names = "default";
+-		pinctrl-0 = <&usb2_id_det_default>;
+-		ports {
+-			#address-cells = <1>;
+-			#size-cells = <0>;
+-
+-			port@0 {
+-				reg = <0>;
+-				usb2_port_connector: endpoint {
+-					remote-endpoint = <&usb2_port>;
+-				};
+-			};
+-		};
+-	};
+-
+ 	vreg_sdc: regulator-sdc {
+ 		compatible = "regulator-gpio";
+ 
+@@ -1594,26 +1567,11 @@ &usb_2 {
+ 	phys = <&usb_2_hsphy>;
+ 	phy-names = "usb2-phy";
+ 
+-	dr_mode = "otg";
+-	usb-role-switch;
++	dr_mode = "host";
+ 	qcom,enable-rt;
+ 	wakeup-source;
+ 
+ 	status = "okay";
+-
+-	ports {
+-
+-		#address-cells = <1>;
+-		#size-cells = <0>;
+-
+-		port@0 {
+-			reg = <0>;
+-			usb2_port: endpoint {
+-				remote-endpoint = <&usb2_port_connector>;
+-			};
+-		};
+-
+-	};
+ };
+ 
+ &usb_2_hsphy {
+-- 
+2.34.1
+
