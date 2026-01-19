@@ -553,4 +553,5 @@ SRC_URI:append = " \
     file://common/0002-BACKPORT-UPSTREAM-drm-msm-dpu-fill-CRTC-resources-in.patch \
     file://common/0003-BACKPORT-UPSTREAM-drm-msm-dpu-don-t-set-crtc_state-m.patch \
     file://common/0004-BACKPORT-UPSTREAM-drm-msm-dpu-move-resource-allocati.patch \
+    file://common/0151-FROMLIST-driver-bluetooth-btusb-Allow-firmware-re.patch \
 "
