@@ -34,7 +34,6 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-qcs9100-ath11k-wcn6855-updates \
     linux-firmware-qcs9100-qca-qca2066-updates \
     linux-firmware-qcs9100-qca-qca61x4-usb-updates \
-    linux-firmware-qcs9100-qca-qca6698-updates \
     linux-firmware-qcs9100-qcom-tzapps-updates \
     linux-firmware-qcs9100-qca-wcn685x-updates \
 "
