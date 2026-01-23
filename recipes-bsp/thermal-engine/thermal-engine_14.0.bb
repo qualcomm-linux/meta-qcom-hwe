@@ -16,3 +16,5 @@ SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"
 SRC_URI[qcs8300.sha256sum] = "${QCS8300_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"
+
+FILES:${PN} += "${sysconfdir}/* ${bindir}/* ${libdir}/*"
