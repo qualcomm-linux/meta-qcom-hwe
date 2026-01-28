@@ -32,11 +32,8 @@ reinstall_files () {
 }
 do_install[postfuncs] += "reinstall_files"
 
-FILES:${PN} = "${nonarch_base_libdir}/firmware/* \
-               ${nonarch_libdir}/lib*.so.* \
-               ${base_libdir}/firmware/* \
+FILES:${PN} = "${nonarch_libdir}/lib*.so.* \
                ${libdir}/lib*.so.* \
-               ${libdir}/firmware \
                /usr/share/vulkan/icd.d/* "
 FILES:${PN}-dev = "${includedir}/* \
                    ${nonarch_libdir}/lib*.so \
