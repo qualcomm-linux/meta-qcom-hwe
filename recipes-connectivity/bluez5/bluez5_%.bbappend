@@ -51,6 +51,7 @@ SRC_URI:append:qcom = " file://0001-Setting-default-values-in-main.conf.patch \
                         file://0045-Backport-bluez5-Setting-default-adapter-status.patch \
                         file://0046-Backport-bluez5-Remove-Endpoints-cache-entries-on.patch \
                         file://0047-Backport-bluez5-Implement-PreferredBearer-last-us.patch \
+                        file://0048-FROMLIST-bluez5-Initialize-device-volume-with-a-vali.patch \
 "
 
 #Include obex to support obex related profiles like OPP, FTP, MAP, PBAP
