@@ -1,10 +1,23 @@
-#! /bin/sh
-# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
-# All rights reserved.
-# Confidential and Proprietary - Qualcomm Technologies, Inc.
+#This NOTICE file contains certain notices of software components included
+#with the software that Qualcomm Technologies, Inc. ("Qualcomm Technologies") is required to
+#provide you. Notwithstanding anything in the notices in this file, your use
+#of these software components together with the Qualcomm Technologies software (Qualcomm Technologies
+#software hereinafter referred to as "Software") is subject to the terms of
+#your license from Qualcomm Technologies. Compliance with all copyright laws and software
+#license agreements included in the notice section of this file are the
+#responsibility of the user. Except as may be granted by separate express
+#written agreement, this file provides no license to any patents,
+#trademarks, copyrights, or other intellectual property.
 
+#Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+#All rights reserved.
+#Confidential and Proprietary - Qualcomm Technologies, Inc.
 
-#  Copyright (c) 2020, The Linux Foundation. All rights reserved.
+#________________________________________
+#NOTICES
+#________________________________________
+
+#*Copyright (c) 2020, The Linux Foundation. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -30,31 +43,3 @@
 #  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 #  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 #  IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-
-set -e
-
-case "$1" in
-    start)
-	echo -n "Starting/Loading smcinvoke module: "
-
-	echo "smcinvoke:start/load" > /dev/kmsg
-	modprobe qcom_smcinvoke
-
-	echo "done loading smcinvoke_kernel module"
-	;;
-    stop)
-	echo -n "Bypassing Unloading of smcinvoke_kernel modules "
-	;;
-    restart)
-	$0 stop
-	$0 start
-	;;
-    *)
-	echo "Usage { start | stop | restart}" >&2
-	exit 1
-	;;
-esac
-
-exit 0
-
