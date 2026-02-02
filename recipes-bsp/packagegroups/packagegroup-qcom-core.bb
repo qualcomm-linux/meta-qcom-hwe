@@ -38,6 +38,8 @@ RDEPENDS:${PN} += " \
     ${@oe.utils.conditional('TIMESERVICES', 'True', 'time-services', '', d)} \
 "
 
+RDEPENDS:${PN}:append:qcs9100 = " sail-can"
+
 RDEPENDS:${PN}-vm += " \
     ${@oe.utils.conditional('DIAG', 'True', 'diag', '', d)} \
     ${@oe.utils.conditional('DIAGROUTER', 'True', 'diag-router', '', d)} \
