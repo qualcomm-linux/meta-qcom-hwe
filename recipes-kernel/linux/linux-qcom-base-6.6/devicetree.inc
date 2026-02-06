@@ -356,4 +356,5 @@ SRC_URI:append = " \
     file://qcs8275/0001-BACKPORT-arm64-dts-qcom-qcs8275-Enable-Adreno-623-GP.patch \
     file://qcs8275/0002-UPSTREAM-arm64-dts-qcom-qcs8275-Rename-sound-card-na.patch \
     file://qcs8300/0002-FROMLIST-arm64-dts-qcom-monaco-Add-EL2-overlay.patch \
+    file://qcs615/0003-FROMLIST-arm64-dts-qcom-talos-Add-EL2-overlay.patch \
     "
