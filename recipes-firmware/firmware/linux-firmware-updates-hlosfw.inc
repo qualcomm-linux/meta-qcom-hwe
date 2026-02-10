@@ -125,7 +125,6 @@ QCS9100_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcs9100-ath11k-wcn6855-updates \
   ${PN}-qcs9100-qca-qca2066-updates \
   ${PN}-qcs9100-qca-qca61x4-usb-updates \
-  ${PN}-qcs9100-qca-qca6698-updates \
   ${PN}-qcs9100-qca-wcn685x-updates \
   ${PN}-qcs9100-qcom-tzapps-updates \
 "
@@ -140,7 +139,6 @@ QCS8300_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcs8300-ath11k-wcn6855-updates \
   ${PN}-qcs8300-qca-qca2066-updates \
   ${PN}-qcs8300-qca-qca61x4-usb-updates \
-  ${PN}-qcs8300-qca-qca6698-updates \
   ${PN}-qcs8300-qca-wcn685x-updates \
   ${PN}-qcs8300-qcom-tzapps-updates \
 "
@@ -220,32 +218,6 @@ FILES:${PN}-qcs8300-qca-qca2066-updates = " \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.b* \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/hpnv21_* \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/hpnv21g_* \
-"
-
-SUMMARY:${PN}-qcs9100-qca-qca6698-updates = "QCA6698 firmware update files"
-FILES:${PN}-qcs9100-qca-qca6698-updates = " \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpbtfw21.tlv* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_losslessg.bin \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48K.bin \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48Kg.bin \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPOg.bin \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPO.bin \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_lossless.bin \
-"
-
-SUMMARY:${PN}-qcs8300-qca-qca6698-updates = "QCA6698 firmware update files"
-FILES:${PN}-qcs8300-qca-qca6698-updates = " \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpbtfw21.tlv* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_losslessg.bin \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48K.bin \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48Kg.bin \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPOg.bin \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPO.bin \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_lossless.bin \
 "
 
 SUMMARY:${PN}-qca-wcn6750-updates = "QCA WCN6750 firmware update files"
