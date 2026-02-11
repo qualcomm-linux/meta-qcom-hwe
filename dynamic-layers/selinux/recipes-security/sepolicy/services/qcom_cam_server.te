@@ -18,11 +18,6 @@ qcom_cam_server_device_rw(qcom_cam_server_t)
 qcom_connect_to_property_vault(qcom_cam_server_t)
 rw_fifo_files_pattern({ qcom_cam_server_t }, self, self)
 
-type qcom_cam_server_tmp_t;
-files_tmp_file(qcom_cam_server_tmp_t)
-files_tmp_filetrans(qcom_cam_server_t, qcom_cam_server_tmp_t, { file dir sock_file})
-qcom_manage_cam_server_sock_file(qcom_cam_server_t)
-
 allow qcom_cam_server_t self:capability sys_time;
 allow qcom_cam_server_t self:process { getsched signal };
 allow qcom_cam_server_t self:qipcrtr_socket { connected_socket_perms };
@@ -67,3 +62,7 @@ type qcom_cam_server_etc_t;
 files_type(qcom_cam_server_etc_t);
 
 allow qcom_cam_server_t qcom_cam_server_etc_t:file manage_file_perms;
+
+type qcom_cam_server_runtime_t;
+files_runtime_file(qcom_cam_server_runtime_t)
+manage_sock_files_pattern(qcom_cam_server_t, qcom_cam_server_runtime_t, qcom_cam_server_runtime_t)
