@@ -23,7 +23,6 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-ath11k-wcn6750-updates \
     linux-firmware-qcacld-wcn6855-updates \
     linux-firmware-qca-ramps-updates \
-    linux-firmware-qca-wcn6750-updates \
     linux-firmware-qcm6490-ath11k-wcn6855-updates \
     linux-firmware-qcm6490-qca-qca2066-hpbtfw-updates \
     linux-firmware-qcm6490-qca-qca2066-updates \
