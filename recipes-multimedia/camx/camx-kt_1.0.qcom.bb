@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f2
 
 DESCRIPTION = "Camx"
 
-DEPENDS += "syslog-plumber glib-2.0 property-vault camxlib-kt cameradlkm fastrpc qcom-sensinghub qcom-sensors-utils qcom-sensors-core qmi-framework abseil-cpp"
+DEPENDS += "syslog-plumber chicdk-autogen-kt glib-2.0 property-vault camxlib-kt cameradlkm fastrpc qcom-sensinghub qcom-sensors-utils qcom-sensors-core qmi-framework abseil-cpp"
 
 QCM6490_SHA256SUM = "6e698b1b6913d50bb0cefc893117ab518fc3eb005d930c82bbb2b456a0686d95"
 

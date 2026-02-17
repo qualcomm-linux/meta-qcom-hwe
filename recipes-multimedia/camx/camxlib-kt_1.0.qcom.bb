@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f2
 
 DESCRIPTION = "Camx"
 
-DEPENDS += "syslog-plumber glib-2.0 property-vault camxapi-kt fastrpc virtual/egl virtual/libgles2 adrenocl protobuf-native protobuf"
+DEPENDS += "syslog-plumber chicdk-autogen-kt glib-2.0 property-vault camxapi-kt fastrpc virtual/egl virtual/libgles2 adrenocl protobuf-native protobuf"
 
 RDEPENDS:${PN} += "cameradlkm"
 
