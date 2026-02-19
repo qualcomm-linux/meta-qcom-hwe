@@ -1,6 +1,6 @@
 inherit update-rc.d systemd pkgconfig
-LICENSE          = "Qualcomm-Technologies-Inc.-Proprietary"
-LIC_FILES_CHKSUM = "file://${WORKDIR}/qwesd.service;beginline=1;endline=3;md5=a28d9c70d64c8bc2eb91130fe3292f39"
+LICENSE          = "LICENSE.qcom-2"
+LIC_FILES_CHKSUM = "file://${WORKDIR}/qwesd.service;beginline=1;endline=2;md5=3cd67fbde21d69c7ed906c16fba87e2a"
 
 DESCRIPTION = "Start up script for qwesd daemon"
 
