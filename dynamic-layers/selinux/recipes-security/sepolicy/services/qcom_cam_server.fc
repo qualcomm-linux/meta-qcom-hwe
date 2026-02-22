@@ -3,5 +3,5 @@
 
 /usr/bin/cam-server             --      gen_context(system_u:object_r:qcom_cam_server_exec_t,s0)
 /var/cache/camera(/.*)?                 gen_context(system_u:object_r:qcom_cam_server_var_t,s0)
-/tmp/socket/cam_server(/.*)?            gen_context(system_u:object_r:qcom_cam_server_tmp_t,s0)
 /etc/cam-server.ini             --      gen_context(system_u:object_r:qcom_cam_server_etc_t,s0)
+/run/cam_server(/.*)?                   gen_context(system_u:object_r:qcom_cam_server_runtime_t,s0)
