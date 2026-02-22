@@ -1,0 +1,33 @@
+From 41a354a2144ca7fdeafd03b667d84f60418ff195 Mon Sep 17 00:00:00 2001
+From: Jinwang Li <jinwang.li@oss.qualcomm.com>
+Date: Fri, 30 Jan 2026 15:26:15 +0800
+Subject: [PATCH v1] device: Initialize device volume with a valid value
+
+When AVRCP is connected earlier than AVDTP, this invalid device volume
+causes the A2DP sink to reject the peer's registration for the
+EVENT_VOLUME_CHANGED notification. As a result, subsequent attempts to
+set the volume fail.
+
+Fixes: fa7828bddd21 ("transport: Fix not being able to initialize volume properly")
+Upstream-Status: Submitted [https://lore.kernel.org/all/20260122063640.310090-1-jinwang.li@oss.qualcomm.com/]
+Signed-off-by: Jinwang Li <jinwang.li@oss.qualcomm.com>
+---
+ src/device.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/device.c b/src/device.c
+index 34757db..46f1979 100644
+--- a/src/device.c
++++ b/src/device.c
+@@ -4253,7 +4253,7 @@ static struct btd_device *device_new(struct btd_adapter *adapter,
+ 		return NULL;
+ 
+ 	device->tx_power = 127;
+-	device->volume = -1;
++	device->volume = 127;
+ 
+ 	device->db = gatt_db_new();
+ 	if (!device->db) {
+-- 
+2.34.1
+
