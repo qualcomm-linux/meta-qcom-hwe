@@ -110,6 +110,7 @@ SRC_URI:append = " \
     file://qcs9100/0012-UPSTREAM-arm64-dts-qcom-sa8775p-ride-add-anx7625-DSI-to-DP-bridge-nodes.patch \
     file://qcs9100/0020-FROMLIST-arm64-dts-qcom-Add-EL2-overlay-for-Lemans.patch \
     file://qcs9100/0004-PENDING-arm64-dts-qcom-Add-EL2-support-for-Iris-for-sa8775p.patch \
+    file://qcs9100/0001-FROMLIST-arm64-dts-qcom-lemans-disable-zap-shader-fo.patch \
     "
 
 # qcs615 dtsi patches
@@ -354,4 +355,5 @@ SRC_URI:append = " \
     file://qcs8275/0002-PENDING-arm64-dts-qcom-qcs8275-rb4-Enable-IMX577-cam.patch \
     file://qcs8275/0001-BACKPORT-arm64-dts-qcom-qcs8275-Enable-Adreno-623-GP.patch \
     file://qcs8275/0002-UPSTREAM-arm64-dts-qcom-qcs8275-Rename-sound-card-na.patch \
+    file://qcs8300/0002-FROMLIST-arm64-dts-qcom-monaco-Add-EL2-overlay.patch \
     "
