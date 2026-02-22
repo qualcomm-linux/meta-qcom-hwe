@@ -2,7 +2,7 @@
     "Platform_Libraries_To_Mount": [
         "/dev/socket/weston",
         "/var/run/pulse/native",
-        "/tmp/socket/cam_server/",
+        "/run/cam_server/",
         "/tmp/property-vault.socket",
         "/usr/lib/dri/kms_swrast_dri.so",
         "/usr/lib/dri/swrast_dri.so",
