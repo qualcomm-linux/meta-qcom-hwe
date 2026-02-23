@@ -3,14 +3,13 @@ inherit autotools-brokensep pkgconfig qprebuilt systemd
 SUMMARY = "Driver providing support for SAIL-CAN via Mailbox communication"
 DESCRIPTION = "Provide Sail CAN Driver to communicate between MD and SAIL CAN. SAIL CAN user space binary is used to connect between virtual CAN ports and SAIL CAN controllers in SAIL SS via mailbox in kernel."
 
-LICENSE = "Qualcomm-Technologies-Inc.-Proprietary"
+LICENSE = "LICENSE.qcom-2"
 
-LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}/${LICENSE};md5=58d50a3d36f27f1a1e6089308a49b403"
-
+LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=165287851294f2fb8ac8cbc5e24b02b0"
 
 DEPENDS = "glib-2.0 linux-libc-headers can-utils pkgconfig-native cmake-native"
 
-QCS9100_SHA256SUM = "63aef6bb4591e9998eb1699f87fa68139fda478a55c37d4daed1c2451f52f28e"
+QCS9100_SHA256SUM = "f165ea3786f179351f30ba2623e22fe1cfbee24e3b1b8ffe4b74e47a2ac1509b"
 
 SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"
 
