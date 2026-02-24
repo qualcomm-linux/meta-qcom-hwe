@@ -1,4 +1,4 @@
-LICENSE = "Qualcomm-Technologies-Inc.-Proprietary"
+LICENSE = "LICENSE.qcom-2"
 LICENSE += "& BSD-3-Clause"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
