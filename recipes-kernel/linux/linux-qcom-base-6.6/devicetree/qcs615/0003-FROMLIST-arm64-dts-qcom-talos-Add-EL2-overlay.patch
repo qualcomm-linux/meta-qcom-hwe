@@ -1,0 +1,80 @@
+From b5e19f55a5378f1c2ed0ff258f24531219ceafb2 Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 19 Jan 2026 14:24:54 +0530
+Subject: [PATCH] FROMLIST: arm64: dts: qcom: talos: Add EL2 overlay
+
+All the existing variants Talos boards are using Gunyah hypervisor
+which means that, so far, Linux-based OS could only boot in EL1 on
+those devices.  However, it is possible for us to boot Linux at EL2
+on these devices [1].
+
+When running under Gunyah, the remote processor firmware IOMMU streams
+are controlled by Gunyah. However, without Gunyah, the IOMMU is managed
+by the consumer of this DeviceTree. Therefore, describe the firmware
+streams for each remote processor.
+
+Add a EL2-specific DT overlay and apply it to Talos IOT variant
+devices to create -el2.dtb for each of them alongside "normal" dtb.
+
+[1]
+https://docs.qualcomm.com/bundle/publicresource/topics/80-70020-4/boot-developer-touchpoints.html#uefi
+
+Change-Id: I93b4413f3faab002a3e803695fcfb807ff2f3efc
+Upstream-Status: Submitted [https://lore.kernel.org/all/20260127-talos-el2-overlay-v2-3-b6a2266532c4@oss.qualcomm.com/]
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+---
+ arch/arm64/boot/dts/qcom/Makefile       |  4 ++++
+ arch/arm64/boot/dts/qcom/talos-el2.dtso | 25 +++++++++++++++++++++++++
+ 2 files changed, 29 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/qcom/talos-el2.dtso
+
+diff --git a/arch/arm64/boot/dts/qcom/Makefile b/arch/arm64/boot/dts/qcom/Makefile
+index 1e2a47bf31de..8e32a5ed2b1f 100644
+--- a/arch/arm64/boot/dts/qcom/Makefile
++++ b/arch/arm64/boot/dts/qcom/Makefile
+@@ -90,6 +90,10 @@ dtb-$(CONFIG_ARCH_QCOM)	+= qcm6490-idp.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs404-evb-1000.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs404-evb-4000.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs615-ride.dtb
++
++qcs615-ride-el2-dtbs := qcs615-ride.dtb talos-el2.dtbo
++
++dtb-$(CONFIG_ARCH_QCOM)	+= qcs615-ride-el2.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs6490-rb3gen2.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs8275-iq-8275-evk.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= qcs8300-ride.dtb
+diff --git a/arch/arm64/boot/dts/qcom/talos-el2.dtso b/arch/arm64/boot/dts/qcom/talos-el2.dtso
+new file mode 100644
+index 000000000000..f6818c058d72
+--- /dev/null
++++ b/arch/arm64/boot/dts/qcom/talos-el2.dtso
+@@ -0,0 +1,25 @@
++// SPDX-License-Identifier: BSD-3-Clause
++/*
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++
++ * Talos specific modifications required to boot in EL2.
++ */
++
++/dts-v1/;
++/plugin/;
++
++&gpu_zap_shader {
++	status = "disabled";
++};
++
++&remoteproc_adsp {
++	iommus = <&apps_smmu 0x1720 0x0>;
++};
++
++&remoteproc_cdsp {
++	iommus = <&apps_smmu 0x1080 0x0>;
++};
++
++&venus {
++	status = "disabled";
++};
+-- 
+2.50.1
+
