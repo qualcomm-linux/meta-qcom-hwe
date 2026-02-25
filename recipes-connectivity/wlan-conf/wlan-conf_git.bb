@@ -9,7 +9,8 @@ SRCBRANCH  = "wlan-os-service.qclinux.1.1.r1-rel"
 SRCREV     = "b696e6ca813ef9be0d21ceb55842cf93f656d98d"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=mdm-init \
-           file://wlan_daemon.service"
+           file://wlan_daemon.service \
+           file://multi-vif.service"
 
 S = "${WORKDIR}/mdm-init"
 
@@ -18,6 +19,7 @@ do_install:append: () {
 		install -d ${D}/etc/initscripts
 		cp ${D}/etc/init.d/wlan ${D}/etc/initscripts/wlan
 		install -d ${D}/etc/systemd/system/
+		install -m 0644 ${WORKDIR}/multi-vif.service -D ${D}/etc/systemd/system/multi-vif.service
 		install -m 0644 ${WORKDIR}/wlan_daemon.service -D ${D}/etc/systemd/system/wlan_daemon.service
 		install -d ${D}/etc/systemd/system/multi-user.target.wants/
 		ln -sf /etc/systemd/system/wlan_daemon.service \
@@ -31,6 +33,7 @@ FILES:${PN} += "${nonarch_base_libdir}/firmware/wlan/qca_cld/* ${sysconfdir}/ini
 EXTRA_OECONF:append:qcm6490 = " --enable-qcm6490=yes "
 EXTRA_OECONF:append:qcs9100 = " --enable-upstream=yes "
 EXTRA_OECONF:append:qcs8300 = " --enable-upstream=yes "
+EXTRA_OECONF:append:qcs615 = " --enable-upstream=yes "
 
 SYSTEMD_AUTO_ENABLE = "enable"
 SYSTEMD_SERVICE:${PN}  = "wlan_daemon.service"

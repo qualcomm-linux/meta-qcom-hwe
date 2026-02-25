@@ -1,0 +1,23 @@
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: BSD-3-Clause-Clear
+#
+#
+# Note: This service enables the automatic creation of multiple Wi-Fi
+#       virtual interfaces during WLAN boot.
+#       It is not enabled by default. To enable it, run:
+#       "systemctl enable multi-vif.service"
+
+
+[Unit]
+Description=Create multi WiFi virtual interfaces at boot
+After=network-pre.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/etc/init.d/multi-vif-helper.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+
