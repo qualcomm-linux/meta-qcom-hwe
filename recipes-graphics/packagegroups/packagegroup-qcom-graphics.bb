@@ -1,5 +1,5 @@
 SUMMARY = "QCOM GFX package groups"
-LICENSE  = "Qualcomm-Technologies-Inc.-Proprietary"
+LICENSE  = "LICENSE.qcom-2"
 
 PACKAGE_ARCH="${SOC_ARCH}"
 
