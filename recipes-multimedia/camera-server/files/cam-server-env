@@ -1,3 +1,0 @@
-LD_LIBRARY_PATH=/usr/lib/camera/components/:/usr/lib/camera/
-XDG_RUNTIME_DIR=/run/user/root/
-WAYLAND_DISPLAY=wayland-1

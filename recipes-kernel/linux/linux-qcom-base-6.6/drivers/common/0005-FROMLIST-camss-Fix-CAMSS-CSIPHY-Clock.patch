@@ -1,0 +1,97 @@
+From 7e8648d84826ac91ed32534cf5cbec7f6026fa9d Mon Sep 17 00:00:00 2001
+From: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Date: Thu, 4 Sep 2025 14:21:50 +0800
+Subject: [PATCH 5/5] FROMLIST: camss: Fix CAMSS CSIPHY Clock
+
+Fix camss csiphy clk for LeMans and Monoco.
+
+Signed-off-by: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/linux-arm-msm/20250814101615.1102795-6-quic_vikramsa@quicinc.com/]
+---
+ drivers/media/platform/qcom/camss/camss.c | 28 +++++++++++++++++------
+ 1 file changed, 21 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/media/platform/qcom/camss/camss.c b/drivers/media/platform/qcom/camss/camss.c
+index bd26c7f24241..8f2d6d2334f6 100644
+--- a/drivers/media/platform/qcom/camss/camss.c
++++ b/drivers/media/platform/qcom/camss/camss.c
+@@ -1119,7 +1119,9 @@ static const struct camss_subdev_resources csiphy_res_8300[] = {
+ 		.regulators = {},
+ 		.clock = { "csid_csiphy_rx", "csiphy0", "csiphy0_timer"},
+ 		.clock_rate = {
+-			{ 400000000, 0, 400000000}
++			{ 400000000 },
++			{ 0 },
++			{ 400000000 },
+ 		},
+ 		.reg = { "csiphy0" },
+ 		.interrupt = { "csiphy0" },
+@@ -1133,7 +1135,9 @@ static const struct camss_subdev_resources csiphy_res_8300[] = {
+ 		.regulators = {},
+ 		.clock = { "csid_csiphy_rx", "csiphy1", "csiphy1_timer"},
+ 		.clock_rate = {
+-			{ 400000000, 0, 400000000}
++			{ 400000000 },
++			{ 0 },
++			{ 400000000 }
+ 		},
+ 		.reg = { "csiphy1" },
+ 		.interrupt = { "csiphy1" },
+@@ -1147,7 +1151,9 @@ static const struct camss_subdev_resources csiphy_res_8300[] = {
+ 		.regulators = {},
+ 		.clock = { "csid_csiphy_rx", "csiphy2", "csiphy2_timer"},
+ 		.clock_rate = {
+-			{ 400000000, 0, 400000000}
++			{ 400000000 },
++			{ 0 },
++			{ 400000000 }
+ 		},
+ 		.reg = { "csiphy2" },
+ 		.interrupt = { "csiphy2" },
+@@ -1563,7 +1569,9 @@ static const struct camss_subdev_resources csiphy_res_8775p[] = {
+ 		.regulators = {},
+ 		.clock = { "csid_csiphy_rx", "csiphy0", "csiphy0_timer"},
+ 		.clock_rate = {
+-			{ 400000000, 0, 400000000}
++			{ 400000000 },
++			{ 0 },
++			{ 400000000 },
+ 		},
+ 		.reg = { "csiphy0" },
+ 		.interrupt = { "csiphy0" },
+@@ -1577,7 +1585,9 @@ static const struct camss_subdev_resources csiphy_res_8775p[] = {
+ 		.regulators = {},
+ 		.clock = { "csid_csiphy_rx", "csiphy1", "csiphy1_timer"},
+ 		.clock_rate = {
+-			{ 400000000, 0, 400000000}
++			{ 400000000 },
++			{ 0 },
++			{ 400000000 },
+ 		},
+ 		.reg = { "csiphy1" },
+ 		.interrupt = { "csiphy1" },
+@@ -1591,7 +1601,9 @@ static const struct camss_subdev_resources csiphy_res_8775p[] = {
+ 		.regulators = {},
+ 		.clock = { "csid_csiphy_rx", "csiphy2", "csiphy2_timer"},
+ 		.clock_rate = {
+-			{ 400000000, 0, 400000000}
++			{ 400000000 },
++			{ 0 },
++			{ 400000000 },
+ 		},
+ 		.reg = { "csiphy2" },
+ 		.interrupt = { "csiphy2" },
+@@ -1605,7 +1617,9 @@ static const struct camss_subdev_resources csiphy_res_8775p[] = {
+ 		.regulators = {},
+ 		.clock = { "csid_csiphy_rx", "csiphy3", "csiphy3_timer"},
+ 		.clock_rate = {
+-			{ 400000000, 0, 400000000}
++			{ 400000000 },
++			{ 0 },
++			{ 400000000 },
+ 		},
+ 		.reg = { "csiphy3" },
+ 		.interrupt = { "csiphy3" },
+-- 
+2.34.1
+

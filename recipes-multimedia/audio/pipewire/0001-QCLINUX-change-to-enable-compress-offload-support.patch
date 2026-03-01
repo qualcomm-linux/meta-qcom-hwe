@@ -1,0 +1,691 @@
+From 804d250f99533b9266cb360617a4a8ef156bbea5 Mon Sep 17 00:00:00 2001
+From: Pratyush Meduri <mpratyus@qti.qualcomm.com>
+Date: Mon, 1 Dec 2025 11:09:26 +0530
+Subject: [PATCH] QCLINUX: change to enable compress offload support
+
+This patch file is from Qualcomm Technologies, Inc. and is provided under the following license:
+
+Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+SPDX-License-Identifier: BSD-3-Clause-Clear
+
+Signed-off-by: Pratyush Meduri <mpratyus@qti.qualcomm.com>
+Upstream-Status: pending
+---
+ src/tools/pw-cat.c | 521 ++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 495 insertions(+), 26 deletions(-)
+
+diff --git a/src/tools/pw-cat.c b/src/tools/pw-cat.c
+index 34347d7c3..0e2031acd 100644
+--- a/src/tools/pw-cat.c
++++ b/src/tools/pw-cat.c
+@@ -14,7 +14,7 @@
+ #include <assert.h>
+ #include <ctype.h>
+ #include <locale.h>
+-
++#include <string.h>
+ #include <sndfile.h>
+ 
+ #include <spa/param/audio/layout.h>
+@@ -57,7 +57,7 @@
+ #define DEFAULT_FORMAT		"s16"
+ #define DEFAULT_VOLUME		1.0
+ #define DEFAULT_QUALITY		4
+-
++#define FILE_READ_CHUNK 4096
+ enum mode {
+ 	mode_none,
+ 	mode_playback,
+@@ -98,9 +98,7 @@ struct data {
+ #define TYPE_PCM	0
+ #define TYPE_MIDI	1
+ #define TYPE_DSD	2
+-#ifdef HAVE_PW_CAT_FFMPEG_INTEGRATION
+ #define TYPE_ENCODED    3
+-#endif
+ 	int data_type;
+ 	const char *remote_name;
+ 	const char *media_type;
+@@ -111,10 +109,16 @@ struct data {
+ 	const char *target;
+ 	const char *latency;
+ 	struct pw_properties *props;
++    char codec_name[16];
++    char sample_rate_str[16];
++    char channels_str[8];
+ 
+ 	const char *filename;
+ 	SNDFILE *file;
+ 
++    uint64_t sample_limit;       /* For PCM sample limiting */
++    uint64_t samples_processed;  /* Track processed samples */
++
+ 	unsigned int bitrate;
+ 	unsigned int rate;
+ 	int channels;
+@@ -150,6 +154,20 @@ struct data {
+ 		struct dff_layout layout;
+ 	} dff;
+ 
++struct  {
++    int fd;                             /* File descriptor for encoded file */
++    uint8_t *buffer;                    /* Optional preloaded buffer */
++    size_t buffer_size;                 /* Size of buffer */
++    size_t read_offset;                 /* Current read position */
++    uint32_t frame_size;                /* Size of one encoded frame in bytes */
++    uint32_t frame_duration_us;         /* Duration of one encoded frame in microseconds */
++    uint32_t sample_rate;               /* Sample rate of audio */
++    uint32_t channels;                  /* Number of channels */
++    uint32_t bitrate;                   /* Bitrate (optional) */
++    char codec_name[32];                /* Codec name (e.g., "mp3", "aac") */
++    int64_t accumulated_excess_playtime;/* Excess playtime tracking */
++} encoded ;
++
+ #ifdef HAVE_PW_CAT_FFMPEG_INTEGRATION
+ 	struct {
+ 		AVFormatContext *format_context;
+@@ -844,15 +862,29 @@ static void on_process(void *userdata)
+ 	if (data->mode == mode_playback) {
+ 		bool null_frame = false;
+ 
+-		n_frames = d->maxsize / data->stride;
+-		n_frames = SPA_MIN(n_frames, (int)b->requested);
++        if (data->stride == 0)
++            data->stride = 1;
++
++        n_frames = d->maxsize / data->stride;
++        if (b->requested)
++            n_frames = SPA_MIN(n_frames, (int)b->requested);
+ 
+ 		/* Note that when playing encoded audio, the encoded_playback_fill()
+ 		 * fill callback actually returns number of bytes, not frames, since
+ 		 * this is encoded data. However, the calculations below still work
+ 		 * out because the stride is set to 1 in setup_encodedfile(). */
++        if (data->sample_limit > 0) {
++            uint64_t samples_left = data->sample_limit - data->samples_processed;
++            if (samples_left == 0) {
++                pw_main_loop_quit(data->loop);
++                return;
++            }
++            n_frames = SPA_MIN(n_frames, (int)samples_left);
++        }
+ 		n_fill_frames = data->fill(data, p, n_frames, &null_frame);
+ 
++        if (data->sample_limit > 0 && n_fill_frames > 0)
++            data->samples_processed += n_fill_frames;
+ 		if (null_frame) {
+ 			/* A null frame is not to be confused with the drain scenario.
+ 			 * In this case, we want to continue streaming, but in this
+@@ -865,9 +897,14 @@ static void on_process(void *userdata)
+ 		} else if (n_fill_frames > 0 || n_frames == 0) {
+ 			d->chunk->offset = 0;
+ 			d->chunk->stride = data->stride;
++            if (data->spa_format == SPA_AUDIO_FORMAT_ENCODED) {
++                d->chunk->size = (uint32_t)n_fill_frames; /* bytes */
++                b->size = (uint32_t)n_fill_frames;
++            } else {
+ 			d->chunk->size = n_fill_frames * data->stride;
+-			have_data = true;
+ 			b->size = n_fill_frames;
++            }
++            have_data = true;
+ 		} else if (n_fill_frames < 0) {
+ 			fprintf(stderr, "fill error %d\n", n_fill_frames);
+ 		} else {
+@@ -884,7 +921,19 @@ static void on_process(void *userdata)
+ 
+ 		n_frames = size / data->stride;
+ 
+-		n_fill_frames = data->fill(data, p, n_frames, &null_frame);
++        if (data->sample_limit > 0) {
++            uint64_t samples_left = data->sample_limit - data->samples_processed;
++            if (samples_left == 0) {
++                pw_main_loop_quit(data->loop);
++                return;
++            }
++            n_frames = SPA_MIN(n_frames, (int)samples_left);
++        }
++
++        n_fill_frames = data->fill(data, p, n_frames, &null_frame);
++
++        if (data->sample_limit > 0 && n_fill_frames > 0)
++            data->samples_processed += n_fill_frames;
+ 
+ 		have_data = true;
+ 	}
+@@ -1033,9 +1082,9 @@ static void show_usage(const char *name, bool is_error)
+ 		     "  -r, --record                          Recording mode\n"
+ 		     "  -m, --midi                            Midi mode\n"
+ 		     "  -d, --dsd                             DSD mode\n"
+-#ifdef HAVE_PW_CAT_FFMPEG_INTEGRATION
++
+ 		     "  -o, --encoded                         Encoded mode\n"
+-#endif
++
+ 		     "\n"), fp);
+ 	}
+ }
+@@ -1179,6 +1228,329 @@ static int dff_play(struct data *d, void *src, unsigned int n_frames, bool *null
+ 	return dff_file_read(d->dff.file, src, n_frames, &d->dff.layout);
+ }
+ 
++static const int mpeg_sr_base[3] = {44100, 48000, 32000};
++
++/* AAC ADTS sample rates table */
++static const int aac_sample_rates[13] = {
++    96000, 88200, 64000, 48000, 44100, 32000,
++    24000, 22050, 16000, 12000, 11025, 8000, 7350
++};
++
++/* ------- small helpers ------- */
++
++/* find a byte sequence in a buffer (portable replacement for memmem) */
++static const uint8_t *find_bytes(const uint8_t *hay, size_t hlen,
++                                 const uint8_t *needle, size_t nlen)
++{
++    if (!hay || !needle || nlen == 0 || hlen < nlen) return NULL;
++    for (size_t i = 0; i <= hlen - nlen; ++i) {
++        if (hay[i] == needle[0] && memcmp(hay + i, needle, nlen) == 0)
++            return hay + i;
++    }
++    return NULL;
++}
++
++/* Read up to max_bytes from file */
++static ssize_t read_prefix(const char *filename, uint8_t *buf, size_t max_bytes)
++{
++    int fd = open(filename, O_RDONLY);
++    if (fd < 0) return -1;
++    ssize_t r = read(fd, buf, max_bytes);
++    close(fd);
++    return r;
++}
++
++/* ------- MP3 parsing ------- */
++
++static int mp3_is_frame_start(const uint8_t *p)
++{
++    if (p[0] != 0xFF || (p[1] & 0xE0) != 0xE0) return 0;  /* 11-bit sync */
++    uint8_t version_id = (p[1] >> 3) & 0x03;  /* 3=MPEG1, 2=MPEG2, 0=MPEG2.5 */
++    uint8_t layer      = (p[1] >> 1) & 0x03;  /* 1=Layer III */
++    uint8_t bitrate_ix = (p[2] >> 4) & 0x0F;
++    uint8_t sr_ix      = (p[2] >> 2) & 0x03;
++    if (version_id == 0x01) return 0;  /* reserved */
++    if (layer != 0x01)    return 0;    /* only Layer III */
++    if (bitrate_ix == 0x0F || bitrate_ix == 0x00) return 0;
++    if (sr_ix == 0x03) return 0;
++    return 1;
++}
++
++/* Parse MP3 header to sr/ch/frame_bytes/frame_dur_us */
++static int mp3_parse_header(const uint8_t *h,
++                            uint32_t *sr, uint32_t *ch,
++                            uint32_t *frame_bytes, uint32_t *frame_dur_us)
++{
++    if (!mp3_is_frame_start(h)) return 0;
++
++    uint8_t version_id = (h[1] >> 3) & 0x03;      /* 3=MPEG1, 2=MPEG2, 0=MPEG2.5 */
++    uint8_t sr_ix      = (h[2] >> 2) & 0x03;
++    uint8_t bitrate_ix = (h[2] >> 4) & 0x0F;
++    uint8_t padding    = (h[2] >> 1) & 0x01;
++    uint8_t mode       = (h[3] >> 6) & 0x03;      /* 3=single channel */
++
++    /* channels */
++    *ch = (mode == 3) ? 1u : 2u;
++
++    /* derive sample rate by version */
++    int base = mpeg_sr_base[sr_ix];
++    switch (version_id) {
++        case 3: *sr = base;     break;     /* MPEG1 */
++        case 2: *sr = base / 2; break;     /* MPEG2 */
++        case 0: *sr = base / 4; break;     /* MPEG2.5 */
++        default: return 0;
++    }
++
++    /* bitrate tables for Layer III (kbps) */
++    static const int br_mpeg1_l3[16] = {
++        0, 32, 40, 48, 56, 64, 80, 96,
++        112, 128, 160, 192, 224, 256, 320, 0
++    };
++    static const int br_mpeg2_l3[16] = {
++        0, 8, 16, 24, 32, 40, 48, 56,
++        64, 80, 96, 112, 128, 144, 160, 0
++    };
++    int br_kbps = (version_id == 3) ? br_mpeg1_l3[bitrate_ix] : br_mpeg2_l3[bitrate_ix];
++    if (br_kbps == 0) return 0;
++
++    /* frame size:
++       MPEG1: 144 * br / sr + padding, samples/frame=1152
++       MPEG2/2.5: 72 * br / sr + padding, samples/frame=576 */
++    int mul = (version_id == 3) ? 144 : 72;
++    uint32_t fb = (uint32_t)((mul * (br_kbps * 1000)) / *sr) + padding;
++    *frame_bytes = fb;
++
++    uint32_t spf = (version_id == 3) ? 1152u : 576u;
++    *frame_dur_us = (uint32_t)((1000000ULL * spf) / *sr);
++    return 1;
++}
++
++static int scan_mp3(const uint8_t *buf, size_t len,
++                    uint32_t *sr, uint32_t *ch, uint32_t *frame_bytes, uint32_t *frame_dur_us)
++{
++    /* If ID3v2 present, skip it; otherwise just scan forward for sync */
++    size_t off = 0;
++    if (len >= 10 && memcmp(buf, "ID3", 3) == 0) {
++        size_t tag_size = ((buf[6] & 0x7F) << 21) |
++                          ((buf[7] & 0x7F) << 14) |
++                          ((buf[8] & 0x7F) << 7)  |
++                          (buf[9] & 0x7F);
++        off = 10 + tag_size;
++        if (off > len) off = 0; /* malformed tag -> scan from 0 */
++    }
++
++    for (size_t i = off; i + 4 <= len; ++i) {
++        if (mp3_parse_header(buf + i, sr, ch, frame_bytes, frame_dur_us))
++            return 1;
++    }
++    return 0;
++}
++
++/* ------- AAC ADTS parsing ------- */
++
++static int aac_parse_adts(const uint8_t *h,
++                          uint32_t *sr, uint32_t *ch, uint32_t *frame_bytes, uint32_t *frame_dur_us)
++{
++    if (!(h[0] == 0xFF && (h[1] & 0xF0) == 0xF0)) return 0; /* sync 0xFFF */
++
++    int sr_index = (h[2] >> 2) & 0x0F;
++    if (sr_index >= 13) return 0;
++
++    *sr = (uint32_t)aac_sample_rates[sr_index];
++    *ch = (uint32_t)(((h[2] & 0x01) << 2) | ((h[3] >> 6) & 0x03));
++    if (*ch == 0) *ch = 2; /* fallback */
++
++    uint32_t flen = ((h[3] & 0x03) << 11) | (h[4] << 3) | ((h[5] >> 5) & 0x07);
++    *frame_bytes = (flen > 0) ? flen : 1024;
++
++    *frame_dur_us = (uint32_t)((1000000ULL * 1024) / *sr); /* AAC LC */
++    return 1;
++}
++
++static int scan_aac_adts(const uint8_t *buf, size_t len,
++                         uint32_t *sr, uint32_t *ch, uint32_t *frame_bytes, uint32_t *frame_dur_us)
++{
++    for (size_t i = 0; i + 7 <= len; ++i) {
++        if (aac_parse_adts(buf + i, sr, ch, frame_bytes, frame_dur_us))
++            return 1;
++    }
++    return 0;
++}
++
++/* ------- FLAC parsing (STREAMINFO) ------- */
++
++static int parse_flac_streaminfo(const uint8_t *si, size_t silen,
++                                 uint32_t *sr, uint32_t *ch)
++{
++    if (silen < 34) return 0;
++    /* Sample rate: 20 bits starting at byte 10 */
++    uint32_t s = ((si[10] << 12) | (si[11] << 4) | ((si[12] >> 4) & 0x0F)) & 0xFFFFF;
++    uint32_t c = ((si[12] >> 1) & 0x07) + 1;
++    if (s == 0) return 0;
++    *sr = s;
++    *ch = c ? c : 2;
++    return 1;
++}
++
++static int scan_flac(const uint8_t *buf, size_t len,
++                     uint32_t *sr, uint32_t *ch, uint32_t *frame_bytes, uint32_t *frame_dur_us)
++{
++    const uint8_t magic[] = {'f','L','a','C'};
++    const uint8_t *p = find_bytes(buf, len, magic, 4);
++    if (!p) return 0;
++    if ((size_t)(p - buf) + 8 > len) return 0;
++
++    /* Metadata block header follows: [is_last|type(7), length(24)] */
++    const uint8_t *mb = p + 4;
++    uint8_t type = mb[0] & 0x7F;
++    uint32_t length = (mb[1] << 16) | (mb[2] << 8) | mb[3];
++    const uint8_t *si = mb + 4;
++
++    if (type == 0 && (size_t)(si - buf) + length <= len) {
++        if (!parse_flac_streaminfo(si, length, sr, ch)) return 0;
++        /* Block size is variable; use a conservative frame_bytes */
++        *frame_bytes = 4096;
++        *frame_dur_us = (uint32_t)((1000000ULL * 4096) / *sr);
++        return 1;
++    }
++    return 0;
++}
++
++/* ------- Opus (Ogg) ------- */
++
++static int scan_opus(const uint8_t *buf, size_t len,
++                     uint32_t *sr, uint32_t *ch, uint32_t *frame_bytes, uint32_t *frame_dur_us)
++{
++    const uint8_t sig[] = {'O','p','u','s','H','e','a','d'};
++    const uint8_t *p = find_bytes(buf, len, sig, sizeof(sig));
++    if (!p) return 0;
++    /* Opus always decodes at 48 kHz; channel count at byte 9 */
++    *sr = 48000;
++    *ch = (len >= (size_t)(p - buf + 10)) ? p[9] : 2;
++    *frame_bytes = 960; /* nominal; varies */
++    *frame_dur_us = (uint32_t)((1000000ULL * 960) / *sr);
++    return 1;
++}
++
++/* ------- Vorbis (Ogg) ------- */
++
++static int scan_vorbis(const uint8_t *buf, size_t len,
++                       uint32_t *sr, uint32_t *ch, uint32_t *frame_bytes, uint32_t *frame_dur_us)
++{
++    /* Identification header: 0x01 'vorbis' + version(4) + channels(1) + samplerate(4 LE) */
++    const uint8_t sig[] = {'v','o','r','b','i','s'};
++    const uint8_t *p = find_bytes(buf, len, sig, sizeof(sig));
++    if (!p) return 0;
++    if (p == buf) return 0;
++    if (*(p - 1) != 0x01) {
++        /* Didn't land on identification header; fallback defaults */
++        *sr = 44100; *ch = 2;
++    } else {
++        size_t pos = (size_t)(p - buf);
++        if (pos + 7 + 9 > len) { *sr = 44100; *ch = 2; }
++        else {
++            uint8_t channels = buf[pos + 7 + 4]; /* after 'vorbis' + version */
++            uint32_t samplerate = (uint32_t)(
++                buf[pos + 7 + 5]        |
++                (buf[pos + 7 + 6] << 8) |
++                (buf[pos + 7 + 7] << 16)|
++                (buf[pos + 7 + 8] << 24));
++            *sr = samplerate ? samplerate : 44100;
++            *ch = channels ? channels : 2;
++        }
++    }
++    *frame_bytes = 1024;
++    *frame_dur_us = (uint32_t)((1000000ULL * 1024) / *sr);
++    return 1;
++}
++
++/* ------- Main detector ------- */
++
++static int detect_compressed_format(struct data *data, const char *filename)
++{
++    enum { MAX_SCAN = 1024 * 1024 }; /* scan up to 1MB */
++    uint8_t *buf = (uint8_t*)malloc(MAX_SCAN);
++    const char *ext = strrchr(filename, '.');
++    if (ext) ext++;	
++    if (!buf) {
++        fprintf(stderr, "detect_compressed_format: malloc failed\n");
++        return 0;
++    }
++    ssize_t r = read_prefix(filename, buf, MAX_SCAN);
++    if (r < 0) {
++        fprintf(stderr, "detect_compressed_format: open/read failed: %s\n", strerror(errno));
++        free(buf);
++        return 0;
++    }
++    if (r < 16) {
++        fprintf(stderr, "detect_compressed_format: file too small (%zd bytes)\n", r);
++        free(buf);
++        return 0;
++    }
++    size_t len = (size_t)r;
++
++    uint32_t sr=0, ch=0, frame_bytes=0, frame_dur_us=0;
++    if (strcasecmp(ext, "mp3") == 0) {
++    /* Try MP3 (scan past ID3) */
++    if (scan_mp3(buf, len, &sr, &ch, &frame_bytes, &frame_dur_us)) {
++        strlcpy(data->encoded.codec_name, "mp3", sizeof(data->encoded.codec_name));
++        data->encoded.sample_rate      = sr;
++        data->encoded.channels         = ch;
++        data->encoded.frame_size       = frame_bytes;
++        data->encoded.frame_duration_us= frame_dur_us;
++        free(buf);
++        return 1;
++    }
++   
++    } else if (strcasecmp(ext, "aac") == 0) {
++   /* Try AAC ADTS anywhere */
++    if (scan_aac_adts(buf, len, &sr, &ch, &frame_bytes, &frame_dur_us)) {
++        strlcpy(data->encoded.codec_name, "aac", sizeof(data->encoded.codec_name));
++        data->encoded.sample_rate      = sr;
++        data->encoded.channels         = ch;
++        data->encoded.frame_size       = frame_bytes;
++        data->encoded.frame_duration_us= frame_dur_us;
++        free(buf);
++        return 1;
++    }
++    } else if (strcasecmp(ext, "flac") == 0) { 
++    /* Try FLAC */
++    if (scan_flac(buf, len, &sr, &ch, &frame_bytes, &frame_dur_us)) {
++        strlcpy(data->encoded.codec_name, "flac", sizeof(data->encoded.codec_name));
++        data->encoded.sample_rate      = sr;
++        data->encoded.channels         = ch;
++        data->encoded.frame_size       = frame_bytes;
++        data->encoded.frame_duration_us= frame_dur_us;
++        free(buf);
++        return 1;
++    }
++    } else if (strcasecmp(ext, "opus") == 0) {
++    /* Try Opus (Ogg) */
++    if (scan_opus(buf, len, &sr, &ch, &frame_bytes, &frame_dur_us)) {
++        strlcpy(data->encoded.codec_name, "opus", sizeof(data->encoded.codec_name));
++        data->encoded.sample_rate      = sr;
++        data->encoded.channels         = ch;
++        data->encoded.frame_size       = frame_bytes;
++        data->encoded.frame_duration_us= frame_dur_us;
++        free(buf);
++        return 1;
++    }
++    } else  {
++    /* Try Vorbis (Ogg) */
++    if (scan_vorbis(buf, len, &sr, &ch, &frame_bytes, &frame_dur_us)) {
++        strlcpy(data->encoded.codec_name, "vorbis", sizeof(data->encoded.codec_name));
++        data->encoded.sample_rate      = sr;
++        data->encoded.channels         = ch;
++        data->encoded.frame_size       = frame_bytes;
++        data->encoded.frame_duration_us= frame_dur_us;
++        free(buf);
++        return 1;
++    }
++	}
++    free(buf);
++    fprintf(stderr, "detect_compressed_format: unsupported format\n");
++    return 0;
++}
+ static int setup_dsdfile(struct data *data)
+ {
+ 	if (data->mode == mode_record)
+@@ -1427,6 +1799,101 @@ static int setup_encodedfile(struct data *data)
+ 	return 0;
+ }
+ #endif
++static int encoded_playback_fill(struct data *d, void *dest,
++                                 unsigned int n_frames, bool *null_frame)
++{
++    const uint32_t frame_size = d->encoded.frame_size;
++    const uint32_t sample_rate = d->encoded.sample_rate;
++    const uint32_t frame_dur_us = d->encoded.frame_duration_us;
++    int64_t quantum_us = 0;
++
++    if (sample_rate == 0 || frame_size == 0) {
++        fprintf(stderr, "encoded_fill: invalid sample_rate=%u or frame_size=%u\n",
++                sample_rate, frame_size);
++        *null_frame = true;
++        return 0;
++    }
++
++    if (n_frames > 0)
++        quantum_us = ((int64_t)n_frames * 1000000LL) / sample_rate;
++
++    if (quantum_us > 0 &&
++        d->encoded.accumulated_excess_playtime >= quantum_us) {
++        fprintf(stderr,
++                "Skipping cycle to compensate excess playtime (excess: %" PRId64 " us, quantum: %" PRId64 " us)\n",
++                d->encoded.accumulated_excess_playtime, quantum_us);
++        d->encoded.accumulated_excess_playtime -= quantum_us;
++        if (d->encoded.accumulated_excess_playtime < 0)
++            d->encoded.accumulated_excess_playtime = 0;
++        *null_frame = true;
++        return 0;
++    }
++
++    int ret = read(d->encoded.fd, dest, frame_size);
++    if (ret <= 0) {
++        fprintf(stderr, "encoded_fill: no encoded data or EOF\n");
++        *null_frame = true;
++        return 0;
++    }
++
++    if (quantum_us > 0 && frame_dur_us > quantum_us)
++        d->encoded.accumulated_excess_playtime += (frame_dur_us - quantum_us);
++
++    return ret; /* bytes read */
++}
++static int setup_encodedfile(struct data *data, const char *filename) {
++    /* Detect codec and initialize encoded fields */
++    if (!detect_compressed_format(data, filename)) {
++        fprintf(stderr, "Unsupported or unrecognized compressed format for '%s'\n", filename);
++        return -1;
++    }
++
++    /* Validate essential fields */
++    if (data->encoded.sample_rate == 0 ||
++        data->encoded.channels == 0 ||
++        data->encoded.frame_size == 0 ||
++        data->encoded.frame_duration_us == 0) {
++        fprintf(stderr,
++            "Invalid encoded setup: sr=%u ch=%u frame_size=%u frame_dur_us=%u\n",
++            data->encoded.sample_rate, data->encoded.channels,
++            data->encoded.frame_size, data->encoded.frame_duration_us);
++        return -1;
++    }
++
++    /* Prepare PipeWire properties */
++    snprintf(data->sample_rate_str, sizeof(data->sample_rate_str), "%u", data->encoded.sample_rate);
++    snprintf(data->channels_str, sizeof(data->channels_str), "%u", data->encoded.channels);
++
++    data->stride = 1; /* encoded path uses stride=1 */
++    data->spa_format = SPA_AUDIO_FORMAT_ENCODED;
++    data->encoded.accumulated_excess_playtime = 0;
++
++    data->props = pw_properties_new(
++        PW_KEY_MEDIA_TYPE, "Audio",
++        PW_KEY_MEDIA_CATEGORY, "Playback",
++        PW_KEY_MEDIA_ROLE, "Music",
++        PW_KEY_MEDIA_FILENAME, filename,
++        PW_KEY_MEDIA_NAME, filename,
++        "compress.offload", "true",
++        "audio.format", data->encoded.codec_name,
++        "audio.rate", data->sample_rate_str,
++        "audio.channels", data->channels_str,
++        NULL);
++
++    pw_log_info("Configured compress offload: codec=%s rate=%s channels=%s frame_size=%u frame_dur_us=%u",
++                data->encoded.codec_name, data->sample_rate_str, data->channels_str,
++                data->encoded.frame_size, data->encoded.frame_duration_us);
++
++    /* Open file */
++    data->encoded.fd = open(filename, O_RDONLY);
++    if (data->encoded.fd < 0) {
++        perror("open");
++        return -1;
++    }
++
++    data->fill = encoded_playback_fill;
++    return 0;
++}
+ 
+ static int setup_sndfile(struct data *data)
+ {
+@@ -1640,11 +2107,9 @@ int main(int argc, char *argv[])
+ 	} else if (spa_streq(prog, "pw-dsdplay")) {
+ 		data.mode = mode_playback;
+ 		data.data_type = TYPE_DSD;
+-#ifdef HAVE_PW_CAT_FFMPEG_INTEGRATION
+ 	} else if (spa_streq(prog, "pw-encplay")) {
+ 		data.mode = mode_playback;
+ 		data.data_type = TYPE_ENCODED;
+-#endif
+ 	} else
+ 		data.mode = mode_none;
+ 
+@@ -1661,11 +2126,7 @@ int main(int argc, char *argv[])
+ 		goto error_no_props;
+ 	}
+ 
+-#ifdef HAVE_PW_CAT_FFMPEG_INTEGRATION
+ 	while ((c = getopt_long(argc, argv, "hvprmdoR:q:P:", long_options, NULL)) != -1) {
+-#else
+-	while ((c = getopt_long(argc, argv, "hvprmdR:q:P:", long_options, NULL)) != -1) {
+-#endif
+ 
+ 		switch (c) {
+ 
+@@ -1701,12 +2162,9 @@ int main(int argc, char *argv[])
+ 		case 'd':
+ 			data.data_type = TYPE_DSD;
+ 			break;
+-
+-#ifdef HAVE_PW_CAT_FFMPEG_INTEGRATION
+ 		case 'o':
+ 			data.data_type = TYPE_ENCODED;
+ 			break;
+-#endif
+ 
+ 		case 'R':
+ 			data.remote_name = optarg;
+@@ -1872,11 +2330,9 @@ int main(int argc, char *argv[])
+ 		case TYPE_DSD:
+ 			ret = setup_dsdfile(&data);
+ 			break;
+-#ifdef HAVE_PW_CAT_FFMPEG_INTEGRATION
+ 		case TYPE_ENCODED:
+-			ret = setup_encodedfile(&data);
++			ret = setup_encodedfile(&data,data.filename);
+ 			break;
+-#endif
+ 		default:
+ 			ret = -ENOTSUP;
+ 			break;
+@@ -1908,21 +2364,34 @@ int main(int argc, char *argv[])
+ 		pw_properties_set(data.props, PW_KEY_TARGET_OBJECT, data.target);
+ 
+ 	switch (data.data_type) {
+-#ifdef HAVE_PW_CAT_FFMPEG_INTEGRATION
++
+ 	case TYPE_ENCODED:
+ 	{
+ 		struct spa_audio_info info;
+ 
+ 		spa_zero(info);
+ 		info.media_type = SPA_MEDIA_TYPE_audio;
+-
++                
++        uint8_t buffer[256];
++        struct spa_pod_builder b;
++        spa_pod_builder_init(&b, buffer, sizeof(buffer));
++
++        const struct spa_pod *format = spa_pod_builder_add_object(&b,
++                         SPA_TYPE_OBJECT_Format, SPA_PARAM_EnumFormat,
++                         SPA_FORMAT_mediaType,    SPA_POD_Id(SPA_MEDIA_TYPE_audio),
++                         SPA_FORMAT_mediaSubtype, SPA_POD_Id(SPA_MEDIA_SUBTYPE_mp3),
++                         SPA_FORMAT_AUDIO_format, SPA_POD_Id(SPA_AUDIO_FORMAT_ENCODED),
++                         SPA_FORMAT_AUDIO_rate,   SPA_POD_Int(44100),
++                         SPA_FORMAT_AUDIO_channels, SPA_POD_Int(2));
++#ifdef HAVE_PW_CAT_FFMPEG_INTEGRATION
+ 		ret = av_codec_params_to_audio_info(&data, data.encoded.audio_stream->codecpar, &info);
+ 		if (ret < 0)
+ 			goto error_bad_file;
+-		params[n_params++] = spa_format_audio_build(&b, SPA_PARAM_EnumFormat, &info);
++        params[n_params++] = spa_format_audio_build(&b, SPA_PARAM_EnumFormat, &info);		
++#endif
++		params[n_params++] = format;
+ 		break;
+ 	}
+-#endif
+ 	case TYPE_PCM:
+ 	{
+ 		struct spa_audio_info_raw info;
+-- 
+2.34.1
+

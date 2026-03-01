@@ -48,3 +48,8 @@ miscfiles_read_localization(qcom_qtee_supplicant_t)
 
 # Allow qtee_supplicant to access wakelocks under /sys/power
 dev_rw_sysfs(qcom_qtee_supplicant_t)
+
+# Allow qtee_supplicant to read /data
+files_search_default(qcom_qtee_supplicant_t)
+
+dev_read_input(qcom_qtee_supplicant_t)

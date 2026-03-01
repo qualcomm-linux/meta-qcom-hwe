@@ -38,6 +38,24 @@ RDEPENDS:${PN} += " \
     ${@oe.utils.conditional('TIMESERVICES', 'True', 'time-services', '', d)} \
 "
 
+RDEPENDS:${PN}:append:qcs9100 = " sail-can"
+
+
+SAIL_MAILBOX_KERNEL:qcs9100 = 'True'
+SAIL_MAILBOX:qcs9100 = 'True'
+
+
+RDEPENDS:${PN}:qcom-custom-bsp = "\
+     ${@oe.utils.conditional('SAIL_MAILBOX', 'True', 'sail-mailbox', '', d)} \
+"
+
+
+RDEPENDS:${PN}:qcom-custom-bsp = "\
+     ${@oe.utils.conditional('SAIL_MAILBOX_KERNEL', 'True', 'sail-mailbox-ipcc', '', d)} \
+     ${@oe.utils.conditional('SAIL_MAILBOX_KERNEL', 'True', 'sail-devicetree', '', d)} \
+"
+
+
 RDEPENDS:${PN}-vm += " \
     ${@oe.utils.conditional('DIAG', 'True', 'diag', '', d)} \
     ${@oe.utils.conditional('DIAGROUTER', 'True', 'diag-router', '', d)} \

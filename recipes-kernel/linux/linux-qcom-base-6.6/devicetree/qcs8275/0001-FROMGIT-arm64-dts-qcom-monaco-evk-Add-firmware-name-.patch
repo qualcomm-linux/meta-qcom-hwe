@@ -1,0 +1,43 @@
+From 453078a91f32367e3c25ac529f617bf90e9d09f9 Mon Sep 17 00:00:00 2001
+From: Viken Dadhaniya <viken.dadhaniya@oss.qualcomm.com>
+Date: Thu, 25 Sep 2025 09:56:05 +0530
+Subject: [PATCH 1/1] FROMGIT: arm64: dts: qcom: monaco-evk: Add firmware-name
+ to QUPv3 nodes
+
+Traditionally, firmware loading for Serial Engines (SE) in the QUP hardware
+of Qualcomm SoCs has been managed by TrustZone (TZ). While this approach
+ensures secure SE assignment and access control, it limits flexibility for
+developers who need to enable various protocols on different SEs.
+
+Add the firmware-name property to QUPv3 nodes in the device tree to enable
+firmware loading from the Linux environment. Handle SE assignments and
+access control permissions directly within Linux, removing the dependency
+on TrustZone.
+
+Change-Id: Ia224375eab75aed5a155effa75ec3d52ffc5e923
+Signed-off-by: Viken Dadhaniya <viken.dadhaniya@oss.qualcomm.com>
+Upstream-Status: Merged [https://lore.kernel.org/all/20250925042605.1388951-1-viken.dadhaniya@oss.qualcomm.com/]
+---
+ arch/arm64/boot/dts/qcom/monaco-evk.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/monaco-evk.dts b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+index ef4209eb7d91..17b0a1f0ac7c 100644
+--- a/arch/arm64/boot/dts/qcom/monaco-evk.dts
++++ b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+@@ -411,10 +411,12 @@ &iris {
+ };
+ 
+ &qupv3_id_0 {
++	firmware-name = "qcom/qcs8300/qupv3fw.elf";
+ 	status = "okay";
+ };
+ 
+ &qupv3_id_1 {
++	firmware-name = "qcom/qcs8300/qupv3fw.elf";
+ 	status = "okay";
+ };
+ 
+-- 
+2.34.1
+

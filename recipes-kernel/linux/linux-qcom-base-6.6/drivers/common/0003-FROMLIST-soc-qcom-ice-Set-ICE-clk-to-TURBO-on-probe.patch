@@ -20,7 +20,7 @@ targets where ICE is integrated with the storage controller,
 fall back to using standard clock APIs to set the frequency.
 
 Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
-Upstream-Status: Submitted
+Upstream-Status: Submitted [https://lore.kernel.org/all/20251121-enable-ufs-ice-clock-scaling-v2-3-66cb72998041@oss.qualcomm.com/]
 ---
  drivers/soc/qcom/ice.c | 10 ++++++++++
  1 file changed, 10 insertions(+)

@@ -23,6 +23,17 @@ S = "${WORKDIR}/git"
 
 CARGO_BUILD_FLAGS += "--features=gunyah"
 
+# TODO: migrate this recipe to make use of
+# bitbake managed cargo dependencies rather than
+# allow cargo tool to download the dependencies.
+# This will allow removal of network access during
+# compilation and will be more aligned to make bitbake
+# download and setup the cargo dependencies. This sounds
+# more like the yocto way of doing things right.
+# See: https://crates.io/crates/cargo-bitbake
+CARGO_BUILD_FLAGS:remove = "--frozen"
+CARGO_BUILD_FLAGS:remove = "--offline"
+
 do_configure:prepend() {
     cd ${WORKDIR}/git
     git submodule update --init --recursive

@@ -1,0 +1,125 @@
+From b0bd9e87ce843edaeed5a6fd1836b00cff4cf92a Mon Sep 17 00:00:00 2001
+From: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Date: Thu, 4 Sep 2025 14:09:14 +0800
+Subject: [PATCH] PENDING: arm64: dts: qcom: qcs9075-iq-9075-evk: Enable IMX577
+ camera sensor
+
+Enable IMX577 camera sensor for qcs9075 evk board.
+
+Signed-off-by: Wenmeng Liu <quic_wenmliu@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/linux-arm-msm/20250815-rb8_camera-v2-3-6806242913ed@quicinc.com/]
+---
+ .../boot/dts/qcom/qcs9075-iq-9075-evk.dts     | 83 +++++++++++++++++++
+ 1 file changed, 83 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index 3151f32ca39e..501548ab942f 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -147,6 +147,14 @@ dummy_reg: regulator-dummy {
+ 		regulator-min-microvolt = <2950000>;
+ 		regulator-max-microvolt = <2950000>;
+ 	};
++
++	vreg_cam1_1p8: regulator-cam1 {
++		compatible = "regulator-fixed";
++		regulator-name = "vreg_cam1";
++		startup-delay-us = <10000>;
++		enable-active-high;
++		gpio = <&pmm8654au_0_gpios 8 GPIO_ACTIVE_HIGH>;
++	};
+ };
+ 
+ &apps_rsc {
+@@ -380,6 +388,65 @@ vreg_l8e: ldo8 {
+ 	};
+ };
+ 
++&camss {
++	vdda-pll-supply = <&vreg_l1c>;
++	vdda-phy-supply = <&vreg_l4a>;
++
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@1 {
++			reg = <1>;
++
++			csiphy1_ep: endpoint {
++				clock-lanes = <7>;
++				data-lanes = <0 1 2 3>;
++				remote-endpoint = <&imx577_ep1>;
++			};
++		};
++	};
++};
++
++&cci1 {
++	pinctrl-0 = <&cci1_0_default>;
++	pinctrl-1 = <&cci1_0_sleep>;
++
++	status = "okay";
++};
++
++&cci1_i2c0 {
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	camera@1a {
++		compatible = "sony,imx577";
++		reg = <0x1a>;
++
++		reset-gpios = <&tlmm 133 GPIO_ACTIVE_LOW>;
++		pinctrl-0 = <&cam1_default>;
++		pinctrl-names = "default";
++
++		clocks = <&camcc CAM_CC_MCLK1_CLK>;
++		assigned-clocks = <&camcc CAM_CC_MCLK1_CLK>;
++		assigned-clock-rates = <24000000>;
++
++		dovdd-supply = <&vreg_s4a>;
++		avdd-supply = <&vreg_cam1_1p8>;
++
++		port {
++			imx577_ep1: endpoint {
++				clock-lanes = <7>;
++				link-frequencies = /bits/ 64 <600000000>;
++				data-lanes = <0 1 2 3>;
++				remote-endpoint = <&csiphy1_ep>;
++			};
++		};
++	};
++};
++
+ &ethernet0 {
+ 	phy-handle = <&sgmii_phy0>;
+ 	phy-mode = "sgmii";
+@@ -1048,6 +1115,22 @@ &spi19 {
+ };
+ 
+ &tlmm {
++	cam1_default: cam1-default-state {
++		mclk-pins {
++			pins = "gpio73";
++			function = "cam_mclk";
++			drive-strength = <2>;
++			bias-disable;
++		};
++
++		rst-pins {
++			pins = "gpio133";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-disable;
++		};
++	};
++
+ 	dp0_hot_plug_det: dp0-hot-plug-det-state {
+ 		pins = "gpio101";
+ 		function = "edp0_hot";
+-- 
+2.34.1
+

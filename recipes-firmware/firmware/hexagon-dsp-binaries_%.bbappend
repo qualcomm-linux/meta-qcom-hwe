@@ -26,13 +26,26 @@ do_install:append:qcom (){
         fwdir=$(basename "$dir")
         bbdebug 1 "Processing firmware directory: ${fwdir}"
 
-        socdir=$(echo "${fwdir/_dspso/}" | tr '[:upper:]' '[:lower:]')
+        socdir=$(printf '%s' "$fwdir" | sed 's/_dspso//g' | tr '[:upper:]' '[:lower:]')
         install -d ${D}/${socdir}${nonarch_base_libdir}/dsp
         [ -d "${WORKDIR}/$fwdir/usr/lib/dsp" ] && \
         find "${WORKDIR}/$fwdir/usr/lib/dsp" -maxdepth 1 -type d \
                 -exec cp -r {} ${D}/${socdir}${nonarch_base_libdir}/dsp \;
     done
 }
+
+do_hexagon_dsp_binaries_pkgd_fixup() {
+    for soc in qcm6490 qcs615 qcs8300 qcs9100; do
+        if [ -d "${PKGD}/${soc}${nonarch_base_libdir}/dsp" ]; then
+            install -d "${PKGD}${nonarch_base_libdir}/dsp/"
+            cp -a "${PKGD}/${soc}${nonarch_base_libdir}/dsp/." "${PKGD}${nonarch_base_libdir}/dsp/"
+        fi
+
+    done
+
+}
+
+addtask hexagon_dsp_binaries_pkgd_fixup after do_package before do_package_write_rpm
 
 DSP_UPDATE_PACKAGES = " \
     ${PN}-qcm6490-updates \

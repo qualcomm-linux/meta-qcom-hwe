@@ -1,4 +1,4 @@
-From c2f292248941b5ee6f314bf6afa86cea0b156517 Mon Sep 17 00:00:00 2001
+From 746ec50aa58be22619b2ed1c8d7f8b2878eea5f7 Mon Sep 17 00:00:00 2001
 From: Bartosz Golaszewski <brgl@bgdev.pl>
 Date: Sun, 1 Dec 2024 21:58:57 +0530
 Subject: [PATCH 1/1] FROMLIST: ufs: core: add support for deriving the
@@ -20,11 +20,11 @@ Upstream-Status: Submitted [https://lore.kernel.org/all/20241011-wrapped-keys-v7
  2 files changed, 18 insertions(+)
 
 diff --git a/drivers/ufs/core/ufshcd-crypto.c b/drivers/ufs/core/ufshcd-crypto.c
-index c42a537053f4..247c1eb225aa 100644
+index 64389e8769108..2530239d42afa 100644
 --- a/drivers/ufs/core/ufshcd-crypto.c
 +++ b/drivers/ufs/core/ufshcd-crypto.c
-@@ -119,6 +119,20 @@ static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
- 	return ufshcd_clear_keyslot(hba, slot);
+@@ -113,6 +113,20 @@ static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
+ 	return ufshcd_program_key(hba, NULL, &cfg, slot);
  }
  
 +static int ufshcd_crypto_derive_sw_secret(struct blk_crypto_profile *profile,
@@ -41,10 +41,10 @@ index c42a537053f4..247c1eb225aa 100644
 +	return -EOPNOTSUPP;
 +}
 +
- bool ufshcd_crypto_enable(struct ufs_hba *hba)
- {
- 	if (!(hba->caps & UFSHCD_CAP_CRYPTO))
-@@ -132,6 +146,7 @@ bool ufshcd_crypto_enable(struct ufs_hba *hba)
+ /*
+  * Reprogram the keyslots if needed, and return true if CRYPTO_GENERAL_ENABLE
+  * should be used in the host controller initialization sequence.
+@@ -134,6 +148,7 @@ bool ufshcd_crypto_enable(struct ufs_hba *hba)
  static const struct blk_crypto_ll_ops ufshcd_crypto_ops = {
  	.keyslot_program	= ufshcd_crypto_keyslot_program,
  	.keyslot_evict		= ufshcd_crypto_keyslot_evict,
@@ -53,13 +53,13 @@ index c42a537053f4..247c1eb225aa 100644
  
  static enum blk_crypto_mode_num
 diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 2b6050d127f6..89715e7dd25d 100644
+index 5cccdf270fa1e..e51484fc537fe 100644
 --- a/include/ufs/ufshcd.h
 +++ b/include/ufs/ufshcd.h
-@@ -367,6 +367,9 @@ struct ufs_hba_variant_ops {
- 	int	(*program_key)(struct ufs_hba *hba,
- 			       const struct blk_crypto_key *bkey,
- 			       const union ufs_crypto_cfg_entry *cfg, int slot);
+@@ -371,6 +371,9 @@ struct ufs_hba_variant_ops {
+ 	int	(*fill_crypto_prdt)(struct ufs_hba *hba,
+ 				    const struct bio_crypt_ctx *crypt_ctx,
+ 				    void *prdt, unsigned int num_segments);
 +	int	(*derive_sw_secret)(struct ufs_hba *hba, const u8 wkey[],
 +				    unsigned int wkey_size,
 +				    u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE]);

@@ -1,0 +1,118 @@
+From 7ceef2f08e17d968e801e3a8c67b0183e064c876 Mon Sep 17 00:00:00 2001
+From: Sushrut Shree Trivedi <quic_sushruts@quicinc.com>
+Date: Thu, 20 Nov 2025 11:08:39 +0530
+Subject: [PATCH] FROMLIST: arm64: dts: qcom: monaco-evk: Enable PCIe0 & PCIe1
+
+Enables PCIe0 and PCIe1 controller and phy-nodes.
+
+PCIe0 is routed to an m.2 E key connector on the mainboard for wifi
+attaches while PCIe1 routes to a standard PCIe x4 expansion slot.
+
+Change-Id: I68ebcc733495e08de2bd4bd746d5b07ab91dde67
+Signed-off-by: Sushrut Shree Trivedi <quic_sushruts@quicinc.com>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20251111-monaco-evk-pci-v1-1-8013d0d6a7ca@quicinc.com]
+---
+ arch/arm64/boot/dts/qcom/monaco-evk.dts | 80 +++++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/monaco-evk.dts b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+index 35a23b8b2abe..0f7e00ecf403 100644
+--- a/arch/arm64/boot/dts/qcom/monaco-evk.dts
++++ b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+@@ -357,6 +357,40 @@ &iris {
+ 	status = "okay";
+ };
+ 
++&pcie0 {
++	perst-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
++
++	pinctrl-0 = <&pcie0_default_state>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pcie0_phy {
++	vdda-phy-supply = <&vreg_l6a>;
++	vdda-pll-supply = <&vreg_l5a>;
++
++	status = "okay";
++};
++
++&pcie1 {
++	perst-gpios = <&tlmm 23 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 21 GPIO_ACTIVE_HIGH>;
++
++	pinctrl-0 = <&pcie1_default_state>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pcie1_phy {
++	vdda-phy-supply = <&vreg_l6a>;
++	vdda-pll-supply = <&vreg_l5a>;
++
++	status = "okay";
++};
++
+ &qupv3_id_0 {
+ 	status = "okay";
+ };
+@@ -406,6 +440,52 @@ ethernet0_mdio: ethernet0-mdio-pins {
+ 		};
+ 	};
+ 
++	pcie0_default_state: pcie0-default-state {
++		wake-pins {
++			pins = "gpio0";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++
++		clkreq-pins {
++			pins = "gpio1";
++			function = "pcie0_clkreq";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++
++		perst-pins {
++			pins = "gpio2";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
++	};
++
++	pcie1_default_state: pcie1-default-state {
++		wake-pins {
++			pins = "gpio21";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++
++		clkreq-pins {
++			pins = "gpio22";
++			function = "pcie1_clkreq";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++
++		perst-pins {
++			pins = "gpio23";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
++	};
++
+ 	qup_i2c1_default: qup-i2c1-state {
+ 		pins = "gpio19", "gpio20";
+ 		function = "qup0_se1";
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+

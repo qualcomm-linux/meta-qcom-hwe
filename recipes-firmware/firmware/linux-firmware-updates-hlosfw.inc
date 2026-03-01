@@ -25,7 +25,7 @@ do_install:append:qcom (){
         bbdebug 1 "Processing firmware directory: ${fwdir}"
 
         # Copy all except 'lib/firmware/updates'
-        socdir=$(echo "${fwdir/_fw/}" | tr '[:upper:]' '[:lower:]')
+        socdir=$(printf '%s' "$fwdir" | sed 's/_fw//g' | tr '[:upper:]' '[:lower:]')
         install -d ${D}/${socdir}${FIRMWARE_UPDATES_DIR}
         [ -d "${WORKDIR}/$fwdir/lib/firmware" ] && \
         find "${WORKDIR}/$fwdir/lib/firmware" -mindepth 1 -maxdepth 1 -type d ! -name "updates" \
@@ -75,6 +75,24 @@ python populate_packages:append() {
     hlosfw_update_packages(d, 'QCS615_HLOSFW_UPDATE_PACKAGES')
 }
 
+do_hlosfw_pkgd_fixup() {
+    for soc in qcm6490 qcs615 qcs8300 qcs9100; do
+        if [ -d "${PKGD}/${soc}${FIRMWARE_UPDATES_DIR}" ]; then
+            install -d "${PKGD}${FIRMWARE_UPDATES_DIR}"
+            cp -a "${PKGD}/${soc}${FIRMWARE_UPDATES_DIR}/." "${PKGD}${FIRMWARE_UPDATES_DIR}/"
+        fi
+
+    done
+
+    if [ -d "${PKGD}${FIRMWARE_UPDATES_DIR}/qcom" ]; then
+        install -d "${PKGD}${nonarch_base_libdir}/firmware/qcom/"
+        cp -a "${PKGD}${FIRMWARE_UPDATES_DIR}/qcom/." "${PKGD}${nonarch_base_libdir}/firmware/qcom/"
+    fi
+
+}
+
+addtask hlosfw_pkgd_fixup after do_package before do_package_write_rpm
+
 QCM6490_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-ath11k-wcn6750-updates \
   ${PN}-qcacld-wcn6855-updates \
@@ -84,6 +102,7 @@ QCM6490_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcm6490-qca-qca2066-hpbtfw-updates \
   ${PN}-qcm6490-qca-qca2066-updates \
   ${PN}-qcm6490-qca-qca61x4-usb-updates \
+  ${PN}-qcm6490-qca-wcn685x-updates \
   ${PN}-qcm6490-qcom-tzapps-updates \
   ${PN}-qcom-qcm6490-audio-updates \
   ${PN}-qcom-qcm6490-compute-updates \
@@ -107,6 +126,7 @@ QCS9100_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcs9100-qca-qca2066-updates \
   ${PN}-qcs9100-qca-qca61x4-usb-updates \
   ${PN}-qcs9100-qca-qca6698-updates \
+  ${PN}-qcs9100-qca-wcn685x-updates \
   ${PN}-qcs9100-qcom-tzapps-updates \
 "
 
@@ -121,6 +141,7 @@ QCS8300_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcs8300-qca-qca2066-updates \
   ${PN}-qcs8300-qca-qca61x4-usb-updates \
   ${PN}-qcs8300-qca-qca6698-updates \
+  ${PN}-qcs8300-qca-wcn685x-updates \
   ${PN}-qcs8300-qcom-tzapps-updates \
 "
 
@@ -204,13 +225,11 @@ FILES:${PN}-qcs8300-qca-qca2066-updates = " \
 SUMMARY:${PN}-qcs9100-qca-qca6698-updates = "QCA6698 firmware update files"
 FILES:${PN}-qcs9100-qca-qca6698-updates = " \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpbtfw21.tlv* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b2* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b2* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.bin* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b* \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_losslessg.bin \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48K.bin \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48Kg.bin \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.bin \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPOg.bin \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPO.bin \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_lossless.bin \
@@ -219,13 +238,11 @@ FILES:${PN}-qcs9100-qca-qca6698-updates = " \
 SUMMARY:${PN}-qcs8300-qca-qca6698-updates = "QCA6698 firmware update files"
 FILES:${PN}-qcs8300-qca-qca6698-updates = " \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpbtfw21.tlv* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b2* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b2* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.bin* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21.b* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.b* \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_losslessg.bin \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48K.bin \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_48Kg.bin \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21g.bin \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPOg.bin \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_LPO.bin \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/hpnv21_AA_lossless.bin \
@@ -256,6 +273,29 @@ SUMMARY:${PN}-qcs8300-qca-qca61x4-usb-updates = "QCS8300 QCA QCA61x4 USB firmwar
 FILES:${PN}-qcs8300-qca-qca61x4-usb-updates = " \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/nvm_usb_*.bin* \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/rampatch_usb_*.bin* \
+"
+
+SUMMARY:${PN}-qcm6490-qca-wcn685x-updates = "QCM6490 QCA wcn685x firmware update files"
+FILES:${PN}-qcm6490-qca-wcn685x-updates = " \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/wcnhpbtfw21.tlv* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/wcnhpbtfw21g* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21.b* \
+  qcm6490${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21* \
+"
+SUMMARY:${PN}-qcs9100-qca-wcn685x-updates = "QCS9100 QCA wcn685x firmware update files"
+FILES:${PN}-qcs9100-qca-wcn685x-updates = " \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/wcnhpbtfw21.tlv* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21.b* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21g.* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21* \
+"
+
+SUMMARY:${PN}-qcs8300-qca-wcn685x-updates = "QCS8300 QCA wcn685x firmware update files"
+FILES:${PN}-qcs8300-qca-wcn685x-updates = " \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/wcnhpbtfw21.tlv* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21.b* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21g.b* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21* \
 "
 
 SUMMARY:${PN}-qcom-qcm6490-audio-updates = "QCOM qcom-qcm6490-audio firmware overlay"

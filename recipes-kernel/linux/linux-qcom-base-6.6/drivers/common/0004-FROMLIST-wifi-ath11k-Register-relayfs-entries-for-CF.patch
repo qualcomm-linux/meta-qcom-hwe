@@ -1,0 +1,143 @@
+From 534f0d6c409ee1217668318ee95b9e0fb659fd46 Mon Sep 17 00:00:00 2001
+From: Qian Zhang <zhangq@qti.qualcomm.com>
+Date: Fri, 19 Dec 2025 09:43:21 +0800
+Subject: [PATCH 4/6] FROMLIST: wifi: ath11k: Register relayfs entries for CFR
+ dump
+
+Provide a relayfs interface to collect the CFR dump from the user space.
+
+'/sys/kernel/debug/ieee80211/phyX/ath11k/cfr_capture' is exposed to user
+space to get CFR data.
+
+CFR format to user space:
+ ___________________________________________
+| CFR header | CFR payload | CFR tail data |
+|____________|_____________|_______________|
+
+CFR header contains the following fields,
+
+* Start magic number 0xDEADBEAF - 4 bytes
+* vendor id - 4 bytes
+* cfr metadata version - 1 byte
+* cfr data version - 1 byte
+* device type - 1 byte
+* platform type - 1 byte
+* CFR metadata length - 4 bytes
+* metadata - 92 bytes
+        peer mac - 6 bytes
+        capture status - 1 byte (1 for success 0 for failure)
+        capture_bw - 1 byte
+        channel_bw - 1 byte
+        phy_mode - 1 byte
+        prim20_chan - 2 bytes
+        center_freq1 - 2 bytes
+        center_freq2 - 2 bytes
+        capture_mode - 1 byte
+        capture_type - 1 byte
+        sts_count - 1 byte
+        num_rx_chain - 1 byte
+        timestamp - 4 bytes
+        length - 4 bytes
+        chain_rssi - 32 bytes (4 bytes for each chain)
+        chain_phase - 16 bytes (2 bytes for each chain)
+        cfo_measurement - 4 bytes
+        agc_gain - 8 bytes (1 bytes for each chain)
+        rx_start_ts - 4 bytes
+
+CFR payload:
+
+CFR payload contains 8bytes of ucode header followed by the tone
+information. Tone order is positive tones, followed by PHY memory
+garbage, followed by negative tones. Dummy tones are uploaded to make
+number of tones always integer number of 64. Number of tones is not
+preamble type dependent.
+
+Each CFR tone has 14-bit I component and 14-bit Q component and is sign
+extended to 16-bit I/Q. Two tones are packed into one 64-bit unit as:
+
+[63:0] = [Tone1_Q(63:48) Tone1_I(47:32) Tone0_Q(31:16) Tone0_I(15:0)]
+
+CFR tail: end magic number 0xBEAFDEAD
+
+Tested-on: IPQ8074 hw2.0 PCI IPQ8074 WLAN.HK.2.5.0.1-00991-QCAHKSWPL_SILICONZ-1
+Tested-on: WCN6855 hw2.1 PCI WLAN.HSP.1.1-04685-QCAHSPSWPL_V1_V2_SILICONZ_IOE-1
+
+Signed-off-by: Venkateswara Naralasetty <quic_vnaralas@quicinc.com>
+Co-developed-by: Yu Zhang(Yuriy) <yu.zhang@oss.qualcomm.com>
+Signed-off-by: Yu Zhang(Yuriy) <yu.zhang@oss.qualcomm.com>
+Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
+Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
+Link: https://lore.kernel.org/all/20251105172226.3182968-5-yu.zhang@oss.qualcomm.com/
+Signed-off-by: Yu Zhang(Yuriy) <yu.zhang@oss.qualcomm.com>
+Signed-off-by: Qian Zhang <qian.zhang@oss.qualcomm.com>
+Upstream-Status: Submitted [https://patchwork.kernel.org/project/linux-wireless/patch/20251030043150.3905086-5-yu.zhang@oss.qualcomm.com/]
+---
+ drivers/net/wireless/ath/ath11k/cfr.c | 35 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/cfr.h |  1 +
+ 2 files changed, 36 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath11k/cfr.c b/drivers/net/wireless/ath/ath11k/cfr.c
+index ed649bf1e5e6..fde8cbb4bafd 100644
+--- a/drivers/net/wireless/ath/ath11k/cfr.c
++++ b/drivers/net/wireless/ath/ath11k/cfr.c
+@@ -443,10 +443,45 @@ static void ath11k_cfr_debug_unregister(struct ath11k *ar)
+ 	ar->cfr.enable_cfr = NULL;
+ 	debugfs_remove(ar->cfr.cfr_unassoc);
+ 	ar->cfr.cfr_unassoc = NULL;
++
++	relay_close(ar->cfr.rfs_cfr_capture);
++	ar->cfr.rfs_cfr_capture = NULL;
+ }
+ 
++static struct dentry *ath11k_cfr_create_buf_file_handler(const char *filename,
++							 struct dentry *parent,
++							 umode_t mode,
++							 struct rchan_buf *buf,
++							 int *is_global)
++{
++	struct dentry *buf_file;
++
++	buf_file = debugfs_create_file(filename, mode, parent, buf,
++				       &relay_file_operations);
++	*is_global = 1;
++	return buf_file;
++}
++
++static int ath11k_cfr_remove_buf_file_handler(struct dentry *dentry)
++{
++	debugfs_remove(dentry);
++
++	return 0;
++}
++
++static const struct rchan_callbacks rfs_cfr_capture_cb = {
++	.create_buf_file = ath11k_cfr_create_buf_file_handler,
++	.remove_buf_file = ath11k_cfr_remove_buf_file_handler,
++};
++
+ static void ath11k_cfr_debug_register(struct ath11k *ar)
+ {
++	ar->cfr.rfs_cfr_capture = relay_open("cfr_capture",
++					     ar->debug.debugfs_pdev,
++					     ar->ab->hw_params.cfr_stream_buf_size,
++					     ar->ab->hw_params.cfr_num_stream_bufs,
++					     &rfs_cfr_capture_cb, NULL);
++
+ 	ar->cfr.enable_cfr = debugfs_create_file("enable_cfr", 0600,
+ 						 ar->debug.debugfs_pdev, ar,
+ 						 &fops_enable_cfr);
+diff --git a/drivers/net/wireless/ath/ath11k/cfr.h b/drivers/net/wireless/ath/ath11k/cfr.h
+index e7b69e98cbf5..19f136d34c65 100644
+--- a/drivers/net/wireless/ath/ath11k/cfr.h
++++ b/drivers/net/wireless/ath/ath11k/cfr.h
+@@ -60,6 +60,7 @@ struct ath11k_cfr {
+ 	struct ath11k_look_up_table *lut;
+ 	struct dentry *enable_cfr;
+ 	struct dentry *cfr_unassoc;
++	struct rchan *rfs_cfr_capture;
+ 	u8 cfr_enabled_peer_cnt;
+ 	u32 lut_num;
+ 	u64 tx_evt_cnt;
+-- 
+2.34.1
+
