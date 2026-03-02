@@ -4,7 +4,7 @@ DESCRIPTION = "QCOM sail kernel drivers"
 LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/${LICENSE};md5=801f80980d171dd6425610833a22dbe6"
 
-SRCPROJECT = "git://git.quicinc.com/platform/vendor/qcom-opensource/sail-mailbox-kmd.git;protocol=git"
+SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/sail-mailbox-kmd.git;protocol=https"
 SRCBRANCH  = "sail-mailbox-kernel.lnx.1.0.r1-rel"
 SRCREV     = "e5044f27f4a42967561c09e0baff9f9c88dde101"
 
