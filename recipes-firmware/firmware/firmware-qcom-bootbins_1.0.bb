@@ -1,6 +1,6 @@
 DESCRIPTION = "Recipe to install NHLOS images in DEPLOY_DIR"
-LICENSE          = "Qualcomm-Technologies-Inc.-Proprietary"
-LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}/${LICENSE};md5=58d50a3d36f27f1a1e6089308a49b403"
+LICENSE          = "LICENSE.qcom-2"
+LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}/${LICENSE};md5=165287851294f2fb8ac8cbc5e24b02b0"
 
 COMPATIBLE_MACHINE = "qcm6490|qcs9100|qcs8300|qcs615"
 
@@ -66,6 +66,6 @@ PACKAGE_ARCH = "${SOC_ARCH}"
 PACKAGES += "${PN}-copyright"
 
 FILES:${PN} += "/*.elf /*.mbn /*.bin /*.fv */.melf /sail_nor/*"
-FILES:${PN}-copyright += "/Qualcomm-Technologies-Inc.-Proprietary"
+FILES:${PN}-copyright += "/LICENSE.qcom-2"
 
 INSANE_SKIP:${PN} = "arch"
