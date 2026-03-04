@@ -121,7 +121,6 @@ QCS9100_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcom-sa8775p-compute-updates \
   ${PN}-qcom-sa8775p-generalpurpose-updates \
   ${PN}-qcom-sa8775p-qupv3fw-updates \
-  ${PN}-qcs9100-ath11k-qca6698aq-updates \
   ${PN}-qcs9100-ath11k-wcn6855-updates \
   ${PN}-qcs9100-qca-qca2066-updates \
   ${PN}-qcs9100-qca-qca61x4-usb-updates \
@@ -135,7 +134,6 @@ QCS8300_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcom-qcs8300-generalpurpose-updates \
   ${PN}-qcom-qcs8300-qupv3fw-updates \
   ${PN}-qcom-qcs8300-verinfo \
-  ${PN}-qcs8300-ath11k-qca6698aq-updates \
   ${PN}-qcs8300-ath11k-wcn6855-updates \
   ${PN}-qcs8300-qca-qca2066-updates \
   ${PN}-qcs8300-qca-qca61x4-usb-updates \
@@ -155,12 +153,6 @@ PACKAGES:prepend = " \
   ${QCS8300_HLOSFW_UPDATE_PACKAGES} \
   ${QCS615_HLOSFW_UPDATE_PACKAGES} \
 "
-
-SUMMARY:${PN}-qcs9100-ath11k-qca6698aq-updates = "QCS9100 ATH11K QCA6698AQ firmware overlay"
-FILES:${PN}-qcs9100-ath11k-qca6698aq-updates = "/qcs9100${FIRMWARE_UPDATES_DIR}/ath11k/QCA6698AQ"
-
-SUMMARY:${PN}-qcs8300-ath11k-qca6698aq-updates = "QCS8300 ATH11K QCA6698AQ firmware overlay"
-FILES:${PN}-qcs8300-ath11k-qca6698aq-updates = "/qcs8300${FIRMWARE_UPDATES_DIR}/ath11k/QCA6698AQ"
 
 SUMMARY:${PN}-ath11k-wcn6750-updates = "ATH11K WCN6750 firmware overlay"
 FILES:${PN}-ath11k-wcn6750-updates = "/qcm6490${FIRMWARE_UPDATES_DIR}/ath11k/WCN6750"
