@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f2
 
 DESCRIPTION = "Camx"
 
-DEPENDS += "syslog-plumber glib-2.0 property-vault camx-kt virtual/libgles2 virtual/egl adrenocl qcom-fastcv-binaries"
+DEPENDS += "syslog-plumber chicdk-autogen-kt glib-2.0 property-vault camx-kt virtual/libgles2 virtual/egl adrenocl qcom-fastcv-binaries protobuf-native protobuf"
 
 QCM6490_SHA256SUM = "72fae64cd8ff95e6339603ffa89c39b51451e77ba3effaffd35b5ecd6a553dce"
 
@@ -17,10 +17,9 @@ FILES:${PN} = "\
     /usr/lib/* \
     /usr/bin/* \
     /usr/lib/rfsa/adsp/* \
-    /usr/include/* \
     /lib/firmware/* \
     /system/etc/camera/* "
-FILES:${PN}-dev = ""
+FILES:${PN}-dev = "/usr/include/*"
 
 
 INSANE_SKIP = "1"

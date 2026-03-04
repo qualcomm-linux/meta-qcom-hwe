@@ -1,0 +1,87 @@
+From be50c1684821bd72853a5eb02d745da48bac4f0b Mon Sep 17 00:00:00 2001
+From: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Date: Mon, 29 Dec 2025 18:00:23 +0530
+Subject: [PATCH 1/3] BACKPORT: arm64: dts: qcom: Add Host only mode support
+ for USB1 on QCS9075 IQ9 EVK
+
+Add Host only mode support for USB1 on QCS9075 IQ9 EVK.
+
+Change-Id: I7fd6effb28b62b46a4e2a36f2f578c6192c889ab
+Signed-off-by: Swati Agarwal <swati.agarwal@oss.qualcomm.com>
+Upstream-Status: Backport [https://lore.kernel.org/all/20251220063537.3639535-5-swati.agarwal@oss.qualcomm.com/]
+---
+ .../boot/dts/qcom/qcs9075-iq-9075-evk.dts     | 43 +------------------
+ 1 file changed, 1 insertion(+), 42 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+index 846df23d1c4c..c38e59fb3a07 100644
+--- a/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs9075-iq-9075-evk.dts
+@@ -887,25 +887,6 @@ &sleep_clk {
+ };
+ 
+ &soc {
+-	connector_usb1: connector-usb1 {
+-		compatible = "gpio-usb-b-connector";
+-		id-gpio = <&tlmm 51 GPIO_ACTIVE_HIGH>;
+-		vbus-supply = <&vbus_supply_regulator_1>;
+-		pinctrl-names = "default";
+-		pinctrl-0 = <&usb1_id_det_default>;
+-		ports {
+-			#address-cells = <1>;
+-			#size-cells = <0>;
+-
+-			port@0 {
+-				reg = <0>;
+-				usb1_port_connector: endpoint {
+-					remote-endpoint = <&usb1_port>;
+-				};
+-			};
+-		};
+-	};
+-
+ 	connector_usb2: connector-usb2 {
+ 		compatible = "gpio-usb-b-connector";
+ 		id-gpio = <&pmm8654au_2_gpios 11 GPIO_ACTIVE_HIGH>;
+@@ -1429,13 +1410,6 @@ sd_cd: sd-cd-state {
+ 		function = "gpio";
+ 		bias-pull-up;
+ 	};
+-
+-	usb1_id_det_default: usb1-id-det-default {
+-		pins = "gpio51";
+-		function = "gpio";
+-		drive-strength = <2>;
+-		bias-pull-up;
+-	};
+ };
+ 
+ &uart0 {
+@@ -1586,23 +1560,8 @@ &usb_1 {
+ 	qcom,enable-rt;
+ 	wakeup-source;
+ 	maximum-speed = "super-speed";
+-	dr_mode = "otg";
+-	usb-role-switch;
++	dr_mode = "host";
+ 	status = "okay";
+-
+-	ports {
+-
+-		#address-cells = <1>;
+-		#size-cells = <0>;
+-
+-		port@0 {
+-			reg = <0>;
+-			usb1_port: endpoint {
+-				remote-endpoint = <&usb1_port_connector>;
+-			};
+-		};
+-
+-	};
+ };
+ 
+ &usb_1_hsphy {
+-- 
+2.34.1
+

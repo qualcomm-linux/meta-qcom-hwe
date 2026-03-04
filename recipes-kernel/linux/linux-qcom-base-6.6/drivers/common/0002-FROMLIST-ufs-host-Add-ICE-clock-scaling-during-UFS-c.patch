@@ -10,7 +10,7 @@ an appropriate frequency when the UFS clocks are scaled up or down,
 improving performance and maintaining stability for crypto operations.
 
 Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
-Upstream-Status: Submitted
+Upstream-Status: Submitted [https://lore.kernel.org/all/20251121-enable-ufs-ice-clock-scaling-v2-2-66cb72998041@oss.qualcomm.com/]
 ---
  drivers/ufs/host/ufs-qcom.c | 15 +++++++++++++++
  1 file changed, 15 insertions(+)

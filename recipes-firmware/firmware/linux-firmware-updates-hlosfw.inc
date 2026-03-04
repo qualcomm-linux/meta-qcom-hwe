@@ -75,6 +75,24 @@ python populate_packages:append() {
     hlosfw_update_packages(d, 'QCS615_HLOSFW_UPDATE_PACKAGES')
 }
 
+do_hlosfw_pkgd_fixup() {
+    for soc in qcm6490 qcs615 qcs8300 qcs9100; do
+        if [ -d "${PKGD}/${soc}${FIRMWARE_UPDATES_DIR}" ]; then
+            install -d "${PKGD}${FIRMWARE_UPDATES_DIR}"
+            cp -a "${PKGD}/${soc}${FIRMWARE_UPDATES_DIR}/." "${PKGD}${FIRMWARE_UPDATES_DIR}/"
+        fi
+
+    done
+
+    if [ -d "${PKGD}${FIRMWARE_UPDATES_DIR}/qcom" ]; then
+        install -d "${PKGD}${nonarch_base_libdir}/firmware/qcom/"
+        cp -a "${PKGD}${FIRMWARE_UPDATES_DIR}/qcom/." "${PKGD}${nonarch_base_libdir}/firmware/qcom/"
+    fi
+
+}
+
+addtask hlosfw_pkgd_fixup after do_package before do_package_write_rpm
+
 QCM6490_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-ath11k-wcn6750-updates \
   ${PN}-qcacld-wcn6855-updates \
@@ -264,20 +282,20 @@ FILES:${PN}-qcm6490-qca-wcn685x-updates = " \
   /qcm6490${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21.b* \
   qcm6490${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21* \
 "
-SUMMARY:${PN}-qcs9100-qca-wcn685x-updates = "QCM6490 QCA wcn685x firmware update files"
+SUMMARY:${PN}-qcs9100-qca-wcn685x-updates = "QCS9100 QCA wcn685x firmware update files"
 FILES:${PN}-qcs9100-qca-wcn685x-updates = " \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/wcnhpbtfw21.tlv* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/wcnhpnv21.b* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/wcnhpnv21g.* \
-  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/QCA6698/wcnhpnv21* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/wcnhpbtfw21.tlv* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21.b* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21g.* \
+  /qcs9100${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21* \
 "
 
-SUMMARY:${PN}-qcs8300-qca-wcn685x-updates = "QCM6490 QCA wcn685x firmware update files"
+SUMMARY:${PN}-qcs8300-qca-wcn685x-updates = "QCS8300 QCA wcn685x firmware update files"
 FILES:${PN}-qcs8300-qca-wcn685x-updates = " \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/wcnhpbtfw21.tlv* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/wcnhpnv21.b* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/wcnhpnv21g.b* \
-  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/QCA6698/wcnhpnv21* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/wcnhpbtfw21.tlv* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21.b* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21g.b* \
+  /qcs8300${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21* \
 "
 
 SUMMARY:${PN}-qcom-qcm6490-audio-updates = "QCOM qcom-qcm6490-audio firmware overlay"

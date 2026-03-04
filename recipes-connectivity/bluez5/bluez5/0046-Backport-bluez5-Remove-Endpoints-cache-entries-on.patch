@@ -1,0 +1,32 @@
+From 8e5d96b256367342d7ef52d549db93c338ac205e Mon Sep 17 00:00:00 2001
+From: Jinwang Li <jinwang.li@oss.qualcomm.com>
+Date: Thu, 15 Jan 2026 19:58:16 +0800
+Subject: [PATCH v1] Backport: bluez5: Remove Endpoints cache entries on device
+ removal
+
+When a device is removed, the endpoints are kept in cache. This may
+prevent future connection, after a new pairing, to use the best
+codec available.
+
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/bluetooth/bluez.git/commit/?id=ea3f4047e452b081e34d017cce316aba9d623301]
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/bluetooth/bluez.git/commit/?id=78aabd896dbe3e23faaebbc97b8ecd711b2502fc]
+Signed-off-by: Jinwang Li <jinwang.li@oss.qualcomm.com>
+---
+ src/device.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/device.c b/src/device.c
+index 7d853cc..8a04986 100644
+--- a/src/device.c
++++ b/src/device.c
+@@ -4676,6 +4676,7 @@ static void device_remove_stored(struct btd_device *device)
+ 	}
+ 	g_key_file_remove_group(key_file, "ServiceRecords", NULL);
+ 	g_key_file_remove_group(key_file, "Attributes", NULL);
++	g_key_file_remove_group(key_file, "Endpoints", NULL);
+ 
+ 	data = g_key_file_to_data(key_file, &length, NULL);
+ 	if (length > 0) {
+-- 
+2.34.1
+

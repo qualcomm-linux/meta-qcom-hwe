@@ -1,7 +1,7 @@
 inherit qprebuilt pkgconfig
 
-LICENSE          = "Qualcomm-Technologies-Inc.-Proprietary"
-LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f27f1a1e6089308a49b403"
+LICENSE          = "LICENSE.qcom-2"
+LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=165287851294f2fb8ac8cbc5e24b02b0"
 
 DESCRIPTION = "Adreno Graphics"
 
@@ -32,11 +32,8 @@ reinstall_files () {
 }
 do_install[postfuncs] += "reinstall_files"
 
-FILES:${PN} = "${nonarch_base_libdir}/firmware/* \
-               ${nonarch_libdir}/lib*.so.* \
-               ${base_libdir}/firmware/* \
+FILES:${PN} = "${nonarch_libdir}/lib*.so.* \
                ${libdir}/lib*.so.* \
-               ${libdir}/firmware \
                /usr/share/vulkan/icd.d/* "
 FILES:${PN}-dev = "${includedir}/* \
                    ${nonarch_libdir}/lib*.so \

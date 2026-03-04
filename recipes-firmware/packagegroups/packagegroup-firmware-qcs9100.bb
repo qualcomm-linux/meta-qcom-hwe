@@ -9,9 +9,9 @@ RRECOMMENDS:${PN} = " \
     linux-firmware-ath11k-qca6698aq \
     linux-firmware-ath12k-wcn7850 \
     linux-firmware-qca-qca2066 \
-    linux-firmware-qca-wcn685x \
     linux-firmware-qca-qca61x4-usb \
     linux-firmware-qca-qca6698 \
+    linux-firmware-qca-wcn685x \
     linux-firmware-qcom-adreno-a660 \
     linux-firmware-qcom-adreno-a663 \
     linux-firmware-qcom-sa8775p-adreno \
@@ -30,12 +30,9 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-qcom-sa8775p-audio-updates \
     linux-firmware-qcom-sa8775p-compute-updates \
     linux-firmware-qcom-sa8775p-generalpurpose-updates \
-    linux-firmware-qcom-sa8775p-qupv3fw-updates \
-    linux-firmware-qcs9100-ath11k-qca6698aq-updates \
     linux-firmware-qcs9100-ath11k-wcn6855-updates \
     linux-firmware-qcs9100-qca-qca2066-updates \
     linux-firmware-qcs9100-qca-qca61x4-usb-updates \
-    linux-firmware-qcs9100-qca-qca6698-updates \
     linux-firmware-qcs9100-qcom-tzapps-updates \
     linux-firmware-qcs9100-qca-wcn685x-updates \
 "

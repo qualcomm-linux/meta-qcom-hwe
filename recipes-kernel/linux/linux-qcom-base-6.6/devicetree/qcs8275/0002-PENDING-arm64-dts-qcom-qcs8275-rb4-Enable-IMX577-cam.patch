@@ -1,0 +1,272 @@
+From dc756f9bce560299b140b06d4d3e94eb5610fb35 Mon Sep 17 00:00:00 2001
+From: Nihal Kumar Gupta <quic_nihalkum@quicinc.com>
+Date: Fri, 14 Nov 2025 19:15:40 +0530
+Subject: [PATCH 2/2] PENDING: arm64: dts: qcom: qcs8275-rb4: Enable IMX577
+ camera sensor
+
+Monaco EVK board does not include a camera sensor in its default hardware
+configuration. Introducing a device tree overlay to support optional
+integration of the IMX577 sensor via CSIPHY1.
+
+Camera reset is handled through an I2C expander, and power is enabled
+via TLMM GPIO74.
+
+An example media-ctl pipeline for the imx577 is:
+
+media-ctl --reset
+media-ctl -V '"imx577 3-001a":0[fmt:SRGGB10/4056x3040 field:none]'
+media-ctl -V '"msm_csiphy1":0[fmt:SRGGB10/4056x3040]'
+media-ctl -V '"msm_csid0":0[fmt:SRGGB10/4056x3040]'
+media-ctl -V '"msm_vfe0_rdi0":0[fmt:SRGGB10/4056x3040]'
+media-ctl -l '"msm_csiphy1":1->"msm_csid0":0[1]'
+media-ctl -l '"msm_csid0":1->"msm_vfe0_rdi0":0[1]'
+yavta -B capture-mplane -c -I -n 5 -f SRGGB10P -s 4056x3040 -F /dev/video1
+
+Signed-off-by: Nihal Kumar Gupta <quic_nihalkum@quicinc.com>
+Co-developed-by: Ravi Shankar <quic_rshankar@quicinc.com>
+Signed-off-by: Ravi Shankar <quic_rshankar@quicinc.com>
+Co-developed-by: Vishal Verma <quic_vishverm@quicinc.com>
+Signed-off-by: Vishal Verma <quic_vishverm@quicinc.com>
+Signed-off-by: Vikram Sharma <quic_vikramsa@quicinc.com>
+Reviewed-by: Vladimir Zapolskiy <vladimir.zapolskiy@linaro.org>
+Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20251114064541.446276-1-quic_vikramsa@quicinc.com]
+---
+ arch/arm64/boot/dts/qcom/monaco-evk.dts       | 91 +++++++++++++++++++
+ .../boot/dts/qcom/qcs8275-iq-8275-evk.dts     | 90 ++++++++++++++++++
+ 2 files changed, 181 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/monaco-evk.dts b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+index 6451a2c1dddd..06c3a421ef98 100644
+--- a/arch/arm64/boot/dts/qcom/monaco-evk.dts
++++ b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+@@ -94,6 +94,16 @@ platform {
+ 			};
+ 		};
+ 	};
++
++	vreg_cam1_2p8: vreg-cam1-2p8 {
++		compatible = "regulator-fixed";
++		regulator-name = "vreg_cam1_2p8";
++		startup-delay-us = <10000>;
++		enable-active-high;
++		gpio = <&tlmm 74 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&cam1_avdd_2v8_en_default>;
++	};
+ };
+ 
+ &apps_rsc {
+@@ -232,6 +242,63 @@ vreg_l9c: ldo9 {
+ 	};
+ };
+ 
++&camss {
++	vdda-phy-supply = <&vreg_l4a>;
++	vdda-pll-supply = <&vreg_l5a>;
++
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@1 {
++			reg = <1>;
++
++			csiphy1_ep: endpoint {
++				clock-lanes = <7>;
++				data-lanes = <0 1 2 3>;
++				remote-endpoint = <&imx577_ep1>;
++			};
++		};
++	};
++};
++
++&cci1 {
++	pinctrl-0 = <&cci1_0_default>;
++	pinctrl-1 = <&cci1_0_sleep>;
++
++	status = "okay";
++};
++
++&cci1_i2c0 {
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	camera@1a {
++		compatible = "sony,imx577";
++		reg = <0x1a>;
++
++		reset-gpios = <&expander2 1 GPIO_ACTIVE_LOW>;
++		pinctrl-0 = <&cam1_default>;
++		pinctrl-names = "default";
++
++		clocks = <&camcc CAM_CC_MCLK1_CLK>;
++		assigned-clocks = <&camcc CAM_CC_MCLK1_CLK>;
++		assigned-clock-rates = <24000000>;
++
++		avdd-supply = <&vreg_cam1_2p8>;
++
++		port {
++			imx577_ep1: endpoint {
++				link-frequencies = /bits/ 64 <600000000>;
++				data-lanes = <0 1 2 3>;
++				remote-endpoint = <&csiphy1_ep>;
++			};
++		};
++	};
++};
++
+ &ethernet0 {
+ 	phy-mode = "2500base-x";
+ 	phy-handle = <&hsgmii_phy0>;
+@@ -487,6 +554,30 @@ &serdes0 {
+ };
+ 
+ &tlmm {
++	/*
++	 * gpio67, gpio68, gpio69 provide MCLK0, MCLK1, MCLK2 for
++	 * CAM0, CAM1 and CAM2 respectively via the "cam_mclk" function.
++	 * So, here it's MCLK1 pin for instance.
++	 */
++	cam1_default: cam1-default-state {
++		pins = "gpio68";
++		function = "cam_mclk";
++		drive-strength = <2>;
++		bias-disable;
++	};
++
++	/*
++	 * gpio73, gpio74, gpio75 enable AVDD regulators for
++	 * CAM0, CAM1 and CAM2 respectively via the "gpio" function.
++	 * So, here it's AVDD1 pin for instance.
++	 */
++	cam1_avdd_2v8_en_default: cam1-avdd-2v8-en-state {
++		pins = "gpio74";
++		function = "gpio";
++		drive-strength = <2>;
++		bias-disable;
++	};
++
+ 	ethernet0_default: ethernet0-default-state {
+ 		ethernet0_mdc: ethernet0-mdc-pins {
+ 			pins = "gpio5";
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index 5bf29a5ec991..5e68d9fc24cb 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -94,6 +94,16 @@ platform {
+ 			};
+ 		};
+ 	};
++
++	vreg_cam1_2p8: vreg-cam1-2p8 {
++		compatible = "regulator-fixed";
++		regulator-name = "vreg_cam1_2p8";
++		startup-delay-us = <10000>;
++		enable-active-high;
++		gpio = <&tlmm 74 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&cam1_avdd_2v8_en_default>;
++	};
+ };
+ 
+ &apps_rsc {
+@@ -269,6 +279,63 @@ vreg_l9c: ldo9 {
+ 	};
+ };
+ 
++&camss {
++	vdda-phy-supply = <&vreg_l4a>;
++	vdda-pll-supply = <&vreg_l5a>;
++
++	status = "okay";
++
++	ports {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		port@1 {
++			reg = <1>;
++
++			csiphy1_ep: endpoint {
++				clock-lanes = <7>;
++				data-lanes = <0 1 2 3>;
++				remote-endpoint = <&imx577_ep1>;
++			};
++		};
++	};
++};
++
++&cci1 {
++	pinctrl-0 = <&cci1_0_default>;
++	pinctrl-1 = <&cci1_0_sleep>;
++
++	status = "okay";
++};
++
++&cci1_i2c0 {
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	camera@1a {
++		compatible = "sony,imx577";
++		reg = <0x1a>;
++
++		reset-gpios = <&expander2 1 GPIO_ACTIVE_LOW>;
++		pinctrl-0 = <&cam1_default>;
++		pinctrl-names = "default";
++
++		clocks = <&camcc CAM_CC_MCLK1_CLK>;
++		assigned-clocks = <&camcc CAM_CC_MCLK1_CLK>;
++		assigned-clock-rates = <24000000>;
++
++		avdd-supply = <&vreg_cam1_2p8>;
++
++		port {
++			imx577_ep1: endpoint {
++				link-frequencies = /bits/ 64 <600000000>;
++				data-lanes = <0 1 2 3>;
++				remote-endpoint = <&csiphy1_ep>;
++			};
++		};
++	};
++};
++
+ &pcie0 {
+ 	perst-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
+ 	wake-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
+@@ -515,6 +582,29 @@ tpm@0 {
+ };
+ 
+ &tlmm {
++	/*
++	 * gpio67, gpio68, gpio69 provide MCLK0, MCLK1, MCLK2 for
++	 * CAM0, CAM1 and CAM2 respectively via the "cam_mclk" function.
++	 * So, here it's MCLK1 pin for instance.
++	 */
++	cam1_default: cam1-default-state {
++		pins = "gpio68";
++		function = "cam_mclk";
++		drive-strength = <2>;
++		bias-disable;
++	};
++
++	/*
++	 * gpio73, gpio74, gpio75 enable AVDD regulators for
++	 * CAM0, CAM1 and CAM2 respectively via the "gpio" function.
++	 * So, here it's AVDD1 pin for instance.
++	 */
++	cam1_avdd_2v8_en_default: cam1-avdd-2v8-en-state {
++		pins = "gpio74";
++		function = "gpio";
++		drive-strength = <2>;
++		bias-disable;
++	};
+ 
+ 	dp_hot_plug_det: dp-hot-plug-det-state {
+ 	/* TODO: Add the required nodes once mdss_dp0 is available.*/
+-- 
+2.34.1
+

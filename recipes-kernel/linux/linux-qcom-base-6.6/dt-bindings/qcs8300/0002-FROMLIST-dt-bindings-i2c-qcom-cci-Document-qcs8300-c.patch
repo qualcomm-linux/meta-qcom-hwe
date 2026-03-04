@@ -1,0 +1,59 @@
+From 5b00f3d02a7da45da0789792cab20ea7d41dbe74 Mon Sep 17 00:00:00 2001
+From: Nihal Kumar Gupta <quic_nihalkum@quicinc.com>
+Date: Fri, 24 Oct 2025 15:39:35 +0530
+Subject: [PATCH 2/2] FROMLIST: dt-bindings: i2c: qcom-cci: Document qcs8300
+ compatible
+
+The three instances of CCI found on the QCS8300 are functionally the same
+as on a number of existing Qualcomm SoCs.
+
+Introduce a new SoC-specific compatible string "qcom,qcs8300-cci" with a
+common fallback.
+
+Signed-off-by: Nihal Kumar Gupta <quic_nihalkum@quicinc.com>
+Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
+Reviewed-by: Vladimir Zapolskiy <vladimir.zapolskiy@linaro.org>
+Upstream-Status: Submitted [https://lore.kernel.org/all/20251114064541.446276-2-quic_vikramsa@quicinc.com]
+---
+ .../devicetree/bindings/i2c/qcom,i2c-cci.yaml   | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml b/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml
+index 4083aaccffac..eb5c7e056083 100644
+--- a/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml
++++ b/Documentation/devicetree/bindings/i2c/qcom,i2c-cci.yaml
+@@ -25,6 +25,7 @@ properties:
+
+       - items:
+           - enum:
++              - qcom,qcs8300-cci
+               - qcom,sa8775p-cci
+               - qcom,sdm845-cci
+               - qcom,sm6350-cci
+@@ -115,6 +116,22 @@ allOf:
+             - const: cci_ahb
+             - const: cci
+
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,qcs8300-cci
++    then:
++      properties:
++        clocks:
++          minItems: 2
++          maxItems: 2
++        clock-names:
++          items:
++            - const: ahb
++            - const: cci
++
+   - if:
+       properties:
+         compatible:
+--
+2.34.1
+

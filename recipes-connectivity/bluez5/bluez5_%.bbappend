@@ -49,6 +49,9 @@ SRC_URI:append:qcom = " file://0001-Setting-default-values-in-main.conf.patch \
                         file://0043-UPSTREAM-obex-Add-base-implementation-for-get_mas_in.patch \
                         file://0044-UPSTREAM-obex-Add-supported-features-tag-in-MAP-Clie.patch \
                         file://0045-Backport-bluez5-Setting-default-adapter-status.patch \
+                        file://0046-Backport-bluez5-Remove-Endpoints-cache-entries-on.patch \
+                        file://0047-Backport-bluez5-Implement-PreferredBearer-last-us.patch \
+                        file://0048-FROMLIST-bluez5-Initialize-device-volume-with-a-vali.patch \
 "
 
 #Include obex to support obex related profiles like OPP, FTP, MAP, PBAP

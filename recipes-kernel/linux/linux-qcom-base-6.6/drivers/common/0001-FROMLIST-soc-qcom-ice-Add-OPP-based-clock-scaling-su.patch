@@ -19,7 +19,7 @@ constraints. For legacy targets without an ICE-device specific OPP table,
 fall back to the standard clock framework APIs to set the frequency.
 
 Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
-Upstream-Status: Submitted
+Upstream-Status: Submitted [https://lore.kernel.org/all/20251121-enable-ufs-ice-clock-scaling-v2-1-66cb72998041@oss.qualcomm.com/]
 ---
  drivers/soc/qcom/ice.c | 106 ++++++++++++++++++++++++++++++++++++-----
  include/soc/qcom/ice.h |   1 +

@@ -1,0 +1,42 @@
+From fc91de17ec68970e0ae205d5897ed497afdfd49f Mon Sep 17 00:00:00 2001
+From: Akhil P Oommen <akhilpo@oss.qualcomm.com>
+Date: Tue, 4 Nov 2025 19:24:33 +0530
+Subject: [PATCH] BACKPORT: arm64: dts: qcom: qcs8275: Enable Adreno 623 GPU
+
+Enable GPU for qcs8275 platform and provide path for zap
+shader.
+
+Git-commit: ed7e440531601ba558fb81856352ef260ecb153f
+Git-repo: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git.
+Signed-off-by: Akhil P Oommen <akhilpo@oss.qualcomm.com>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Link: https://lore.kernel.org/r/20250909-monaco-evk-gpu-v1-1-e14938780411@oss.qualcomm.com
+Signed-off-by: Bjorn Andersson <andersson@kernel.org>
+Signed-off-by: Kishor Buchi <kbuchi@qti.qualcomm.com>
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git	ed7e440531601ba558fb81856352ef260ecb153f]
+---
+ arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+index 05bbfa4c4b3c..61ade8b4d6e2 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8275-iq-8275-evk.dts
+@@ -321,6 +321,14 @@ queue3 {
+ 	};
+ };
+ 
++&gpu {
++	status = "okay";
++};
++
++&gpu_zap_shader {
++	firmware-name = "qcom/qcs8300/a623_zap.mbn";
++};
++
+ &i2c1 {
+ 	pinctrl-0 = <&qup_i2c1_default>;
+ 	pinctrl-names = "default";
+-- 
+2.43.0
+

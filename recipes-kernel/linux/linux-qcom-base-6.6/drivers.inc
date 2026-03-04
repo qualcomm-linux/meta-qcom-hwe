@@ -469,6 +469,8 @@ SRC_URI:append = " \
     file://common/0025-FROMLIST-media-iris-Add-internal-buffer-calculation-.patch \
     file://common/0026-FROMLIST-media-iris-Add-codec-specific-check-for-VP9.patch \
     file://common/0001-QCLINUX-media-iris-add-support-for-GDSC-switch-and-P.patch \
+    file://common/0004-FROMLIST-camss-update-CSIPHY-driver-on-camss-for-qcs.patch \
+    file://common/0005-FROMLIST-camss-Fix-CAMSS-CSIPHY-Clock.patch \
     file://common/0142-FORMLIST-driver-bluetooth-hci_qca-disable-hci_aut.patch \
     file://common/0001-FROMLIST-misc-fastrpc-Fix-channel-resource-access-in.patch \
     file://common/0001-FROMLIST-dt-bindings-thermal-Add-qcom-qmi-cooling-ya.patch \
@@ -526,6 +528,7 @@ SRC_URI:append = " \
     file://common/0001-FROMGIT-ASoC-qcom-sc8280xp-set-card-driver-name-from.patch \
     file://common/0002-BACKPORT-FROMGIT-ASoC-qcom-sc8280xp-Fix-sound-card-d.patch \
     file://common/0003-BACKPORT-FROMGIT-ASoC-qcom-sc8280xp-Enable-DAI-forma.patch \
+    file://qcs8300/0003-FROMLIST-camss-update-CSIPHY-driver-on-camss-for-qcs.patch \
     file://common/0149-FROMLIST-driver-bluetooth-btqca-Add-WCN6855-firmw.patch \
     file://common/0001-PENDING-usb-dwc3-core-Don-t-touch-the-resets.patch \
     file://common/0002-PENDING-usb-typec-Add-wakeup-support-from.patch \
@@ -534,4 +537,21 @@ SRC_URI:append = " \
     file://common/0001-FROMLIST-soc-qcom-ice-Add-OPP-based-clock-scaling-su.patch \
     file://common/0002-FROMLIST-ufs-host-Add-ICE-clock-scaling-during-UFS-c.patch \
     file://common/0003-FROMLIST-soc-qcom-ice-Set-ICE-clk-to-TURBO-on-probe.patch \
+    file://common/0001-FROMLIST-drm-msm-dp-fix-the-intf_type-of-MST-interfa.patch \
+    file://common/0002-FROMLIST-drm-msm-dp-Add-MST-stream-support-for-SA877.patch \
+    file://common/0003-FROMLIST-drm-msm-dp-add-support-for-programming-p1-p.patch \
+    file://common/0004-FROMLIST-drm-msm-dp-Add-catalog-support-for-3rd-4th-.patch \
+    file://common/0002-BACKPORT-UPSTREAM-ASoC-qcom-sc8280xp-Add-sound-card-.patch \
+    file://common/0001-FROMLIST-wifi-ath11k-Add-initialization-and-deinitia.patch \
+    file://common/0002-FROMLIST-wifi-ath11k-Register-debugfs-for-CFR-config.patch \
+    file://common/0003-FROMLIST-wifi-ath11k-Add-support-unassociated-client.patch \
+    file://common/0004-FROMLIST-wifi-ath11k-Register-relayfs-entries-for-CF.patch \
+    file://common/0005-FROMLIST-wifi-ath11k-Register-DBR-event-handler-for-.patch \
+    file://common/0006-FROMLIST-wifi-ath11k-Register-handler-for-CFR-captur.patch \
+    file://common/0150-FROMLIST-driver-bluetooth-hci_qca-Always-perform-.patch \
+    file://common/0001-BACKPORT-UPSTREAM-drm-msm-dpu-switch-RM-to-use-crtc_.patch \
+    file://common/0002-BACKPORT-UPSTREAM-drm-msm-dpu-fill-CRTC-resources-in.patch \
+    file://common/0003-BACKPORT-UPSTREAM-drm-msm-dpu-don-t-set-crtc_state-m.patch \
+    file://common/0004-BACKPORT-UPSTREAM-drm-msm-dpu-move-resource-allocati.patch \
+    file://common/0151-FROMLIST-driver-bluetooth-btusb-Allow-firmware-re.patch \
 "

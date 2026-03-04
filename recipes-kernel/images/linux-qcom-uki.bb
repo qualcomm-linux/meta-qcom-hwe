@@ -57,8 +57,7 @@ do_compile() {
     ukify_cmd="$ukify_cmd --uname ${KERNEL_VERSION}"
 
     # Kernel cmdline
-    uki_cmdline="${@bb.utils.to_boolean(d.getVar("EFI_UKI_ADD_CMDLINE"), True)}"
-    if [ $uki_cmdline ]; then
+    if [ "${EFI_UKI_ADD_CMDLINE}" = "True" ]; then
         cmdline=""
         if [ -n "${QCOM_BOOTIMG_ROOTFS}" ]; then
             cmdline="$cmdline root=${QCOM_BOOTIMG_ROOTFS} rw rootwait"

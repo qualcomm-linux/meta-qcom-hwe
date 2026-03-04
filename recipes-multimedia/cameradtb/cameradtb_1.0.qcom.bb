@@ -81,14 +81,19 @@ do_compile() {
     elif [ "${SOC_FAM}" = "qcs8300" ]; then
         if [ "${TARGET_BOARD}" = "qcs8300-ride-sx" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs8300-camera
+            oe_runmake ${EXTRA_OEMAKE} qcs8300-camera-el2
         elif [ "${TARGET_BOARD}" = "qcs8275-iq-8275-evk" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk
+            oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk-el2
         elif [ "${TARGET_BOARD}" = "qcs8275-iq-8275-evk-ifp" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk
+            oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk-el2
         elif [ "${TARGET_BOARD}" = "qcs8275-iq-8275-evk-pro-sku" ]; then
             oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk-pro-sku
+            oe_runmake ${EXTRA_OEMAKE} qcs8275-camera-iq-8275-evk-pro-sku-el2
         elif [ "${TARGET_BOARD}" = "monaco-monza" ]; then
             oe_runmake ${EXTRA_OEMAKE} monaco-monza-camera
+            oe_runmake ${EXTRA_OEMAKE} monaco-monza-camera-el2
         fi
     elif [ "${SOC_FAM}" = "qcs615" ]; then
         oe_runmake ${EXTRA_OEMAKE} qcs615-camera

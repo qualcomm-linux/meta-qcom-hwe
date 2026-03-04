@@ -1,0 +1,41 @@
+From beada0e6af0de599509172ec264aef062a0b6568 Mon Sep 17 00:00:00 2001
+From: Saikiran Muppidi <quic_saikmupp@quicinc.com>
+Date: Thu, 20 Nov 2025 14:53:05 +0530
+Subject: [PATCH] FROMGIT: arm64: dts: qcom: monaco-evk: Enable Adreno 623 GPU
+
+Enable GPU for monaco-evk platform and provide path for zap shader.
+
+Signed-off-by: Saikiran Muppidi <quic_saikmupp@quicinc.com>
+Signed-off-by: Akhil P Oommen <akhilpo@oss.qualcomm.com>
+Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Link: https://lore.kernel.org/r/20250909-monaco-evk-gpu-v1-1-e14938780411@oss.qualcomm.com
+Signed-off-by: Bjorn Andersson <andersson@kernel.org>
+Git-commit: ed7e440531601ba558fb81856352ef260ecb153f
+Git-repo: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+Upstream-Status: Backport [https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git	ed7e440531601ba558fb81856352ef260ecb153f]
+---
+ arch/arm64/boot/dts/qcom/monaco-evk.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/monaco-evk.dts b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+index ef4209eb7d91..dff5247b854d 100644
+--- a/arch/arm64/boot/dts/qcom/monaco-evk.dts
++++ b/arch/arm64/boot/dts/qcom/monaco-evk.dts
+@@ -327,6 +327,14 @@ &gpi_dma1 {
+ 	status = "okay";
+ };
+ 
++&gpu {
++	status = "okay";
++};
++
++&gpu_zap_shader {
++	firmware-name = "qcom/qcs8300/a623_zap.mbn";
++};
++
+ &i2c1 {
+ 	pinctrl-0 = <&qup_i2c1_default>;
+ 	pinctrl-names = "default";
+-- 
+2.34.1
+
