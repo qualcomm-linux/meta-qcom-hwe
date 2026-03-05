@@ -9,7 +9,7 @@ DEPENDS += "fastrpc qcom-libvmmem securemsm-features"
 
 PBT_ARCH = "aarch64"
 
-AARCH64_SHA256SUM = "bf97cf36c7796885481d1fa977e2a05ed6150d445515284faf690381ecc27429"
+AARCH64_SHA256SUM = "e0e3e0497e5e87d9e8bfcd64fa1cf4896edb66a7dba7a21f2e5154014bdc3ce5"
 SRC_URI[aarch64.sha256sum] = "${AARCH64_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"

@@ -7,7 +7,7 @@ DESCRIPTION = "Camx"
 
 DEPENDS += "syslog-plumber chicdk-autogen-kt glib-2.0 property-vault camx-kt virtual/libgles2 virtual/egl adrenocl qcom-fastcv-binaries protobuf-native protobuf"
 
-QCM6490_SHA256SUM = "72fae64cd8ff95e6339603ffa89c39b51451e77ba3effaffd35b5ecd6a553dce"
+QCM6490_SHA256SUM = "1ca0eac15ddc26e4b56272256e18dcf1609e2eb00160fb86b171a9f074910661"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 

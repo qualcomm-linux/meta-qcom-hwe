@@ -6,7 +6,7 @@ LICENSE = "Qualcomm-Technologies-Inc.-Proprietary"
 LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}/${LICENSE};md5=58d50a3d36f27f1a1e6089308a49b403"
 DEPENDS += "glib-2.0 systemd linux-libc-headers pkgconfig-native cmake-native"
 
-QCS9100_SHA256SUM = "3cd6d53b1c8c855869afc836d96f25459a3918e03ed883bfec340227876b3ffc"
+QCS9100_SHA256SUM = "0552110f1c17decae062f4ef0bbef331153f383bfb43efb4bc397663587f7e34"
 
 SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"
 

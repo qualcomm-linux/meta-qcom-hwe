@@ -1,11 +1,11 @@
 FW_ARTIFACTORY = "https://softwarecenter.qualcomm.com/nexus/generic/software/chip/qualcomm_linux-spf-1-0/qualcomm-linux-spf-1-0_test_device_public"
-FW_BUILD_ID    = "r1.0_00114.0/qcs8300-le-1-0"
+FW_BUILD_ID    = "r1.0_00117.0/qcs8300-le-1-0"
 FW_BIN_PATH    = "common/build/ufs/bin"
 
-QCS8300_FW_BUILD_ID ?= "r1.0_00114.0/qcs8300-le-1-0"
+QCS8300_FW_BUILD_ID ?= "r1.0_00117.0/qcs8300-le-1-0"
 QCS8300_FW_BIN_PATH ?= "common/build/ufs/bin"
-QCS8300_HLOSFW_SHA256SUM ?= "e4a6abfe78ed81c63b97cf35c4b26969b85bbfdde518c1c0459fcfaa84c15a3b"
-QCS8300_DSPSO_SHA256SUM ?= "af1a9bbc78de97bc31a16cc64c344597a7e259824e177e874c5dcd27dce3312f"
+QCS8300_HLOSFW_SHA256SUM ?= "cfed3eba0457b47c4fbf6f0037ba45d24b18c38c26dcb960f90440833c8376de"
+QCS8300_DSPSO_SHA256SUM ?= "ae353f5560c372d72bcf14c87e59c29711e983b18fad35028d78127510976c13"
 
 # Fetch a shallow mirror tarball.
 BB_GIT_SHALLOW       = "1"
