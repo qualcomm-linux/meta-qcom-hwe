@@ -8,7 +8,7 @@ inherit autotools pkgconfig
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom/opensource/agm.git;protocol=https"
 SRCBRANCH  = "audio-core.lnx.1.0.r1-rel"
-SRCREV     = "6c133fae735d6e58afe29f48d589ad30e282dfb6"
+SRCREV     = "8c68a87611f7cf58b20dd7ae1a974285846459b6"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/agm"
 

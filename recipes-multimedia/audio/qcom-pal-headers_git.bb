@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM += "file://PalDefs.h;beginline=30;endline=31;md5=c83ea7207cf32b
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom/opensource/arpal-lx.git;protocol=https"
 SRCBRANCH  = "audio-core.lnx.1.0.r1-rel"
-SRCREV     = "3e5cf712f22f9e15a3b4c389a6c0970e33033db8"
+SRCREV     = "a14ffab51c8ec6152e0a37716e0ebd1788879a8d"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/arpal-lx"
 

@@ -7,7 +7,7 @@ DESCRIPTION = "Voice UI test app"
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/pulseaudio-plugin.git;protocol=https"
 SRCBRANCH  = "audio-algos.lnx.1.0.r1-rel"
-SRCREV     = "73866a4ce325a381d263bff22954a83066f166d3"
+SRCREV     = "54111949a80ca10ded32b31035a4e3d1183f68e1"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/pulseaudio-plugins"
 

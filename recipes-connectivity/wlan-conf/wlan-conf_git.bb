@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/${LICENSE};md5=550794465ba0ec53
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/qcom-opensource/mdm-init.git;protocol=https"
 SRCBRANCH  = "wlan-os-service.qclinux.1.1.r1-rel"
-SRCREV     = "250445bbef6aaaa9b3319105ffaf3647c595c209"
+SRCREV     = "335db4f88b4aa8c601f3ee93cb043f1c3fe27545"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=mdm-init \
            file://wlan_daemon.service \

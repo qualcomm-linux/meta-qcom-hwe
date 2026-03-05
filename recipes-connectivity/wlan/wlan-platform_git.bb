@@ -6,7 +6,7 @@ inherit module
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/wlan/platform.git;protocol=https"
 SRCBRANCH  = "wlan-platform.qclinux.1.0.r2-rel"
-SRCREV     = "c07f727270df5f7073b640aa1933c10f1eb3d643"
+SRCREV     = "a9e3d31d5a0d08730842186c3cda7cc69560d94a"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=wlan/platform"
 
