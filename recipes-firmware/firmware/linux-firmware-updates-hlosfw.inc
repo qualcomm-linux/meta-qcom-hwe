@@ -7,16 +7,13 @@ require firmware-qcs615.inc
 QCM6490_SRC_URI ?= "${FW_ARTIFACTORY}/${QCM6490_FW_BUILD_ID}/${QCM6490_FW_BIN_PATH}/QCM6490_fw.zip;name=QCM6490_fw"
 QCS9100_SRC_URI ?= "${FW_ARTIFACTORY}/${QCS9100_FW_BUILD_ID}/${QCS9100_FW_BIN_PATH}/QCS9100_fw.zip;name=QCS9100_fw"
 QCS8300_SRC_URI ?= "${FW_ARTIFACTORY}/${QCS8300_FW_BUILD_ID}/${QCS8300_FW_BIN_PATH}/QCS8300_fw.zip;name=QCS8300_fw"
-QCS615_SRC_URI  ?= "${FW_ARTIFACTORY}/${QCS615_FW_BUILD_ID}/${QCS615_FW_BIN_PATH}/QCS615_fw.zip;name=QCS615_fw"
 
 SRC_URI[QCM6490_fw.sha256sum] = "${QCM6490_HLOSFW_SHA256SUM}"
 SRC_URI[QCS9100_fw.sha256sum] = "${QCS9100_HLOSFW_SHA256SUM}"
 SRC_URI[QCS8300_fw.sha256sum] = "${QCS8300_HLOSFW_SHA256SUM}"
-SRC_URI[QCS615_fw.sha256sum] = "${QCS615_HLOSFW_SHA256SUM}"
 SRC_URI += "${QCM6490_SRC_URI}"
 SRC_URI += "${QCS9100_SRC_URI}"
 SRC_URI += "${QCS8300_SRC_URI}"
-SRC_URI += "${QCS615_SRC_URI}"
 
 do_install:append:qcom (){
     for dir in "${WORKDIR}"/*_fw/; do
@@ -72,11 +69,10 @@ python populate_packages:append() {
     hlosfw_update_packages(d, 'QCM6490_HLOSFW_UPDATE_PACKAGES')
     hlosfw_update_packages(d, 'QCS9100_HLOSFW_UPDATE_PACKAGES')
     hlosfw_update_packages(d, 'QCS8300_HLOSFW_UPDATE_PACKAGES')
-    hlosfw_update_packages(d, 'QCS615_HLOSFW_UPDATE_PACKAGES')
 }
 
 do_hlosfw_pkgd_fixup() {
-    for soc in qcm6490 qcs615 qcs8300 qcs9100; do
+    for soc in qcm6490 qcs8300 qcs9100; do
         if [ -d "${PKGD}/${soc}${FIRMWARE_UPDATES_DIR}" ]; then
             install -d "${PKGD}${FIRMWARE_UPDATES_DIR}"
             cp -a "${PKGD}/${soc}${FIRMWARE_UPDATES_DIR}/." "${PKGD}${FIRMWARE_UPDATES_DIR}/"
@@ -145,17 +141,10 @@ QCS8300_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-qcs8300-qcom-tzapps-updates \
 "
 
-QCS615_HLOSFW_UPDATE_PACKAGES = " \
-  ${PN}-qcom-qcs615-updates \
-  ${PN}-qcom-qcs615-verinfo \
-  ${PN}-qcs615-qcom-tzapps-updates \
-"
-
 PACKAGES:prepend = " \
   ${QCM6490_HLOSFW_UPDATE_PACKAGES} \
   ${QCS9100_HLOSFW_UPDATE_PACKAGES} \
   ${QCS8300_HLOSFW_UPDATE_PACKAGES} \
-  ${QCS615_HLOSFW_UPDATE_PACKAGES} \
 "
 
 SUMMARY:${PN}-qcs9100-ath11k-qca6698aq-updates = "QCS9100 ATH11K QCA6698AQ firmware overlay"
@@ -402,23 +391,12 @@ FILES:${PN}-qcs8300-qcom-tzapps-updates = " \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/loadalgota64.mdt \
 "
 
-SUMMARY:${PN}-qcs615-qcom-tzapps-updates = "QCS615 QCOM TZ application files"
-FILES:${PN}-qcs615-qcom-tzapps-updates = " \
-  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/loadalgota64.b* \
-  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/loadalgota64.mdt \
-"
-
 SUMMARY:${PN}-qcom-qcm6490-wlanhsp-updates = "QCOM QCM6490 Data firmware update files"
 FILES:${PN}-qcom-qcm6490-wlanhsp-updates = " \
   /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/Data* \
   /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/regdb.* \
 "
 
-SUMMARY:${PN}-qcom-qcs615-updates = "QCOM QCS615 firmware update files"
-FILES:${PN}-qcom-qcs615-updates = " \
-  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/adsp* \
-  /qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/cdsp* \
-"
 
 SUMMARY:${PN}-qcom-qcm6490-qps615-updates = "QCOM QCM6490 QPS615 firmware update files"
 FILES:${PN}-qcom-qcm6490-qps615-updates = " \
@@ -439,6 +417,3 @@ FILES:${PN}-qcom-qcs9100-verinfo = "/qcs9100${FIRMWARE_UPDATES_DIR}/qcom/qcs9100
 
 SUMMARY:${PN}-qcom-qcs8300-verinfo = "QCS8300 HLOS Ver_Info.txt convenience link in overlay"
 FILES:${PN}-qcom-qcs8300-verinfo = "/qcs8300${FIRMWARE_UPDATES_DIR}/qcom/qcs8300/Ver_Info.txt"
-
-SUMMARY:${PN}-qcom-qcs615-verinfo = "QCS615 HLOS Ver_Info.txt convenience link in overlay"
-FILES:${PN}-qcom-qcs615-verinfo = "/qcs615${FIRMWARE_UPDATES_DIR}/qcom/qcs615/Ver_Info.txt"

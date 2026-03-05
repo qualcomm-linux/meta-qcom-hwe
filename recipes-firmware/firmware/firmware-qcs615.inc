@@ -1,7 +1,3 @@
-FW_ARTIFACTORY = "https://softwarecenter.qualcomm.com/nexus/generic/software/chip/qualcomm_linux-spf-1-0/qualcomm-linux-spf-1-0_test_device_public"
-FW_BUILD_ID    = "r1.0_00114.0/qcs615-le-1-0"
-FW_BIN_PATH    = "common/build/common/bin"
-
 QCS615_FW_BUILD_ID ?= "r1.0_00114.0/qcs615-le-1-0"
 QCS615_FW_BIN_PATH ?= "common/build/common/bin"
 QCS615_HLOSFW_SHA256SUM  ?= "53378e80b2e9d5b33144d46d45f27363084a1dbb3ef9cbf53826d0e989f7210e"
