@@ -5,7 +5,7 @@ DESCRIPTION = "QCOM Sail-mailbox device-tree"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/${LICENSE};md5=550794465ba0ec5312d6919e203a55f9"
 
-SRCPROJECT = "git://git.quicinc.com/platform/vendor/qcom-opensource/sail-mailbox-devicetree.git;protocol=git"
+SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/sail-mailbox-devicetree.git;protocol=https"
 SRCBRANCH  = "sail-mailbox-kernel.lnx.1.0.r1-rel"
 SRCREV     = "1537bce7bcaba78e03a50f14251193f0e9facf37"
 
