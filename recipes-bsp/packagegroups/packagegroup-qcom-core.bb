@@ -39,6 +39,7 @@ RDEPENDS:${PN} += " \
 "
 
 RDEPENDS:${PN}:append:qcs9100 = " sail-can"
+RDEPENDS:${PN}:append:qcs8300 = " sail-can"
 
 
 SAIL_MAILBOX_KERNEL:qcs9100 = 'True'
