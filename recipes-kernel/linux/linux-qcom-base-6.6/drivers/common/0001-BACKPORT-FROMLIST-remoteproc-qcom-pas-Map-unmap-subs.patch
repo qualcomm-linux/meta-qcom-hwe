@@ -1,0 +1,187 @@
+From 588ff75620a2cc035bc04233621d682f1eacb13c Mon Sep 17 00:00:00 2001
+From: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+Date: Mon, 2 Feb 2026 14:15:59 +0530
+Subject: [PATCH] BACKPORT: FROMLIST: remoteproc: qcom: pas: Map/unmap
+ subsystem region before auth_and_reset
+
+Qualcomm remoteproc drivers such as qcom_q6v5_mss, which do not use the
+Peripheral Authentication Service (PAS), always map the MBA region before
+use and unmap it once the usage is complete. This behavior was introduced
+to avoid issues seen in the past where speculative accesses from the
+application processor to the MBA region after it was assigned to the remote
+Q6 led to an XPU violation. The issue was mitigated by unmapping the region
+before handing control to the remote Q6.
+
+Currently, most Qualcomm SoCs using the PAS driver run either with a
+standalone QHEE or the Gunyah hypervisor. In these environments, the
+hypervisor unmaps the Q6 memory from HLOS Stage-2 and remaps it into the
+Q6 Stage-2 page table. As a result, speculative accesses from HLOS cannot
+reach the region even if it remains mapped in HLOS Stage-1; therefore, XPU
+violations cannot occur.
+
+However, when the same SoC runs Linux at EL2, Linux itself must perform the
+unmapping to avoid such issues. It is still correct to apply this mapping/
+unmapping sequence even for SoCs that run under Gunyah, so this behavior
+should not be conditional.
+
+Upstream-Status: Submitted [https://lore.kernel.org/lkml/20260310135205.2497789-2-mukesh.ojha@oss.qualcomm.com/]
+Change-Id: Iacbdaf1552daf054162e9c07ab929637cae4b202
+Signed-off-by: Mukesh Ojha <mukesh.ojha@oss.qualcomm.com>
+---
+ drivers/remoteproc/qcom_q6v5_pas.c | 76 +++++++++++++++++++++++++-----
+ 1 file changed, 63 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/remoteproc/qcom_q6v5_pas.c b/drivers/remoteproc/qcom_q6v5_pas.c
+index 8fb1585fa1ae..b34dc980c083 100644
+--- a/drivers/remoteproc/qcom_q6v5_pas.c
++++ b/drivers/remoteproc/qcom_q6v5_pas.c
+@@ -132,7 +132,16 @@ static void adsp_minidump(struct rproc *rproc)
+ 	if (rproc->dump_conf == RPROC_COREDUMP_DISABLED)
+ 		return;
+ 
++	adsp->mem_region = ioremap_wc(adsp->mem_phys, adsp->mem_size);
++	if (!adsp->mem_region) {
++		dev_err(adsp->dev, "unable to map memory region: %pa+%zx\n",
++			&adsp->mem_phys, adsp->mem_size);
++		return;
++	}
++
+ 	qcom_minidump(rproc, adsp->minidump_id, adsp_segment_dump);
++	iounmap(adsp->mem_region);
++	adsp->mem_region = NULL;
+ }
+ 
+ static int adsp_pds_enable(struct qcom_adsp *adsp, struct device **pds,
+@@ -219,9 +228,25 @@ static int adsp_load(struct rproc *rproc, const struct firmware *fw)
+ 			return ret;
+ 		}
+ 
++		/*
++		 * Could be SSR + ramdump enabled case where region is mapped and not
++		 * unmapped later, lets reuse if its mapped already.
++		 */
++		if (!adsp->dtb_mem_region) {
++			adsp->dtb_mem_region = ioremap_wc(adsp->dtb_mem_phys, adsp->dtb_mem_size);
++			if (!adsp->dtb_mem_region) {
++				dev_err(adsp->dev, "unable to map dtb memory region: %pa+%zx\n",
++					&adsp->dtb_mem_phys, adsp->dtb_mem_size);
++				ret = -EINVAL;
++				goto release_firmware;
++			}
++		}
++
+ 		ret = qcom_mdt_pas_load(adsp->dtb_pas_ctx, adsp->dtb_firmware,
+ 					adsp->dtb_firmware_name, adsp->dtb_mem_region,
+ 					&adsp->dtb_mem_reloc);
++		iounmap(adsp->dtb_mem_region);
++		adsp->dtb_mem_region = NULL;
+ 		if (ret)
+ 			goto release_dtb_metadata;
+ 	}
+@@ -229,7 +254,9 @@ static int adsp_load(struct rproc *rproc, const struct firmware *fw)
+ 	return 0;
+ 
+ release_dtb_metadata:
+-	qcom_scm_pas_metadata_release(adsp->dtb_pas_ctx);
++	if (adsp->dtb_pas_id)
++		qcom_scm_pas_metadata_release(adsp->dtb_pas_ctx);
++release_firmware:
+ 	release_firmware(adsp->dtb_firmware);
+ 
+ 	return ret;
+@@ -297,8 +324,23 @@ static int adsp_start(struct rproc *rproc)
+ 		}
+ 	}
+ 
++	/*
++	 * Could be SSR + ramdump enabled case where region is mapped and not
++	 * unmapped later, lets reuse if its mapped already.
++	 */
++	if (!adsp->mem_region) {
++		adsp->mem_region = ioremap_wc(adsp->mem_phys, adsp->mem_size);
++		if (!adsp->mem_region) {
++			dev_err(adsp->dev, "unable to map memory region: %pa+%zx\n",
++				&adsp->mem_phys, adsp->mem_size);
++			goto release_dtb_metadata;
++		}
++	}
++
+ 	ret = qcom_mdt_pas_load(adsp->pas_ctx, adsp->firmware, rproc->firmware,
+ 				adsp->mem_region, &adsp->mem_reloc);
++	iounmap(adsp->mem_region);
++	adsp->mem_region = NULL;
+ 	if (ret)
+ 		goto release_pas_metadata;
+ 
+@@ -333,8 +375,11 @@ static int adsp_start(struct rproc *rproc)
+ 
+ unmap_carveout:
+ 	qcom_pas_unmap_carveout(rproc, adsp->mem_phys, adsp->mem_size);
++
+ release_pas_metadata:
+ 	qcom_scm_pas_metadata_release(adsp->pas_ctx);
++
++release_dtb_metadata:
+ 	if (adsp->dtb_pas_id)
+ 		qcom_scm_pas_metadata_release(adsp->dtb_pas_ctx);
+ 
+@@ -486,6 +531,22 @@ static int qcom_pas_parse_firmware(struct rproc *rproc, const struct firmware *f
+ 	return ret;
+ }
+ 
++static void adsp_coredump(struct rproc *rproc)
++{
++	struct qcom_adsp *adsp = rproc->priv;
++
++	adsp->mem_region = ioremap_wc(adsp->mem_phys, adsp->mem_size);
++	if (!adsp->mem_region) {
++		dev_err(adsp->dev, "unable to map memory region: %pa+%zx\n",
++			&adsp->mem_phys, adsp->mem_size);
++		return;
++	}
++
++	rproc_coredump(rproc);
++	iounmap(adsp->mem_region);
++	adsp->mem_region = NULL;
++}
++
+ static const struct rproc_ops adsp_ops = {
+ 	.unprepare = adsp_unprepare,
+ 	.start = adsp_start,
+@@ -494,6 +555,7 @@ static const struct rproc_ops adsp_ops = {
+ 	.parse_fw = qcom_pas_parse_firmware,
+ 	.load = adsp_load,
+ 	.panic = adsp_panic,
++	.coredump = adsp_coredump,
+ };
+ 
+ static const struct rproc_ops adsp_minidump_ops = {
+@@ -628,12 +690,6 @@ static int adsp_alloc_memory_region(struct qcom_adsp *adsp)
+ 
+ 	adsp->mem_phys = adsp->mem_reloc = rmem->base;
+ 	adsp->mem_size = rmem->size;
+-	adsp->mem_region = devm_ioremap_wc(adsp->dev, adsp->mem_phys, adsp->mem_size);
+-	if (!adsp->mem_region) {
+-		dev_err(adsp->dev, "unable to map memory region: %pa+%zx\n",
+-			&rmem->base, adsp->mem_size);
+-		return -EBUSY;
+-	}
+ 
+ 	if (!adsp->dtb_pas_id)
+ 		return 0;
+@@ -653,12 +709,6 @@ static int adsp_alloc_memory_region(struct qcom_adsp *adsp)
+ 
+ 	adsp->dtb_mem_phys = adsp->dtb_mem_reloc = rmem->base;
+ 	adsp->dtb_mem_size = rmem->size;
+-	adsp->dtb_mem_region = devm_ioremap_wc(adsp->dev, adsp->dtb_mem_phys, adsp->dtb_mem_size);
+-	if (!adsp->dtb_mem_region) {
+-		dev_err(adsp->dev, "unable to map dtb memory region: %pa+%zx\n",
+-			&rmem->base, adsp->dtb_mem_size);
+-		return -EBUSY;
+-	}
+ 
+ 	return 0;
+ }
+-- 
+2.53.0
+
