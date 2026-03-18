@@ -1,7 +1,7 @@
 SUMMARY = "QCOM WIFI opensource package groups"
 
 LICENSE = "BSD-3-Clause \
-           & Qualcomm-Technologies-Inc.-Proprietary"
+           & LICENSE.qcom-2"
 
 PACKAGE_ARCH = "${SOC_ARCH}"
 
