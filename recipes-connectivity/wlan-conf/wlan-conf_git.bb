@@ -10,7 +10,11 @@ SRCREV     = "b696e6ca813ef9be0d21ceb55842cf93f656d98d"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=mdm-init \
            file://wlan_daemon.service \
-           file://multi-vif.service"
+           file://multi-vif.service \
+           file://wifi.conf"
+
+SYSTEMD_SYSUSERS = "wifi.conf"
+SYSTEMD_SUPPORTS_SYSUSERS = "1"
 
 S = "${WORKDIR}/mdm-init"
 
@@ -24,11 +28,14 @@ do_install:append: () {
 		install -d ${D}/etc/systemd/system/multi-user.target.wants/
 		ln -sf /etc/systemd/system/wlan_daemon.service \
 			${D}/etc/systemd/system/multi-user.target.wants/wlan_daemon.service
+		install -d ${D}${nonarch_libdir}/sysusers.d
+		install -m 0644 ${WORKDIR}/wifi.conf ${D}${nonarch_libdir}/sysusers.d/wifi.conf
 	fi
 }
 
 FILES:${PN} += "${sysconfdir}/systemd/system/*"
 FILES:${PN} += "${nonarch_base_libdir}/firmware/wlan/qca_cld/* ${sysconfdir}/init.d/* "
+FILES:${PN} += "${nonarch_libdir}/sysusers.d/wifi.conf"
 
 EXTRA_OECONF:append:qcm6490 = " --enable-qcm6490=yes "
 EXTRA_OECONF:append:qcs9100 = " --enable-upstream=yes "
