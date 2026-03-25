@@ -28,6 +28,7 @@ SRC_URI += "file://0001-WNM-Extend-workaround-for-broken-AP-operating-class-beha
 SRC_URI += "file://0001-Use-helper-functions-to-access-RSNE-RSNXE-from-BSS-e.patch;patchdir=${WORKDIR}/git/"
 SRC_URI += "file://0001-FT-Do-not-omit-RSNXE-from-FT-initial-mobility-domain.patch;patchdir=${WORKDIR}/git/"
 SRC_URI += "file://0001-wpa_supplicant-stop-wpa_supplicant-as-part-of-device.patch;patchdir=${WORKDIR}/git/"
+SRC_URI += "file://wpa_supplicant_override.conf"
 
 SRCREV = "9716bf1160beb677e965d9e6475d6c9e162e8374"
 
@@ -84,6 +85,10 @@ do_install:append() {
         if ${@bb.utils.contains('DISTRO_FEATURES','systemd','true','false',d)}; then
                 install -d ${D}/${systemd_system_unitdir}
                 install -m 644 ${S}/systemd/*.service ${D}/${systemd_system_unitdir}
+		install -d ${D}${sysconfdir}/systemd/system/wpa_supplicant.service.d
+		install -m 0644 ${WORKDIR}/wpa_supplicant_override.conf \
+			${D}${sysconfdir}/systemd/system/wpa_supplicant.service.d/wpa_supplicant_override.conf
+
         fi
 }
 
@@ -100,3 +105,4 @@ FILES_SOLIBSDEV = ""
 INSANE_SKIP:${PN} = "dev-so"
 
 FILES:${PN} += "/usr/include/*"
+FILES:${PN} += "${sysconfdir}/systemd/system/wpa_supplicant.service.d/override.conf"
