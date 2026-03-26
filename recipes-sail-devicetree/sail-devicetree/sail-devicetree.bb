@@ -16,8 +16,8 @@ S = "${WORKDIR}/sail-mailbox/sail-mb-devicetree"
 DTC := "${KBUILD_OUTPUT}/scripts/dtc/dtc"
 KERNEL_INCLUDE := "${STAGING_KERNEL_DIR}/include/"
 
-COMPATIBLE_MACHINE = "qcs9075|qcs9100"
-LEMANS_BOARD_NAMES = "qcs9100-ride-sx|qcs9075-ride-sx|qcs9075-rb8-core-kit|qcs9075-iq-9075-evk|qcs9075-iq-9075-evk-ifp|"
+COMPATIBLE_MACHINE = "qcs9075|qcs9100|qcs8300"
+LEMANS_BOARD_NAMES = "qcs9100-ride-sx|qcs9075-ride-sx|qcs9075-rb8-core-kit|qcs9075-iq-9075-evk|qcs9075-iq-9075-evk-ifp|qcs8275-iq-8275-evk-pro-sku"
 
 python get_soc_family() {
     need_machine = d.getVar('COMPATIBLE_MACHINE')
@@ -48,6 +48,9 @@ do_compile() {
             oe_runmake ${EXTRA_OEMAKE}  qcs9100-ride-sail
             oe_runmake ${EXTRA_OEMAKE}  qcs9075-rb8-evk
         fi
+        if [ "${SOC_FAM}" = "qcs8300" ]; then
+	   oe_runmake ${EXTRA_OEMAKE} qcs8275-addons-iq-8275-evk_sailmb
+	fi
 }
 
 do_install() {
