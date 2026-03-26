@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/${LICENSE};md5=550794465ba0ec53
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/sail-mailbox-devicetree.git;protocol=https"
 SRCBRANCH  = "sail-mailbox-kernel.lnx.1.0.r1-rel"
-SRCREV     = "1537bce7bcaba78e03a50f14251193f0e9facf37"
+SRCREV     = "317440253769bba76a25dd772279d3b542ef7121"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=sail-mailbox/sail-mb-devicetree"
 

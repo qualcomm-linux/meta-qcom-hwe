@@ -13,7 +13,7 @@ COMPATIBLE_MACHINE = "(qcom)"
 
 SRCPROJECT = "git://git.codelinaro.org/clo/la/kernel/qcom.git;protocol=https"
 SRCBRANCH  = "kernel.qclinux.1.0.r1-rel"
-SRCREV     = "2c27bab3691ec5a6cde3662d5e1d6c0c9a9c4cc7"
+SRCREV     = "380a343250d3d41060b08349562c73aa078e4901"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=kernel"
 
