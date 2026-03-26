@@ -7,7 +7,7 @@ DESCRIPTION = "libsdmextension Library"
 
 DEPENDS += "qcom-display-hal-linux jsoncpp glib-2.0 qcom-display-color-linux property-vault libdrm openssl linux-kernel-qcom-headers syslog-plumber"
 
-QCM6490_SHA256SUM = "5a7eea526cc3231f9149b4a95eea21ac366f41af2b3d0b289c0856445bca1567"
+QCM6490_SHA256SUM = "962029b2c821a4c8391aa0a80647251488f141030ee94d548b77e8dfb5a0875c"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 

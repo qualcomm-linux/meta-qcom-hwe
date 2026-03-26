@@ -9,7 +9,7 @@ DEPENDS += "qcom-audio-expander"
 
 PBT_ARCH = "armv8-2a"
 
-ARMV8_SHA256SUM = "fef65c32ba8528fd0566caf24c247c31b3eeca2a0a37601d731b86ad24a43c78"
+ARMV8_SHA256SUM = "b05aeb4b500f7733bc34e1d7ea08b88bab2dd3aa62c2aadeccf5bb6031a83479"
 SRC_URI[armv8-2a.sha256sum] = "${ARMV8_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"
