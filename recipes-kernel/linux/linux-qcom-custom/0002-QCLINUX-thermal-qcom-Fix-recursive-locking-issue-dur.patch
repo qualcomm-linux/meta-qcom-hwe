@@ -1,0 +1,35 @@
+From cd19bacd4959781964530fd5ed54dcc17e576002 Mon Sep 17 00:00:00 2001
+From: Haritha Yellampalle <hyellamp@qti.qualcomm.com>
+Date: Fri, 27 Mar 2026 14:22:01 +0530
+Subject: [PATCH] QCLINUX: thermal: qcom: Fix recursive locking issue during
+ trip update
+
+For platforms with higher thermal junction temperature specifications,
+the thermal trip update path may hit a recursive locking scenario when
+updating trips per thermal zone.
+
+Avoid this by invoking tsens_thermal_zone_trip_update() without taking
+the thermal zone lock, since the function is already expected to operate
+without requiring the caller to hold it.
+
+Change-Id: I8496cd449ac4eae7a9a33059a8dcf04d7bbad0d8
+Signed-off-by: Gaurav Kohli <gaurav.kohli@oss.qualcomm.com>
+Upstream-Status: Pending
+
+---
+ drivers/thermal/qcom/tsens.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/thermal/qcom/tsens.c b/drivers/thermal/qcom/tsens.c
+index 7314e10c9956..46aa2131e1b7 100644
+--- a/drivers/thermal/qcom/tsens.c
++++ b/drivers/thermal/qcom/tsens.c
+@@ -1317,7 +1317,7 @@ static int tsens_nvmem_trip_update(struct thermal_zone_device *tz)
+ 	num_trips = thermal_zone_get_num_trips(tz);
+ 	/* First trip is for userspace, update all other trips. */
+ 	for (i = 1; i < num_trips; i++)
+-		thermal_zone_device_exec(tz, tsens_thermal_zone_trip_update, i);
++		tsens_thermal_zone_trip_update(tz, i);
+ 
+ 	return 0;
+ }
