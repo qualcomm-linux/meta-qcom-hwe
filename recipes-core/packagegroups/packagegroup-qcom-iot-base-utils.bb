@@ -1,5 +1,5 @@
 SUMMARY = "IOT Base Utilities Packagegroup"
-LICENSE = "Qualcomm-Technologies-Inc.-Proprietary"
+LICENSE = "LICENSE.qcom-2"
 
 PROVIDES = "${PACKAGES}"
 PACKAGE_ARCH = "${SOC_ARCH}"
