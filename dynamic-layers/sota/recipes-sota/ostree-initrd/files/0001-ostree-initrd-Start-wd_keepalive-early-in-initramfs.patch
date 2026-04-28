@@ -1,0 +1,74 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Neeraj Vishwakarma <neervish@qti.qualcomm.com>
+Date: Mon, 28 Apr 2026 00:00:00 +0000
+Subject: [PATCH] ostree-initrd: Start wd_keepalive early in initramfs
+
+Arm the hardware watchdog as early as possible during initramfs boot
+by starting wd_keepalive immediately after the tmpfs mounts are up.
+
+Changes:
+- Create /var/run -> /run symlink so wd_keepalive can write its PID file
+  before /var is available from the real rootfs.
+- Launch wd_keepalive in the background and wait up to 2 s for its PID
+  file to appear as a readiness signal.
+- Stop wd_keepalive cleanly just before switch_root so the userspace
+  watchdog daemon on the real rootfs can take over without a gap.
+
+Upstream-Status: Inappropriate [Qualcomm platform specific]
+CR: 4501258
+Signed-off-by: Neeraj Vishwakarma <neervish@qti.qualcomm.com>
+---
+ init.sh | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/init.sh b/init.sh
+--- a/init.sh
++++ b/init.sh
+@@ -42,6 +42,34 @@
+ do_mount_fs tmpfs /dev/shm
+ do_mount_fs tmpfs /run
+ 
++# Ensure /var/run exists for wd_keepalive PID file
++mkdir -p /var
++ln -sf /run /var/run
++
++# Start wd_keepalive in initramfs (if present)
++if [ -x /usr/sbin/wd_keepalive ]; then
++  /usr/sbin/wd_keepalive &
++
++  # Wait for wd_keepalive to write its PID file as a readiness signal.
++  timeout=20  # 20 * 0.1s = 2s max
++  while [ $timeout -gt 0 ] && [ ! -s /var/run/wd_keepalive.pid ]; do
++    log_info "Checking wd_keepalive pid"
++    sleep 0.1
++    timeout=$((timeout - 1))
++  done
++
++  if [ -s /var/run/wd_keepalive.pid ]; then
++    WD_PID="$(cat /var/run/wd_keepalive.pid 2>/dev/null || true)"
++    if [ -n "${WD_PID:-}" ] && kill -0 "$WD_PID" 2>/dev/null; then
++      log_info "wd_keepalive started (pid=$WD_PID)"
++    else
++      log_info "wd_keepalive pidfile present but daemon not running (pid=${WD_PID:-empty})"
++    fi
++  else
++    log_info "wd_keepalive pidfile not created within timeout (continuing boot)"
++  fi
++fi
++
+ # check if smack is active (and if so, mount smackfs)
+ grep -q smackfs /proc/filesystems && {
+   do_mount_fs smackfs /sys/fs/smackfs
+@@ -69,6 +97,12 @@
+ # To avoid using a clean /run that is later mounted by systemd
+ mount --move /run /sysroot/run
+ 
++# Stop wd_keepalive before switch_root so rootfs userspace watchdog can take over
++if [ -n "${WD_PID:-}" ] && kill -0 "$WD_PID" 2>/dev/null; then
++  kill "$WD_PID" 2>/dev/null || true
++  log_info "Stopping wd_keepalive (pid=$WD_PID) before switch_root"
++fi
++
+ log_info "Switching to rootfs"
+ # shellcheck disable=SC2093
+ exec switch_root /sysroot /sbin/init
