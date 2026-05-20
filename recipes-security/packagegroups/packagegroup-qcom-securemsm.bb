@@ -1,6 +1,6 @@
 SUMMARY = "QCOM securemsm propreitary packagegroup"
 
-LICENSE = "Qualcomm-Technologies-Inc.-Proprietary"
+LICENSE = "LICENSE.qcom-2"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 inherit packagegroup
