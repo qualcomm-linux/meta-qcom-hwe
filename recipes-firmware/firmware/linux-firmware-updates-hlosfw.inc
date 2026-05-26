@@ -341,6 +341,12 @@ FILES:${PN}-qcom-qcm6490-qps615-updates = " \
   /qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qps615.bin \
 "
 
+SUMMARY:${PN}-qca-ramps-updates = "QCOM QCA ramps firmware update files"
+FILES:${PN}-qca-ramps-updates = " \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/ramps_0x00130201_030* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/ramps_0x00130201_gf_030* \
+"
+
 SUMMARY:${PN}-qcom-qcm6490-verinfo = "QCM6490 HLOS Ver_Info.txt convenience link in overlay"
 FILES:${PN}-qcom-qcm6490-verinfo = "/qcm6490${FIRMWARE_UPDATES_DIR}/qcom/qc[ms]6490/Ver_Info.txt"
 
