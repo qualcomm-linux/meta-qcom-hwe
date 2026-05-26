@@ -22,6 +22,7 @@ RRECOMMENDS:${PN} = " \
 RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     hexagon-dsp-binaries-qcm6490-updates \
     linux-firmware-ath11k-wcn6750-updates \
+    linux-firmware-qca-wcn6750-updates \
     linux-firmware-qcacld-wcn6855-updates \
     linux-firmware-qcm6490-ath11k-wcn6855-updates \
     linux-firmware-qcm6490-qcom-tzapps-updates \
