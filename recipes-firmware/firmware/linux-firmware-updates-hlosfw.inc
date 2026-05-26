@@ -96,7 +96,13 @@ addtask hlosfw_pkgd_fixup after do_package before do_package_write_rpm
 QCM6490_HLOSFW_UPDATE_PACKAGES = " \
   ${PN}-ath11k-wcn6750-updates \
   ${PN}-qcacld-wcn6855-updates \
+  ${PN}-qca-ramps-updates \
+  ${PN}-qca-wcn6750-updates \
   ${PN}-qcm6490-ath11k-wcn6855-updates \
+  ${PN}-qcm6490-qca-qca2066-hpbtfw-updates \
+  ${PN}-qcm6490-qca-qca2066-updates \
+  ${PN}-qcm6490-qca-qca61x4-usb-updates \
+  ${PN}-qcm6490-qca-wcn685x-updates \
   ${PN}-qcm6490-qcom-tzapps-updates \
   ${PN}-qcom-qcm6490-audio-updates \
   ${PN}-qcom-qcm6490-compute-updates \
@@ -160,6 +166,26 @@ FILES:${PN}-qcs9100-ath11k-wcn6855-updates = "/qcs9100${FIRMWARE_UPDATES_DIR}/at
 SUMMARY:${PN}-qcs8300-ath11k-wcn6855-updates = "QCS8300 ATH11K WCN6855 firmware overlay"
 FILES:${PN}-qcs8300-ath11k-wcn6855-updates = "/qcs8300${FIRMWARE_UPDATES_DIR}/ath11k/WCN6855"
 
+SUMMARY:${PN}-qcm6490-qca-qca2066-updates = "QCA2066 firmware overlay"
+FILES:${PN}-qcm6490-qca-qca2066-updates = " \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpbtfw21.tlv \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpnv21.bin \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.bin \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpnv21.3* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.3* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpnv21.b* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpnv21g.b* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpnv21_LPO* \
+"
+
+SUMMARY:${PN}-qcm6490-qca-qca2066-hpbtfw-updates = "QCA firmware update files"
+FILES:${PN}-qcm6490-qca-qca2066-hpbtfw-updates = " \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpbtfw21* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/msbtfw11* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpbtfw20* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/hpnv20* \
+"
+
 SUMMARY:${PN}-qcs9100-qca-qca2066-updates = "QCA2066 firmware overlay"
 FILES:${PN}-qcs9100-qca-qca2066-updates = " \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/hpbtfw21.tlv \
@@ -186,6 +212,21 @@ FILES:${PN}-qcs8300-qca-qca2066-updates = " \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/hpnv21g_* \
 "
 
+SUMMARY:${PN}-qca-wcn6750-updates = "QCA WCN6750 firmware update files"
+FILES:${PN}-qca-wcn6750-updates = " \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/msbtfw11.mbn* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/msbtfw11.tlv* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/msnv11.bin* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/msnv11.b0a* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/msnv11.b09* \
+"
+
+SUMMARY:${PN}-qcm6490-qca-qca61x4-usb-updates = "QCM6490 QCA QCA61x4 USB firmware update files"
+FILES:${PN}-qcm6490-qca-qca61x4-usb-updates = " \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/nvm_usb_*.bin* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/rampatch_usb_*.bin* \
+"
+
 SUMMARY:${PN}-qcs9100-qca-qca61x4-usb-updates = "QCS9100 QCA QCA61x4 USB firmware update files"
 FILES:${PN}-qcs9100-qca-qca61x4-usb-updates = " \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/nvm_usb_*.bin* \
@@ -198,6 +239,13 @@ FILES:${PN}-qcs8300-qca-qca61x4-usb-updates = " \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/rampatch_usb_*.bin* \
 "
 
+SUMMARY:${PN}-qcm6490-qca-wcn685x-updates = "QCM6490 QCA wcn685x firmware update files"
+FILES:${PN}-qcm6490-qca-wcn685x-updates = " \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/wcnhpbtfw21.tlv* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/wcnhpbtfw21g* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21.b* \
+  qcm6490${FIRMWARE_UPDATES_DIR}/qca/wcnhpnv21* \
+"
 SUMMARY:${PN}-qcs9100-qca-wcn685x-updates = "QCS9100 QCA wcn685x firmware update files"
 FILES:${PN}-qcs9100-qca-wcn685x-updates = " \
   /qcs9100${FIRMWARE_UPDATES_DIR}/qca/wcnhpbtfw21.tlv* \
