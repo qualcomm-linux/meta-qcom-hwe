@@ -1,6 +1,6 @@
 SUMMARY = "QCOM fastCV Proprietary Package Group"
 
-LICENSE = "Qualcomm-Technologies-Inc.-Proprietary"
+LICENSE = "LICENSE.qcom-2"
 PACKAGE_ARCH = "${SOC_ARCH}"
 
 inherit packagegroup

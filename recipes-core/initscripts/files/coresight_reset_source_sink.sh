@@ -1,8 +1,7 @@
 #!/bin/sh
 #=============================================================================
-# Copyright (c) 2024 Qualcomm Technologies, Inc.
-# All Rights Reserved.
-# Confidential and Proprietary - Qualcomm Technologies, Inc.
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: MIT
 #=============================================================================
 
 disable_source()

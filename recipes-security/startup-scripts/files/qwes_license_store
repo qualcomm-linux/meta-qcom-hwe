@@ -2,9 +2,8 @@
 #
 # qwes_license_store        init.d script to set up QWES license store.
 #
-#Copyright (c) 2020-2024 Qualcomm Technologies, Inc.
-#All Rights Reserved.
-#Confidential and Proprietary - Qualcomm Technologies, Inc.
+#Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+#SPDX-License-Identifier: MIT
 
 
 set -e

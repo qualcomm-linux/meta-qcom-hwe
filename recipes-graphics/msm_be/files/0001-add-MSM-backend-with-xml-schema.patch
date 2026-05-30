@@ -1,4 +1,4 @@
-From fc3bc6166b13e746e3e0b70a54ebfa10673957ef Mon Sep 17 00:00:00 2001
+From 23b5c8570c0bdb05bd898eef651d5abbd8c0c588 Mon Sep 17 00:00:00 2001
 From: Devanshi Bansal <quic_devanshi@quicinc.com>
 Date: Tue, 12 Aug 2025 09:01:16 +0530
 Subject: [PATCH] add MSM backend with xml schema
@@ -2624,7 +2624,7 @@ index 0000000..e933539
 +#endif
 diff --git a/src/gbm/backends/msm/gbm_msm_int.h b/src/gbm/backends/msm/gbm_msm_int.h
 new file mode 100644
-index 0000000..64a2ec1
+index 0000000..17e800d
 --- /dev/null
 +++ b/src/gbm/backends/msm/gbm_msm_int.h
 @@ -0,0 +1,38 @@
@@ -2641,7 +2641,7 @@ index 0000000..64a2ec1
 +#include <gbm_backend_abi.h>
 +#include "gbm_msm.h"
 +
-+#define GBM_FORMAT_RGBA32323232F fourcc_mod_code(QCOM, 56)
++#define GBM_FORMAT_RGBA32323232F fourcc_code('A', 'B', '8', 'F')
 +
 +struct gbm_msm_device {
 +   struct gbm_device base;

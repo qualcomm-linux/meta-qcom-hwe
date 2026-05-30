@@ -1,6 +1,6 @@
 /**
- * Copyright (c) 2024 QUALCOMM Technologies Inc. All Rights Reserved.
- * Qualcomm Technologies Confidential and Proprietary
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+ * SPDX-License-Identifier: MIT
  *
  */
 #include <stdio.h>

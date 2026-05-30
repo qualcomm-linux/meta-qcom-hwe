@@ -30,8 +30,5 @@ RRECOMMENDS:${PN}:append:qcom-custom-bsp = " \
     linux-firmware-qcom-qcs8300-generalpurpose-updates \
     linux-firmware-qcom-qcs8300-verinfo \
     linux-firmware-qcs8300-ath11k-wcn6855-updates \
-    linux-firmware-qcs8300-qca-qca2066-updates \
-    linux-firmware-qcs8300-qca-qca61x4-usb-updates \
     linux-firmware-qcs8300-qcom-tzapps-updates \
-    linux-firmware-qcs8300-qca-wcn685x-updates \
 "

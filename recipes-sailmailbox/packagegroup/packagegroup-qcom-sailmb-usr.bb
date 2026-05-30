@@ -1,4 +1,4 @@
-LICENSE = "BSD-3-Clause-Clear"
+LICENSE = "LICENSE.qcom-2"
 
 PACKAGE_ARCH = "${SOC_ARCH}"
 

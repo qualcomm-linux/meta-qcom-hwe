@@ -13,7 +13,7 @@ LICENSE = " \
 LIC_FILES_CHKSUM = "\
     file://LICENSE.qcom;md5=56e86b6c508490dadc343f39468b5f5e \
     file://LICENSE.qcom-2;md5=165287851294f2fb8ac8cbc5e24b02b0 \
-    file://WHENCE;md5=fe9e5f1940df84614b02a94b4f85e73d \
+    file://WHENCE;md5=51fa6c1d54036eba9135c68dee12325e \
     file://00-hexagon-dsp-binaries.yaml;endline=4;md5=1e22ea93511ef71fecaca9fc16f1355e \
 "
 NO_GENERIC_LICENSE[dspso-qcom] = "LICENSE.qcom"
@@ -24,7 +24,7 @@ SRC_URI = " \
     git://github.com/linux-msm/dsp-binaries;protocol=https;branch=trunk \
 "
 
-SRCREV = "9efc74739b457bed846e53bb8cf46d524ce58791"
+SRCREV = "5f5e79f2e1ac79daac1c3739d6f4d5bf9d887b83"
 
 S = "${WORKDIR}/git"
 
@@ -41,6 +41,8 @@ do_install () {
 PACKAGE_BEFORE_PN =+ "\
     ${PN}-conf \
     ${PN}-qcom-db820c-adsp \
+    ${PN}-qcom-glymur-crd-adsp \
+    ${PN}-qcom-glymur-crd-cdsp \
     ${PN}-qcom-iq8275-evk-adsp \
     ${PN}-qcom-iq8275-evk-cdsp \
     ${PN}-qcom-iq8275-evk-gdsp \
@@ -59,8 +61,12 @@ PACKAGE_BEFORE_PN =+ "\
     ${PN}-qcom-sa8775p-ride-adsp \
     ${PN}-qcom-sa8775p-ride-cdsp \
     ${PN}-qcom-sa8775p-ride-gdsp \
+    ${PN}-qcom-sdm845-hdk-adsp \
+    ${PN}-qcom-sdm845-hdk-cdsp \
     ${PN}-qcom-sm8750-mtp-adsp \
     ${PN}-qcom-sm8750-mtp-cdsp \
+    ${PN}-radxa-dragon-q6a-adsp \
+    ${PN}-radxa-dragon-q6a-cdsp \
     ${PN}-thundercomm-db845c-adsp \
     ${PN}-thundercomm-db845c-cdsp \
     ${PN}-thundercomm-db845c-sdsp \
@@ -72,11 +78,15 @@ PACKAGE_BEFORE_PN =+ "\
     ${PN}-thundercomm-rb5-adsp \
     ${PN}-thundercomm-rb5-cdsp \
     ${PN}-thundercomm-rb5-sdsp \
+    ${PN}-thundercomm-rubikpi3-adsp \
+    ${PN}-thundercomm-rubikpi3-cdsp \
 "
 
 LICENSE:${PN} = "dspso-WHENCE"
 LICENSE:${PN}-conf = "MIT"
 LICENSE:${PN}-qcom-db820c-adsp = "dspso-qcom"
+LICENSE:${PN}-qcom-glymur-crd-adsp = "dspso-qcom-2"
+LICENSE:${PN}-qcom-glymur-crd-cdsp = "dspso-qcom-2"
 LICENSE:${PN}-qcom-iq8275-evk-adsp = "dspso-qcom-2"
 LICENSE:${PN}-qcom-iq8275-evk-cdsp = "dspso-qcom-2"
 LICENSE:${PN}-qcom-iq8275-evk-gdsp = "dspso-qcom-2"
@@ -95,8 +105,12 @@ LICENSE:${PN}-qcom-qcs8300-ride-gdsp = "dspso-qcom-2"
 LICENSE:${PN}-qcom-sa8775p-ride-adsp = "dspso-qcom-2"
 LICENSE:${PN}-qcom-sa8775p-ride-cdsp = "dspso-qcom-2"
 LICENSE:${PN}-qcom-sa8775p-ride-gdsp = "dspso-qcom-2"
+LICENSE:${PN}-qcom-sdm845-hdk-adsp = "dspso-qcom"
+LICENSE:${PN}-qcom-sdm845-hdk-cdsp = "dspso-qcom"
 LICENSE:${PN}-qcom-sm8750-mtp-adsp = "dspso-qcom-2"
 LICENSE:${PN}-qcom-sm8750-mtp-cdsp = "dspso-qcom-2"
+LICENSE:${PN}-radxa-dragon-q6a-adsp = "dspso-qcom"
+LICENSE:${PN}-radxa-dragon-q6a-cdsp = "dspso-qcom"
 LICENSE:${PN}-thundercomm-db845c-adsp = "dspso-qcom"
 LICENSE:${PN}-thundercomm-db845c-cdsp = "dspso-qcom"
 LICENSE:${PN}-thundercomm-db845c-sdsp = "dspso-qcom"
@@ -108,8 +122,12 @@ LICENSE:${PN}-thundercomm-rb3gen2-cdsp = "dspso-qcom"
 LICENSE:${PN}-thundercomm-rb5-adsp = "dspso-qcom"
 LICENSE:${PN}-thundercomm-rb5-cdsp = "dspso-qcom"
 LICENSE:${PN}-thundercomm-rb5-sdsp = "dspso-qcom"
+LICENSE:${PN}-thundercomm-rubikpi3-adsp = "dspso-qcom"
+LICENSE:${PN}-thundercomm-rubikpi3-cdsp = "dspso-qcom"
 
 RDEPENDS:${PN}-qcom-db820c-adsp = "${PN}-conf linux-firmware-qcom-apq8096-audio (= 1:${PV})"
+RDEPENDS:${PN}-qcom-glymur-crd-adsp = "${PN}-conf linux-firmware-qcom-glymur-audio (= 1:${PV})"
+RDEPENDS:${PN}-qcom-glymur-crd-cdsp = "${PN}-conf linux-firmware-qcom-glymur-compute (= 1:${PV})"
 RDEPENDS:${PN}-qcom-iq8275-evk-adsp = "${PN}-conf linux-firmware-qcom-qcs8300-audio (= 1:${PV})"
 RDEPENDS:${PN}-qcom-iq8275-evk-adsp += "${PN}-qcom-qcs8300-ride-adsp"
 RDEPENDS:${PN}-qcom-iq8275-evk-cdsp = "${PN}-conf linux-firmware-qcom-qcs8300-compute (= 1:${PV})"
@@ -136,6 +154,8 @@ RDEPENDS:${PN}-qcom-sa8775p-ride-cdsp = "${PN}-conf linux-firmware-qcom-sa8775p-
 RDEPENDS:${PN}-qcom-sa8775p-ride-gdsp = "${PN}-conf linux-firmware-qcom-sa8775p-generalpurpose (= 1:${PV})"
 RDEPENDS:${PN}-qcom-sm8750-mtp-adsp = "${PN}-conf linux-firmware-qcom-sa8775p-audio (= 1:${PV})"
 RDEPENDS:${PN}-qcom-sm8750-mtp-cdsp = "${PN}-conf linux-firmware-qcom-sa8775p-compute (= 1:${PV})"
+RDEPENDS:${PN}-radxa-dragon-q6a-adsp = "${PN}-conf linux-firmware-qcom-qcs6490-radxa-dragon-q6a-audio (= 1:${PV})"
+RDEPENDS:${PN}-radxa-dragon-q6a-cdsp = "${PN}-conf linux-firmware-qcom-qcs6490-radxa-dragon-q6a-compute (= 1:${PV})"
 RDEPENDS:${PN}-thundercomm-db845c-adsp = "${PN}-conf linux-firmware-qcom-sdm845-audio (= 1:${PV})"
 RDEPENDS:${PN}-thundercomm-db845c-cdsp = "${PN}-conf linux-firmware-qcom-sdm845-compute (= 1:${PV})"
 RDEPENDS:${PN}-thundercomm-db845c-sdsp = "${PN}-conf linux-firmware-qcom-sdm845-thundercomm-db845c-sensors (= 1:${PV})"
@@ -147,6 +167,7 @@ RDEPENDS:${PN}-thundercomm-rb3gen2-cdsp = "${PN}-conf linux-firmware-qcom-qcm649
 RDEPENDS:${PN}-thundercomm-rb5-adsp = "${PN}-conf linux-firmware-qcom-sm8250-audio (= 1:${PV})"
 RDEPENDS:${PN}-thundercomm-rb5-cdsp = "${PN}-conf linux-firmware-qcom-sm8250-compute (= 1:${PV})"
 RDEPENDS:${PN}-thundercomm-rb5-sdsp = "${PN}-conf linux-firmware-qcom-sm8250-thundercomm-rb5-sensors (= 1:${PV})"
+RDEPENDS:${PN}-thundercomm-rubikpi3-adsp = "${PN}-conf linux-firmware-qcom-qcs6490-thundercomm-rubikpi3-audio (= 1:${PV})"
 
 # Keep the base package empty so that one can choose which files
 # to include and do not pull all of them all in.
@@ -156,6 +177,8 @@ ALLOW_EMPTY:${PN} = "1"
 FILES:${PN}-conf = "${datadir}/qcom/conf.d"
 
 FILES:${PN}-qcom-db820c-adsp = "${datadir}/qcom/apq8096/Qualcomm/db820c/dsp/adsp"
+FILES:${PN}-qcom-glymur-crd-adsp = "${datadir}/qcom/glymur/Qualcomm/Glymur-CRD/dsp/adsp*"
+FILES:${PN}-qcom-glymur-crd-cdsp = "${datadir}/qcom/glymur/Qualcomm/Glymur-CRD/dsp/cdsp*"
 FILES:${PN}-qcom-iq8275-evk-adsp = "${datadir}/qcom/qcs8300/Qualcomm/IQ8275-EVK/dsp/adsp"
 FILES:${PN}-qcom-iq8275-evk-cdsp = "${datadir}/qcom/qcs8300/Qualcomm/IQ8275-EVK/dsp/cdsp*"
 FILES:${PN}-qcom-iq8275-evk-gdsp = "${datadir}/qcom/qcs8300/Qualcomm/IQ8275-EVK/dsp/gdsp*"
@@ -174,8 +197,12 @@ FILES:${PN}-qcom-qcs8300-ride-gdsp = "${datadir}/qcom/qcs8300/Qualcomm/QCS8300-R
 FILES:${PN}-qcom-sa8775p-ride-adsp = "${datadir}/qcom/sa8775p/Qualcomm/SA8775P-RIDE/dsp/adsp"
 FILES:${PN}-qcom-sa8775p-ride-cdsp = "${datadir}/qcom/sa8775p/Qualcomm/SA8775P-RIDE/dsp/cdsp*"
 FILES:${PN}-qcom-sa8775p-ride-gdsp = "${datadir}/qcom/sa8775p/Qualcomm/SA8775P-RIDE/dsp/gdsp*"
+FILES:${PN}-qcom-sdm845-hdk-adsp = "${datadir}/qcom/sdm845/Qualcomm/SDM845-HDK/dsp/adsp"
+FILES:${PN}-qcom-sdm845-hdk-cdsp = "${datadir}/qcom/sdm845/Qualcomm/SDM845-HDK/dsp/cdsp*"
 FILES:${PN}-qcom-sm8750-mtp-adsp = "${datadir}/qcom/sm8750/Qualcomm/SM8750-MTP/dsp/adsp"
 FILES:${PN}-qcom-sm8750-mtp-cdsp = "${datadir}/qcom/sm8750/Qualcomm/SM8750-MTP/dsp/cdsp*"
+FILES:${PN}-radxa-dragon-q6a-adsp = "${datadir}/qcom/qcs6490/radxa/dragon-q6a/dsp/adsp"
+FILES:${PN}-radxa-dragon-q6a-cdsp = "${datadir}/qcom/qcs6490/radxa/dragon-q6a/dsp/cdsp"
 FILES:${PN}-thundercomm-db845c-adsp = "${datadir}/qcom/sdm845/Thundercomm/db845c/dsp/adsp"
 FILES:${PN}-thundercomm-db845c-cdsp = "${datadir}/qcom/sdm845/Thundercomm/db845c/dsp/cdsp"
 FILES:${PN}-thundercomm-db845c-sdsp = "${datadir}/qcom/sdm845/Thundercomm/db845c/dsp/sdsp"
@@ -187,8 +214,12 @@ FILES:${PN}-thundercomm-rb3gen2-cdsp = "${datadir}/qcom/qcm6490/Thundercomm/RB3g
 FILES:${PN}-thundercomm-rb5-adsp = "${datadir}/qcom/sm8250/Thundercomm/RB5/dsp/adsp"
 FILES:${PN}-thundercomm-rb5-cdsp = "${datadir}/qcom/sm8250/Thundercomm/RB5/dsp/cdsp"
 FILES:${PN}-thundercomm-rb5-sdsp = "${datadir}/qcom/sm8250/Thundercomm/RB5/dsp/sdsp"
+FILES:${PN}-thundercomm-rubikpi3-adsp = "${datadir}/qcom/qcs6490/Thundercomm/RubikPi3/dsp/adsp"
+FILES:${PN}-thundercomm-rubikpi3-cdsp = "${datadir}/qcom/qcs6490/Thundercomm/RubikPi3/dsp/cdsp"
 
 INSANE_SKIP:${PN}-qcom-db820c-adsp = "arch libdir file-rdeps textrel"
+INSANE_SKIP:${PN}-qcom-glymur-crd-adsp = "arch libdir file-rdeps textrel"
+INSANE_SKIP:${PN}-qcom-glymur-crd-cdsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-qcom-hamoa-iot-evk-adsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-qcom-hamoa-iot-evk-cdsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-qcom-kaanapali-mtp-adsp = "arch libdir file-rdeps textrel"
@@ -203,6 +234,8 @@ INSANE_SKIP:${PN}-qcom-sa8775p-ride-cdsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-qcom-sa8775p-ride-gdsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-qcom-sm8750-mtp-adsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-qcom-sm8750-mtp-cdsp = "arch libdir file-rdeps textrel"
+INSANE_SKIP:${PN}-radxa-dragon-q6a-adsp = "arch libdir file-rdeps textrel"
+INSANE_SKIP:${PN}-radxa-dragon-q6a-cdsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-thundercomm-db845c-adsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-thundercomm-db845c-cdsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-thundercomm-db845c-sdsp = "arch libdir file-rdeps textrel"
@@ -214,3 +247,4 @@ INSANE_SKIP:${PN}-thundercomm-rb3gen2-cdsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-thundercomm-rb5-adsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-thundercomm-rb5-cdsp = "arch libdir file-rdeps textrel"
 INSANE_SKIP:${PN}-thundercomm-rb5-sdsp = "arch libdir file-rdeps textrel"
+INSANE_SKIP:${PN}-thundercomm-rubikpi3-adsp = "arch libdir file-rdeps textrel"

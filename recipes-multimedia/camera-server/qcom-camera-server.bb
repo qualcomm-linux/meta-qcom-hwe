@@ -7,7 +7,7 @@ inherit cmake pkgconfig systemd
 DEPENDS += "glib-2.0"
 DEPENDS += "gtest"
 DEPENDS += "protobuf-native protobuf-c protobuf-c-native"
-DEPENDS:append:qcm6490 = " camx-kt"
+DEPENDS:append:qcm6490 = " camx-kt chicdk-kt"
 DEPENDS:append:qcs9100 = " camx"
 DEPENDS:append:qcs8300 = " camx"
 
