@@ -124,20 +124,51 @@ case "$1" in
             filename_drm=$(find $PATH_DRM_NODE  -name 'card0' -print -quit )
         done
 
+        # Settle udev before by-path detection to avoid race with symlink creation
+        udevadm settle --timeout=10
+
         echo "WESTON INITIALIZATION STARTUP"
 
-        # Detect dual DPU for Lemans/RB8
-        if [ "$soc_id" == "676" ] || [ "$soc_id" == "667" ] || [ "$soc_id" == "534" ] || [ "$soc_id" == "619" ] || [ "$soc_id" == "533" ] || [ "$soc_id" == "535" ] || [ "$soc_id" == "532" ] || [ "$soc_id" == "656" ]; then
-            # Check if /dev/dri/card1 exists
-            if timeout 10 bash -c 'while [ ! -e /dev/dri/card1 ]; do sleep 1; done'; then
-                echo "card1 detected, lauching Weston with dual DPU"
-                weston --idle-time=0 --continue-without-input --additional-devices=card1 &
-            else
-                weston --idle-time=0 --continue-without-input &
+        # Detect KMS-capable DRM cards via stable by-path symlinks (probe-order independent)
+        weston_opts="--idle-time=0 --continue-without-input"
+        additional_cards=""
+        first_kms_card=""
+        kms_cards=""
+
+        for path_link in /dev/dri/by-path/platform-*-card; do
+            [ -L "$path_link" ] || continue
+            card=$(readlink -f "$path_link")
+            [ -n "$card" ] || continue
+            card_name=$(basename "$card")
+            [ -n "$card_name" ] || continue
+
+            has_kms=0
+            for connector in /sys/class/drm/${card_name}-*; do
+                [ -d "$connector" ] && has_kms=1 && break
+            done
+
+            if [ "$has_kms" -eq 1 ]; then
+                platform_addr=$(echo "$path_link" | sed 's/.*platform-\([0-9a-f]*\).*/\1/')
+                [ -n "$platform_addr" ] && kms_cards="$kms_cards $platform_addr:$card_name"
             fi
-        else
-            weston --idle-time=0 --continue-without-input &
+        done
+
+        sorted_cards=$(echo "$kms_cards" | tr ' ' '\n' | grep -v '^$' | sort | cut -d: -f2)
+
+        for card_name in $sorted_cards; do
+            if [ -z "$first_kms_card" ]; then
+                first_kms_card="$card_name"
+            else
+                additional_cards="${additional_cards:+$additional_cards,}$card_name"
+            fi
+        done
+
+        if [ -n "$additional_cards" ]; then
+            echo "Multi-DPU detected, launching Weston with additional devices: $additional_cards"
+            weston_opts="$weston_opts --additional-devices=$additional_cards"
         fi
+
+        weston $weston_opts &
 
         # Wait for wayland socket node to be created with a maximum of 100 attempts.
         attempts=0

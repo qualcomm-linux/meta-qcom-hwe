@@ -6,9 +6,8 @@
 # create files and give permissions to the files and directories needed by
 # secure file system
 #
-# Copyright (c) 2017, 2023-2024 Qualcomm Technologies, Inc.
-# All Rights Reserved.
-# Confidential and Proprietary - Qualcomm Technologies, Inc.
+# Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
+# SPDX-License-Identifier: MIT
 #==============================================================================
 set -e
 

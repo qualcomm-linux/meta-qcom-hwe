@@ -5,7 +5,7 @@ PACKAGE_ARCH = "${SOC_ARCH}"
 inherit packagegroup
 
 LICENSE = "BSD-3-Clause & BSD-3-Clause-Clear"
-LICENSE += "& Qualcomm-Technologies-Inc.-Proprietary"
+LICENSE += "& LICENSE.qcom-2"
 
 PROVIDES = "${PACKAGES}"
 

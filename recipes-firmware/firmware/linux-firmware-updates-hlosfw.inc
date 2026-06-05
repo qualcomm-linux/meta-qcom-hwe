@@ -201,7 +201,6 @@ FILES:${PN}-qcs8300-qca-qca2066-updates = " \
   /qcs8300${FIRMWARE_UPDATES_DIR}/qca/hpnv21g_* \
 "
 
-
 SUMMARY:${PN}-qca-wcn6750-updates = "QCA WCN6750 firmware update files"
 FILES:${PN}-qca-wcn6750-updates = " \
   /qcm6490${FIRMWARE_UPDATES_DIR}/qca/msbtfw11.mbn* \
@@ -370,8 +369,8 @@ FILES:${PN}-qcom-qcm6490-qps615-updates = " \
 
 SUMMARY:${PN}-qca-ramps-updates = "QCOM QCA ramps firmware update files"
 FILES:${PN}-qca-ramps-updates = " \
-  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/ramps_0x00130201_030a.dfu \
-  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/ramps_0x00130201_gf_030a.dfu \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/ramps_0x00130201_030* \
+  /qcm6490${FIRMWARE_UPDATES_DIR}/qca/ramps_0x00130201_gf_030* \
 "
 
 SUMMARY:${PN}-qcom-qcm6490-verinfo = "QCM6490 HLOS Ver_Info.txt convenience link in overlay"

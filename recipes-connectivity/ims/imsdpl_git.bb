@@ -1,8 +1,8 @@
 inherit cmake pkgconfig python3native systemd qprebuilt
 
 DESCRIPTION = "Data Portability Layer for IP Multimedia Support(IMS) on Qualcomm modems"
-LICENSE          = "Qualcomm-Technologies-Inc.-Proprietary"
-LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f27f1a1e6089308a49b403"
+LICENSE          = "LICENSE.qcom-2"
+LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=165287851294f2fb8ac8cbc5e24b02b0"
 
 PACKAGE_ARCH    ?= "${SOC_ARCH}"
 

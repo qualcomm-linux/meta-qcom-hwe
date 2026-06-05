@@ -1,9 +1,11 @@
 inherit qprebuilt pkgconfig
 
-LICENSE          = "Qualcomm-Technologies-Inc.-Proprietary"
-LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=58d50a3d36f27f1a1e6089308a49b403"
+LICENSE = "LICENSE.qcom-2"
+LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=165287851294f2fb8ac8cbc5e24b02b0"
 
 DESCRIPTION = "audio-systems"
+
+SECTION = "multimedia"
 
 DEPENDS += "qcom-sva-eai qcom-capiv2-headers"
 
