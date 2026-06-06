@@ -9,7 +9,7 @@ DEPENDS += "syslog-plumber chicdk-autogen-kt glib-2.0 property-vault camxapi-kt 
 
 RDEPENDS:${PN} += "cameradlkm"
 
-QCM6490_SHA256SUM = "6fa1c90ad2b44e9a83fb90ea157b8738e8b5fec2efa68b1f86c99d864e781971"
+QCM6490_SHA256SUM = "403cb4bd08beeeefaf96308118a7c05e51a2c596d1fe4f854a1b4d2e97db4206"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 

@@ -9,7 +9,7 @@ DESCRIPTION = "Chicdk Autogen (KT variant)"
 DEPENDS:qcom-custom-bsp += "camxapi-kt protobuf-native protobuf"
 
 # Use the actual checksums for KT artifacts
-QCM6490_SHA256SUM = "fc9f0d5f12db23677177c8034b36e0d0d12d948d4d9b7bcfb92cb7d959667f72"
+QCM6490_SHA256SUM = "b4878d9c56ce74bb1702af018db6e3db913bbc34d51dad91bf0d3d9fe4e25ec6"
 QCS9100_SHA256SUM = "09ed50ff48bbd0168a427fdc08166b535ae546272877a5967b1de4e049c9af7b"
 QCS8300_SHA256SUM = "96421945a0f450d70d6e4d4fe5c883681debe408a527aa316849932597bbb3f2"
 QCS615_SHA256SUM  = "a2eff5f72da84b7f3ddb33bc6b256a8c294beec581b8f6f329adc619f7992f2f"

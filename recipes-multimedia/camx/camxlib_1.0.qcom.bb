@@ -7,9 +7,9 @@ DESCRIPTION = "Camx"
 
 DEPENDS += "syslog-plumber glib-2.0 property-vault camxcommon camx-autogen chicdk-autogen cameradlkm fastrpc adrenocl protobuf-native protobuf"
 
-QCS9100_SHA256SUM = "6a469c8fdda72050e784fe78d38d35fc0773099a1f13fa927d5ceebabb2f7bac"
-QCS8300_SHA256SUM = "be0b123814ba59cc0d9edbc3949d30252a2fac3f29c4e3d10a473e63efdc75d3"
-QCS615_SHA256SUM = "463e42bf6998c20c298a6e35d66956281f8b1f3497f4b8fd1e6c0fb95beee670"
+QCS9100_SHA256SUM = "66d9f3d204841114e97ce2a61d7cbc791102bf74cc2f43084bbfa7f9b9333e06"
+QCS8300_SHA256SUM = "c7c748081e9e4812f1b7a08a78dba0eb567bc454a2cfd26e36095b06f908ba01"
+QCS615_SHA256SUM = "db75209e417df1a1fd3f845398fd9170e0e7c7b81d47b5ff4ed0633fcca8c966"
 
 SRC_URI[qcs9100.sha256sum] = "${QCS9100_SHA256SUM}"
 SRC_URI[qcs8300.sha256sum] = "${QCS8300_SHA256SUM}"
