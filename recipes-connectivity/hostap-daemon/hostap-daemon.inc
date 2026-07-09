@@ -11,3 +11,5 @@ DEPENDS = "openssl libnl"
 do_install() {
 	make install DESTDIR=${D} BINDIR=${sbindir}/
 }
+
+CVE_PRODUCT = "hostapd"
