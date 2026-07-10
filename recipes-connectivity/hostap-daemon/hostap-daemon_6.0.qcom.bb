@@ -24,3 +24,5 @@ do_configure() {
         install -m 0644 ${WORKDIR}/misc/defconfig .config
         echo "CFLAGS +=\"-I${STAGING_INCDIR}/libnl3\"" >> .config
 }
+
+CVE_VERSION = "2.11"
