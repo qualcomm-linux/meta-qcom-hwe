@@ -7,8 +7,8 @@ DESCRIPTION = "Sensors-test-apps Library"
 
 DEPENDS += "glib-2.0 property-vault syslog-plumber protobuf qcom-sensinghub qcom-sensors-api qcom-sensors-utils qcom-sensors-core qcom-sensors-test-core qcom-sensors-test-utils qcom-sensors-lookup"
 
-QCM6490_SHA256SUM = "273243894a10b4e76cd0c4e77b8014786120c6e1ea68c04c30f72df0af574b71"
-QCS615_SHA256SUM = "9089433975b27bfea13c221169ebba3116efce845bd42b19106ae5f091431588"
+QCM6490_SHA256SUM = "a5e252d1efb57a33d1ba211b6ac8c1c868c0edbb870596ba9d1dae14c638f357"
+QCS615_SHA256SUM = "19b4d01bca105a5c74ba88dd3c883cda022eedc4d9d2453bf7335847afe7065f"
 
 SRC_URI[qcm6490.sha256sum] = "${QCM6490_SHA256SUM}"
 SRC_URI[qcs615.sha256sum] = "${QCS615_SHA256SUM}"

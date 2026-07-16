@@ -9,7 +9,7 @@ DEPENDS += "qcom-fastcv-binaries glib-2.0"
 
 PBT_ARCH = "armv8-2a"
 
-ARMV8_SHA256SUM = "4f087c3f2873568c54a7004e8fb5cb3a7c8dac65b94ef6e50ba1ebbbb54ae143"
+ARMV8_SHA256SUM = "71c162efdeb39145a0b1c76390307ea33e62dbe011c06d64f3eb25a3cc2e15d7"
 SRC_URI[armv8-2a.sha256sum] = "${ARMV8_SHA256SUM}"
 
 SRC_URI = "${PBT_ARTIFACTORY}/${PBT_BUILD_ID}/${PBT_BIN_PATH}/${BPN}_${PV}_${PBT_ARCH}.tar.gz;name=${PBT_ARCH}"
