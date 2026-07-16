@@ -1,0 +1,43 @@
+From cc9827397e216a5d5e052c421fbac81e265c3479 Mon Sep 17 00:00:00 2001
+From: Jai Shiv <jshiv@qti.qualcomm.com>
+Date: Fri, 19 Jun 2026 13:21:19 +0530
+Subject: [PATCH] cam-server: remove support for offline jpeg
+
+- chiofflinepostproclib is not available on QLI 2.0
+
+Change-Id: I57ab168c8a14d5f579b7c26e0281cf4060e07815
+Signed-off-by: Jai Shiv <jshiv@qti.qualcomm.com>
+---
+ config/qcm6490/CMakeLists.txt | 4 ----
+ config/qcs6490/CMakeLists.txt | 4 ----
+ 2 files changed, 8 deletions(-)
+
+diff --git a/config/qcm6490/CMakeLists.txt b/config/qcm6490/CMakeLists.txt
+index b400beb..1ede293 100644
+--- a/config/qcm6490/CMakeLists.txt
++++ b/config/qcm6490/CMakeLists.txt
+@@ -2,8 +2,4 @@ project(config-qcm6490)
+ 
+ set(PLATFORM_CXX_FLAGS "${PLATFORM_CXX_FLAGS} -DCAMERA_HAL_API_VERSION=0x0306")
+ 
+-set(PLATFORM_CXX_FLAGS "${PLATFORM_CXX_FLAGS} -DENABLE_OFFLINE_JPEG")
+-
+-set(ENABLE_OFFLINE_JPEG "1" PARENT_SCOPE)
+-
+ set(PLATFORM_CXX_FLAGS ${PLATFORM_CXX_FLAGS} PARENT_SCOPE)
+diff --git a/config/qcs6490/CMakeLists.txt b/config/qcs6490/CMakeLists.txt
+index 182a4e1..bd1f606 100644
+--- a/config/qcs6490/CMakeLists.txt
++++ b/config/qcs6490/CMakeLists.txt
+@@ -2,8 +2,4 @@ project(config-qcs6490)
+ 
+ set(PLATFORM_CXX_FLAGS "${PLATFORM_CXX_FLAGS} -DCAMERA_HAL_API_VERSION=0x0305")
+ 
+-set(PLATFORM_CXX_FLAGS "${PLATFORM_CXX_FLAGS} -DENABLE_OFFLINE_JPEG")
+-
+-set(ENABLE_OFFLINE_JPEG "1" PARENT_SCOPE)
+-
+ set(PLATFORM_CXX_FLAGS ${PLATFORM_CXX_FLAGS} PARENT_SCOPE)
+-- 
+2.34.1
+
