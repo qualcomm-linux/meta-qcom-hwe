@@ -15,7 +15,8 @@ SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/le
 SRCBRANCH  = "le-services.lnx.1.0.r1-rel"
 SRCREV     = "555b36869b0f6f1801c98d202cfd02afca046f9e"
 
-SRC_URI  = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=le-camera-server"
+SRC_URI  = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=le-camera-server \
+            file://0001-cam-server-remove-support-for-offline-jpeg.patch"
 
 S = "${WORKDIR}/le-camera-server"
 
