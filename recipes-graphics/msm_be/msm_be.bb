@@ -11,9 +11,11 @@ LIC_FILES_CHKSUM = "file://docs/license.rst;md5=63779ec98d78d823a9dc533a0735ef10
 PE = "2"
 PV = "1.0"
 
+MESA_VERSION = "24.0.7"
+
 PROVIDES += "virtual/libgbm"
 
-SRC_URI = "https://mesa.freedesktop.org/archive/mesa-24.0.7.tar.xz \
+SRC_URI = "https://mesa.freedesktop.org/archive/mesa-${MESA_VERSION}.tar.xz \
            file://0001-meson-misdetects-64bit-atomics-on-mips-clang.patch \
            file://0001-drisw-fix-build-without-dri3.patch \
            file://0002-glxext-don-t-try-zink-if-not-enabled-in-mesa.patch \
@@ -23,7 +25,7 @@ SRC_URI = "https://mesa.freedesktop.org/archive/mesa-24.0.7.tar.xz \
            file://0001-avoid-install-header.patch \
 "
 
-S = "${WORKDIR}/mesa-24.0.7"
+S = "${WORKDIR}/mesa-${MESA_VERSION}"
 
 SRC_URI[sha256sum] = "7454425f1ed4a6f1b5b107e1672b30c88b22ea0efea000ae2c7d96db93f6c26a"
 
@@ -354,3 +356,6 @@ RCONFLICTS:mesa-megadriver = "mesa"
 RPROVIDES:mesa-megadriver = "mesa"
 
 RPROVIDES:${PN} += "virtual/libgbm"
+
+CVE_PRODUCT = "mesa"
+CVE_VERSION = "${MESA_VERSION}"
