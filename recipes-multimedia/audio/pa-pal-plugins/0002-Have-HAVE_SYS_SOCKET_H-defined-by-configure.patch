@@ -1,0 +1,43 @@
+From 336fd0f84eddc41742b186fbf18b5dee1e9075cb Mon Sep 17 00:00:00 2001
+From: Jaeyoon Jung <jaeyoon.jung@lge.com>
+Date: Thu, 27 Nov 2025 07:17:53 +0900
+Subject: [PATCH] Have HAVE_SYS_SOCKET_H defined by configure
+
+Fixes a build error with musl:
+pa-pal-plugins/1.0/recipe-sysroot/usr/include/pulsecore/core-util.h:303:58: error: unknown type name 'socklen_t'; did you mean 'locale_t'?
+  303 | int pa_accept_cloexec(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+      |                                                          ^
+
+Upstream-Status: Pending
+Signed-off-by: Jaeyoon Jung <jaeyoon.jung@lge.com>
+---
+ modules/pa-pal-plugins/configure.ac | 2 ++
+ utils/pa_bt_audio/configure.ac      | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/modules/pa-pal-plugins/configure.ac b/modules/pa-pal-plugins/configure.ac
+index 3498de3..648272b 100644
+--- a/modules/pa-pal-plugins/configure.ac
++++ b/modules/pa-pal-plugins/configure.ac
+@@ -83,6 +83,8 @@ AC_ARG_WITH(
+         [modlibexecdir=$withval], [modlibexecdir="${libdir}/pulseaudio/modules"])
+ AC_SUBST(modlibexecdir)
+ 
++AC_CHECK_HEADERS([sys/socket.h])
++
+ AC_CONFIG_FILES([ \
+                          Makefile \
+                 ])
+diff --git a/utils/pa_bt_audio/configure.ac b/utils/pa_bt_audio/configure.ac
+index 7d85f6d..44b2b55 100644
+--- a/utils/pa_bt_audio/configure.ac
++++ b/utils/pa_bt_audio/configure.ac
+@@ -45,6 +45,8 @@ PKG_CHECK_MODULES([LIBPULSE], [libpulse])
+ AC_SUBST([LIBPULSE_CFLAGS])
+ AC_SUBST([LIBPULSE_LIBS])
+ 
++AC_CHECK_HEADERS([sys/socket.h])
++
+ AC_CONFIG_FILES([ \
+         Makefile
+         pabtaudio.pc

@@ -1,0 +1,97 @@
+From 190a6b96f6272f55a76db7ef5c272d6ef72311dd Mon Sep 17 00:00:00 2001
+From: Jaeyoon Jung <jaeyoon.jung@lge.com>
+Date: Wed, 26 Nov 2025 16:09:05 +0900
+Subject: [PATCH] args: Remove __unused macro
+
+Use __attribute__((unused)) in place of __unused instead as it may cause
+a error as when building with musl as below:
+qcom-args/git/recipe-sysroot/usr/include/bits/stat.h:17:19: error: expected member name or ';' after declaration specifiers
+   17 |         unsigned __unused[2];
+      |         ~~~~~~~~         ^
+
+Upstream-Status: Pending
+Signed-off-by: Jaeyoon Jung <jaeyoon.jung@lge.com>
+---
+ ar_osal/Makefile.am                      | 2 +-
+ ar_osal/src/linux/ar_osal_mutex.c        | 4 ++--
+ ar_osal/src/linux/ar_osal_signal.c       | 4 ++--
+ ar_osal/src/linux/qcom/ar_osal_servreg.c | 6 +++---
+ 4 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/ar_osal/Makefile.am b/ar_osal/Makefile.am
+index d97466a..6c46d7e 100644
+--- a/ar_osal/Makefile.am
++++ b/ar_osal/Makefile.am
+@@ -4,7 +4,7 @@ EXTRA_DIST = $(pkgconfig_DATA)
+ 
+ AM_CFLAGS = -Wall -Wno-pointer-to-int-cast -Wno-error=unused-function \
+             -Wno-error=unused-label
+-AM_CFLAGS += -D__unused=__attribute__\(\(__unused__\)\) -DLINUX_ENABLED
++AM_CFLAGS += -DLINUX_ENABLED
+ 
+ AM_CFLAGS += -I$(srcdir)/api \
+              -I$(top_srcdir)/acdb/ats/transports/diag/linux/inc/
+diff --git a/ar_osal/src/linux/ar_osal_mutex.c b/ar_osal/src/linux/ar_osal_mutex.c
+index 6509573..6650ead 100644
+--- a/ar_osal/src/linux/ar_osal_mutex.c
++++ b/ar_osal/src/linux/ar_osal_mutex.c
+@@ -25,13 +25,13 @@ typedef struct osal_int_mutex {
+ } osal_int_mutex_t;
+ 
+ _IRQL_requires_max_(PASSIVE_LEVEL)
+-int32_t ar_osal_mutex_init(_Inout_ ar_osal_mutex_t mutex __unused)
++int32_t ar_osal_mutex_init(_Inout_ ar_osal_mutex_t mutex __attribute__((unused)))
+ {
+     return AR_ENOTIMPL;
+ }
+ 
+ _IRQL_requires_max_(PASSIVE_LEVEL)
+-int32_t ar_osal_mutex_deinit(_In_ ar_osal_mutex_t mutex __unused)
++int32_t ar_osal_mutex_deinit(_In_ ar_osal_mutex_t mutex __attribute__((unused)))
+ {
+     return AR_ENOTIMPL;
+ }
+diff --git a/ar_osal/src/linux/ar_osal_signal.c b/ar_osal/src/linux/ar_osal_signal.c
+index 41d6b4e..d7ad559 100644
+--- a/ar_osal/src/linux/ar_osal_signal.c
++++ b/ar_osal/src/linux/ar_osal_signal.c
+@@ -27,13 +27,13 @@ typedef struct osal_int_signal {
+ } osal_int_signal_t;
+ 
+ _IRQL_requires_max_(DISPATCH_LEVEL)
+-int32_t ar_osal_signal_init(_In_ ar_osal_signal_t signal __unused)
++int32_t ar_osal_signal_init(_In_ ar_osal_signal_t signal __attribute__((unused)))
+ {
+     return AR_ENOTIMPL;
+ }
+ 
+ _IRQL_requires_max_(DISPATCH_LEVEL)
+-int32_t ar_osal_signal_deinit(_In_ ar_osal_signal_t signal __unused)
++int32_t ar_osal_signal_deinit(_In_ ar_osal_signal_t signal __attribute__((unused)))
+ {
+     return AR_ENOTIMPL;
+ }
+diff --git a/ar_osal/src/linux/qcom/ar_osal_servreg.c b/ar_osal/src/linux/qcom/ar_osal_servreg.c
+index 263e84d..1619e40 100644
+--- a/ar_osal/src/linux/qcom/ar_osal_servreg.c
++++ b/ar_osal/src/linux/qcom/ar_osal_servreg.c
+@@ -334,7 +334,7 @@ end:
+ *  null on failure.
+ */
+ _IRQL_requires_max_(PASSIVE_LEVEL)
+-ar_osal_servreg_t ar_osal_servreg_register(_In_ ar_osal_client_type  client_type __unused,
++ar_osal_servreg_t ar_osal_servreg_register(_In_ ar_osal_client_type  client_type __attribute__((unused)),
+     _In_opt_ ar_osal_servreg_callback cb_func,
+     _In_opt_ void *cb_context,
+     _In_ ar_osal_servreg_entry_type *domain,
+@@ -470,8 +470,8 @@ end:
+ *  Nonzero -- Failure
+ */
+ _IRQL_requires_max_(PASSIVE_LEVEL)
+-int32_t ar_osal_servreg_set_state(_In_ ar_osal_servreg_t servreg_handle __unused,
+-    _In_ ar_osal_service_state_type state __unused)
++int32_t ar_osal_servreg_set_state(_In_ ar_osal_servreg_t servreg_handle __attribute__((unused)),
++    _In_ ar_osal_service_state_type state __attribute__((unused)))
+ {
+     return AR_ENOTIMPL;
+ }

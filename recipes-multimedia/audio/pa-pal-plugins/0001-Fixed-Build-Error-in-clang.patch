@@ -1,0 +1,42 @@
+From fe9df250e41fe89d7e42b606ad6f3204e4335f71 Mon Sep 17 00:00:00 2001
+From: "geayoung.baek" <geayoung.baek@lge.com>
+Date: Wed, 23 Apr 2025 17:03:07 +0900
+Subject: [PATCH] Fixed Build Error in clang
+
+../audio/opensource/pulseaudio-plugins/modules/pa-pal-plugins/module-pal-card/src/module-pal-card.c:1171:6: error: conflicting types for 'pa__done'
+ 1171 | void pa__done(pa_module *m) {
+../audio/opensource/pulseaudio-plugins/modules/pa-pal-plugins/module-pal-voiceui-card/module-pal-voiceui-card.c:1428:6: error: conflicting types for 'pa__done'
+ 1428 | void pa__done(pa_module 3* warningms) generated {.
+
+Upstream-Status: Pending
+---
+ modules/pa-pal-plugins/module-pal-card/src/module-pal-card.c    | 2 ++
+ .../module-pal-voiceui-card/module-pal-voiceui-card.c           | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/modules/pa-pal-plugins/module-pal-card/src/module-pal-card.c b/modules/pa-pal-plugins/module-pal-card/src/module-pal-card.c
+index 8eac86b..1b87f1c 100644
+--- a/modules/pa-pal-plugins/module-pal-card/src/module-pal-card.c
++++ b/modules/pa-pal-plugins/module-pal-card/src/module-pal-card.c
+@@ -1067,6 +1067,8 @@ static void pa_pal_card_disable_jack_detection(struct userdata *u, pa_module *m)
+     u->jacks = NULL;;
+ }
+ 
++void pa__done(pa_module *m);
++
+ int pa__init(pa_module *m) {
+     struct userdata *u;
+     pa_modargs *ma;
+diff --git a/modules/pa-pal-plugins/module-pal-voiceui-card/module-pal-voiceui-card.c b/modules/pa-pal-plugins/module-pal-voiceui-card/module-pal-voiceui-card.c
+index 6bab613..925bb89 100644
+--- a/modules/pa-pal-plugins/module-pal-voiceui-card/module-pal-voiceui-card.c
++++ b/modules/pa-pal-plugins/module-pal-voiceui-card/module-pal-voiceui-card.c
+@@ -1387,6 +1387,8 @@ static void load_sound_model(DBusConnection *conn, DBusMessage *msg, void *userd
+     pa_dbus_send_basic_value_reply(conn, msg, DBUS_TYPE_OBJECT_PATH, &ses_data->obj_path);
+ }
+ 
++void pa__done(pa_module *m);
++
+ int pa__init(pa_module *m) {
+     struct pal_voiceui_module_data *m_data;
+     pa_modargs *ma;

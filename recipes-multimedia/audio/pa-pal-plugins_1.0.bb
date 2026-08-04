@@ -8,9 +8,12 @@ SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/pu
 SRCBRANCH  = "audio-algos.lnx.1.0.r1-rel"
 SRCREV     = "54111949a80ca10ded32b31035a4e3d1183f68e1"
 
-SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/pulseaudio-plugins"
+SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/pulseaudio-plugins \
+    file://0001-Fixed-Build-Error-in-clang.patch;patchdir=${UNPACKDIR}/audio/opensource/pulseaudio-plugins \
+    file://0002-Have-HAVE_SYS_SOCKET_H-defined-by-configure.patch;patchdir=${UNPACKDIR}/audio/opensource/pulseaudio-plugins \
+"
 
-S = "${WORKDIR}/audio/opensource/pulseaudio-plugins/modules/pa-pal-plugins"
+S = "${UNPACKDIR}/audio/opensource/pulseaudio-plugins/modules/pa-pal-plugins"
 
 DEPENDS = "qcom-agm pulseaudio qcom-pal qcom-pal-headers qcom-vui-interface-header"
 EXTRA_OECONF = " --with-pa_version=17.0 --without-pa-support-card-status"

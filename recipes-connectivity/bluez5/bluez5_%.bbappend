@@ -3,7 +3,7 @@ inherit systemd
 FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
 
 
-RRECOMMENDS:${PN} += " \
+RRECOMMENDS:${PN}:libc-glibc += " \
     glibc-gconv-utf-16 \
     glibc-gconv-utf-32 \
 "

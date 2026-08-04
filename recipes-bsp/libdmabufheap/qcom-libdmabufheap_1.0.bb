@@ -14,6 +14,7 @@ SRC_URI   = " \
              ${SRCPROJECT};branch=${SRCBRANCH};destsuffix=system/memory/libdmabufheap \
              file://kmem.rules \
              file://0001-libdmabufheap-Update-generated-libs-version.patch \
+             file://0002-QCLINUX-libdmabufheap-add-an-optional-TEMP_FAILURE_R.patch \
              "
 
 S = "${WORKDIR}/system/memory/libdmabufheap"

@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}${LICENSE};md5=165287851294
 
 DESCRIPTION = "securemsm-features with QseecomAPI user space library to interact with qseecom driver"
 
-DEPENDS = "libxml2 libdrm libtinyxml2 linux-kernel-qcom-headers glib-2.0 glibc qcom-libvmmem qcom-libdmabufheap \
+DEPENDS = "libxml2 libdrm libtinyxml2 linux-kernel-qcom-headers glib-2.0 qcom-libvmmem qcom-libdmabufheap \
            securemsm-headers minkipc property-vault jsoncpp qmi-framework curl\
           "
 

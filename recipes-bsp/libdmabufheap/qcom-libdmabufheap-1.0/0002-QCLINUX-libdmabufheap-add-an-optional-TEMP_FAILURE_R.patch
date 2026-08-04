@@ -1,0 +1,37 @@
+From 300f7b5c0d5e223441e4687113d55d4350859f9e Mon Sep 17 00:00:00 2001
+From: Vijayanand Jitta <quic_vjitta@quicinc.com>
+Date: Wed, 13 Dec 2023 11:14:36 +0530
+Subject: [PATCH] QCLINUX: libdmabufheap: add an optional TEMP_FAILURE_RETRY
+ macro copy
+
+Define TEMP_FALURE_RETRY on platforms which use libraries like musl
+where it isn't defined.
+
+Upstream-Status: Backport [https://git.codelinaro.org/clo/le/platform/system/memory/libdmabufheap/-/commit/300f7b5c0d5e223441e4687113d55d4350859f9e]
+Change-Id: I1d900cb39865100f0a84337e18ab4452c94db355
+---
+
+ BufferAllocator.cpp | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/BufferAllocator.cpp b/BufferAllocator.cpp
+index eff68be..72c8147 100644
+--- a/BufferAllocator.cpp
++++ b/BufferAllocator.cpp
+@@ -46,6 +46,16 @@ static constexpr char kDmaHeapRoot[] = "/dev/dma_heap/";
+ static constexpr char kIonDevice[] = "/dev/ion";
+ static constexpr char kIonSystemHeapName[] = "ion_system_heap";
+ 
++#ifndef TEMP_FAILURE_RETRY
++/* Used to retry syscalls that can return EINTR. */
++#define TEMP_FAILURE_RETRY(exp) ({     \
++__typeof(exp) _rc;                      \
++do {                                   \
++    _rc = (exp);                       \
++} while (_rc == -1 && errno == EINTR); \
++_rc; })
++#endif
++
+ #ifndef USE_ION
+ BufferAllocator::BufferAllocator()
+     : ion_fd_(-1)

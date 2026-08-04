@@ -1,0 +1,29 @@
+From 97ff78013fd183b67c77a9da06d72a3596dbcb6f Mon Sep 17 00:00:00 2001
+From: Jaeyoon Jung <jaeyoon.jung@lge.com>
+Date: Thu, 27 Nov 2025 07:17:53 +0900
+Subject: [PATCH] Have HAVE_SYS_SOCKET_H defined by configure
+
+Fixes a build error with musl:
+qcom-pa-bt-audio/1.1/recipe-sysroot/usr/include/pulsecore/core-util.h:303:58: error: unknown type name 'socklen_t'; did you mean 'locale_t'?
+  303 | int pa_accept_cloexec(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+      |                                                          ^
+
+Signed-off-by: Jaeyoon Jung <jaeyoon.jung@lge.com>
+Upstream-Status: Pending
+---
+ utils/pa_bt_audio/configure.ac | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/utils/pa_bt_audio/configure.ac b/utils/pa_bt_audio/configure.ac
+index 7d85f6d..44b2b55 100644
+--- a/utils/pa_bt_audio/configure.ac
++++ b/utils/pa_bt_audio/configure.ac
+@@ -45,6 +45,8 @@ PKG_CHECK_MODULES([LIBPULSE], [libpulse])
+ AC_SUBST([LIBPULSE_CFLAGS])
+ AC_SUBST([LIBPULSE_LIBS])
+ 
++AC_CHECK_HEADERS([sys/socket.h])
++
+ AC_CONFIG_FILES([ \
+         Makefile
+         pabtaudio.pc

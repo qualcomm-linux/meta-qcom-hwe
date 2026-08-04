@@ -1,0 +1,38 @@
+From 45b6f8542c7c40b955ea25ab46198c7a32d66fce Mon Sep 17 00:00:00 2001
+From: Jaeyoon Jung <jaeyoon.jung@lge.com>
+Date: Thu, 27 Nov 2025 09:50:49 +0900
+Subject: [PATCH] Add missing header for usleep and close
+
+'#include <unistd.h>' is needed by 'usleep' and 'close'.
+
+Upstream-Status: Pending
+Signed-off-by: Jaeyoon Jung <jaeyoon.jung@lge.com>
+---
+ session/src/SessionAlsaPcm.cpp        | 1 +
+ session/src/SoundTriggerEngineGsl.cpp | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/session/src/SessionAlsaPcm.cpp b/session/src/SessionAlsaPcm.cpp
+index 687954e6..102332b3 100644
+--- a/session/src/SessionAlsaPcm.cpp
++++ b/session/src/SessionAlsaPcm.cpp
+@@ -39,6 +39,7 @@
+ #include <sstream>
+ #include <string>
+ #include <sys/ioctl.h>
++#include <unistd.h>
+ #include <amdb_api.h>
+ #include "rx_haptics_api.h"
+ #include "audio_dam_buffer_api.h"
+diff --git a/session/src/SoundTriggerEngineGsl.cpp b/session/src/SoundTriggerEngineGsl.cpp
+index fcd748c2..ed9b0b0c 100644
+--- a/session/src/SoundTriggerEngineGsl.cpp
++++ b/session/src/SoundTriggerEngineGsl.cpp
+@@ -40,6 +40,7 @@
+ #ifdef PAL_CUTILS_SUPPORTED
+ #include <cutils/trace.h>
+ #endif
++#include <unistd.h>
+ #include "Session.h"
+ #include "Stream.h"
+ #include "StreamSoundTrigger.h"

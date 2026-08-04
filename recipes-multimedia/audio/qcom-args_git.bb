@@ -10,7 +10,10 @@ SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom-opensource/ar
 SRCBRANCH  = "audio-core.lnx.1.0.r1-rel"
 SRCREV     = "2b5cf541b7a1805e03a12ff0ad5515170593e7a1"
 
-SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/args"
+SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=audio/opensource/args \
+    file://0001-args-Remove-__unused-macro.patch \
+    file://0002-args-Use-1-instead-of-NULL-for-SOCKET.patch \
+"
 
 S = "${WORKDIR}/audio/opensource/args"
 

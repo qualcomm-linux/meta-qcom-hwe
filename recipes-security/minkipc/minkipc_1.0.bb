@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://${QCOM_COMMON_LICENSE_DIR}/${LICENSE};md5=16528785129
 
 DESCRIPTION = "Libraries enabling MinkIPC"
 
-DEPENDS += "glib-2.0 glibc linux-kernel-qcom-headers qcom-libdmabufheap securemsm-headers"
+DEPENDS += "glib-2.0 linux-kernel-qcom-headers qcom-libdmabufheap securemsm-headers"
 
 QCM6490_SHA256SUM = "ceffdded74bb171702284b6b4cde26e02b7c1e1a034ecafcc698d792ca00ef77"
 QCS9100_SHA256SUM = "3bf2ae039d7848cecb358399b204c1177dd510d8fc479cb0d9e466d2f2906e45"
