@@ -1,6 +1,6 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
 
-SRC_URI:append:qcom = "file://0001-QCLINUX-units-adjust-timeout-for-systemd-networkd-wa.patch \
+SRC_URI:append:qcom = " file://0001-QCLINUX-units-adjust-timeout-for-systemd-networkd-wa.patch \
 		      "
 
 # Enable coredump support
