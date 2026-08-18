@@ -19,7 +19,7 @@ QCOM_BLUETOOTH_EXT_SRCREV ?= "eaec2f1535cc20362db170631d79b698f3a13fbc"
 SRCREV_FORMAT = "qcomsystembt_qcombluetoothext"
 
 SRCREV_qcomsystembt = "${QCOM_SYSTEM_BT_SRCREV}"
-SRCREV_qcombluetoothext = "${QCOM_BLUETOOTH_EXT_SRCBRANCH}"
+SRCREV_qcombluetoothext = "${QCOM_BLUETOOTH_EXT_SRCREV}"
 
 SRC_URI = "${QCOM_SYSTEM_BT_SRC};branch=${QCOM_SYSTEM_BT_SRCBRANCH};name=qcomsystembt;destsuffix=bluetooth/stack/system/bt \
            ${QCOM_BLUETOOTH_EXT_SRC};branch=${QCOM_BLUETOOTH_EXT_SRCBRANCH};name=qcombluetoothext;destsuffix=bluetooth/stack/bluetooth_ext"
