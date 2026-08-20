@@ -555,4 +555,5 @@ SRC_URI:append = " \
     file://common/0004-BACKPORT-UPSTREAM-drm-msm-dpu-move-resource-allocati.patch \
     file://common/0151-FROMLIST-driver-bluetooth-btusb-Allow-firmware-re.patch \
     file://common/0001-BACKPORT-FROMLIST-remoteproc-qcom-pas-Map-unmap-subs.patch \
+    file://common/0152-UPSTREAM-Bluetooth-hci_core-use-skb_get-instead-of-s.patch \
 "
