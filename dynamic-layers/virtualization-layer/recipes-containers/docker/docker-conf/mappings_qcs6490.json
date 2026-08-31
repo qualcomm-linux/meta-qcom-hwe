@@ -53,6 +53,8 @@
         "/usr/lib/libfastcvopt.so.1.8.0",
         "/usr/lib/dsp/cdsp/cv/v68/KODIAK/libfastcvdsp_skel.so",
         "/usr/lib/dsp/cdsp/cv/v68/KODIAK/libfastcvadsp.so",
+        "/usr/lib/dsp/cdsp/fastrpc_shell_3",
+        "/usr/lib/dsp/cdsp/fastrpc_shell_unsigned_3",
         "/usr/lib/libfastcvdsp_stub.so",
         "/usr/lib/libfastcvdsp_stub.so.1",
         "/usr/lib/libfastcvdsp_stub.so.1.8.0",
