@@ -57,6 +57,8 @@
         "/usr/lib/libdmabufheap.so.0.0.0",
         "/usr/lib/dsp/cdsp/libc++.so.1",
         "/usr/lib/dsp/cdsp/libc++abi.so.1",
+        "/usr/lib/dsp/cdsp/fastrpc_shell_3",
+        "/usr/lib/dsp/cdsp/fastrpc_shell_unsigned_3",
         "/usr/lib/libcamera_metadata.so",
         "/usr/lib/librv.so",
         "/usr/lib/libmv1.so",
