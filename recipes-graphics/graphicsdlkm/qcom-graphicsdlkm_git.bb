@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/${LICENSE};md5=801f80980d171dd6
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/qcom/opensource/graphics-kernel.git;protocol=https"
 SRCBRANCH  = "gfx-kernel.le.0.0.r1-rel"
-SRCREV     = "876f2d4e61ff9ea6243debd7b7d3e57998e90214"
+SRCREV     = "b40bb01d378170886585c84536517540651bb981"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=graphics-kernel"
 

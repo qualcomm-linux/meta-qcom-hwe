@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/${LICENSE};md5=801f80980d171dd6
 
 SRCPROJECT = "git://git.codelinaro.org/clo/le/platform/vendor/opensource/display-drivers.git;protocol=https"
 SRCBRANCH  = "display-kernel.qclinux.1.0.r2-rel"
-SRCREV     = "cd9c7374e57412921eb06f13acc653ab6dad0a43"
+SRCREV     = "71e2e7e311f1bafdc46f363980fa500650b03514"
 
 SRC_URI = "${SRCPROJECT};branch=${SRCBRANCH};destsuffix=display/vendor/qcom/opensource/display-drivers"
 
